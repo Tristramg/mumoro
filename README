@@ -1,0 +1,21 @@
+Mumoro: MUltiModal MUltiObjective ROuting
+
+This lib aims to provide multimodal routing: combining subway, walking and bike.
+It can also be used as a basic routing algorithm.
+
+
+We divided the project in three parts:
+* lib: where everything interesting happens
+* tools: various tools, to generate useable data
+* ui: user interfaces, a graphical one based on marble for now
+
+Requirements
+* GCC: C++ complier (other aren't testetd)
+* Boost: no C++ dev should live without it (used for its Dijkstra's algorithm)
+* CMake: compling tool (replacing autotools and so on)
+* SQLite: lightweight and fast SQL database
+
+Optional requirements
+* Marble: we use its widget for the standalone GUI
+* Expat: for parsing osm data
+
