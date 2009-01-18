@@ -19,3 +19,17 @@ Optional requirements
 * Marble: we use its widget for the standalone GUI
 * Expat: for parsing osm data
 
+How to compile it
+* cmake .
+* make
+
+How to run it
+* grab an osm database 
+  * on www.openstreetmaps.org
+  * center on your favorite town
+  * clic on the export tab an select OpenStreetMap XML Data
+  * if it's gray'ed out, try zooming on a smaller part of the town
+* use tool/osm2mumoro to parse the database
+* use ui/gui/mumoro to play with it
+
+Comments at tristramg (a) gmail (dot) com
