@@ -29,7 +29,6 @@
 
 namespace Mumoro
 {
-
     /** Describes a node */
     struct Node
     {
@@ -43,8 +42,6 @@ namespace Mumoro
      * It is usualy an arc in the network (between two consecutive bus stops
      * or between to road crosses). However it can also be a transport mode
      * switching. Therefore source and target nodes can be identical.
-     *
-     *
      */
     struct Path_elt
     {
@@ -80,7 +77,7 @@ namespace Mumoro
         /**
          * Initialise le graphe
          */
-        void init(const char *);
+        void init(const char *, Transport_mode m);
 
         public:
 
@@ -88,7 +85,7 @@ namespace Mumoro
          *
          * str : string de connection vers la base de cartographie
          */
-        Shortest_path(const char *);
+        Shortest_path(const char *, Transport_mode mode = Car);
 
         /**
          * Destructeur

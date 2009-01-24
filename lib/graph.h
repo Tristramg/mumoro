@@ -42,8 +42,8 @@ namespace Mumoro
         virtual double operator()(double) const;
     };
 
-    typedef enum {Foot=1, Bike, Connexion} Transport_mode;
-    /** Caractéristiques d'un chaînon */
+    typedef enum {Foot, Bike, Car, Subway, Bike_at_hand, Switch} Transport_mode;
+    /** Properties of an edge */
     struct Edge_property
     {
         int link_id; /**< identifiant du chaînon dans la base */

@@ -123,14 +123,14 @@ namespace Mumoro
             return (*it).second;
     }
 
-    void Shortest_path::init(const char * db_file)
+    void Shortest_path::init(const char * db_file, Transport_mode m)
     {
         sqlite3_stmt * stmt;
         sqlite3_open(db_file, &db);
 
         sqlite3_prepare_v2(db, "SELECT lon,lat FROM nodes WHERE id = ?", -1, &node_stmt, NULL);
 
-        sqlite3_prepare_v2(db, "select source, target, length, foot from links", -1, &stmt, NULL);
+        sqlite3_prepare_v2(db, "select source, target, length, foot, bike, bike_r, car, car_r, subway from links", -1, &stmt, NULL);
 
        std::vector<Edge_property> edge_prop;
         double cost;
@@ -141,11 +141,10 @@ std::back_insert_iterator<std::vector<Edge_property> > ii(edge_prop);
 
     while(sqlite3_step(stmt) == SQLITE_ROW)
     {
-  //             foot = sqlite3_column_int64(stmt,2);
-//       if (foot == 1)
-       { cost = sqlite3_column_double(stmt,2);
+        cost = sqlite3_column_double(stmt,2);
         source = node_internal_id_or_add(sqlite3_column_int64(stmt, 0)); 
         target = node_internal_id_or_add(sqlite3_column_int64(stmt, 1)); 
+
 
  
         prop.length = FunctionPtr(new Const_cost(cost / foot_speed));
@@ -158,10 +157,7 @@ std::back_insert_iterator<std::vector<Edge_property> > ii(edge_prop);
         prop.second = source;
         prop.mode = Foot;
         *ii++ = prop;
-       }
     }
-
-    std::cout << "Nombre de links " << edge_prop.size() << ", nb le noeds " << node_count << std::endl;
 
     sort(edge_prop.begin(), edge_prop.end());
 
@@ -172,9 +168,9 @@ std::back_insert_iterator<std::vector<Edge_property> > ii(edge_prop);
     std::cout << "# Loading the graph done " << std::endl;
     }
 
-    Shortest_path::Shortest_path(const char * db) :
+    Shortest_path::Shortest_path(const char * db, Transport_mode m) :
         node_count(0)     {
-            init(db);
+            init(db, m);
         }
 
     std::list<int> Shortest_path::compute(int start, int end, int start_time)
