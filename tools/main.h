@@ -31,17 +31,12 @@
 #ifndef _MAIN_H
 #define	_MAIN_H
 
-typedef enum{SET, AND, OR} Operator;
-const unsigned short Foot = 0x01, Bike = 0x02, Car = 0x04, Oneway = 0x08, Opposite_bike = 0x16;
-class Direction_modifier
-{
-    std::bitset<5> m_mask;
-    Operator m_op;
-    public:
-    Direction_modifier(Operator, int);
-    Direction_modifier();
-    void operator()(std::bitset<5> &);
-};
+const unsigned short Foot = 0x01,
+      Bike = 0x02,
+      Car = 0x04,
+      Oneway = 0x08,
+      Opposite_bike = 0x16,
+      Subway = 0x32;
 
 struct Node
 {
@@ -70,14 +65,15 @@ struct Parse_data
     uint64_t ways_count;
     int link_length;
     uint64_t ways_progress;
-    std::bitset<5> directions;
+    std::bitset<6> directions;
     std::list<boost::tuple<uint64_t, uint64_t, Node*, Node*, std::string, double> > links;
-    std::map<std::string, std::map<std::string, Direction_modifier> > dir_modifiers ;
+    std::map<std::string, std::map<std::string, unsigned short> > dir_modifiers ;
     double length;
     double prev_lon;
     double prev_lat;
     sqlite3 *db;
     sqlite3_stmt *stmt;
+     std::map<std::string, std::string> tag;
 };
 
 #endif	/* _MAIN_H */

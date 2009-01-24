@@ -35,29 +35,10 @@ double distance(double lon1, double lat1, double lon2, double lat2)
             ) * r;
 }
 
-Direction_modifier::Direction_modifier(Operator op, int mask) :
-    m_mask(mask), m_op(op)
-{}
-
-Direction_modifier::Direction_modifier() :
-    m_mask(0x0), m_op(OR)
-{}
-
 char
 bool2char(bool b)
 {
     return (b?'t':'f');
-}
-
-void
-Direction_modifier::operator()(bitset<5> & dir)
-{
-    switch(m_op)
-    {
-        case AND: dir &= m_mask; break;
-        case SET: dir = m_mask; break;
-        case OR: dir |= m_mask; break;
-    }
 }
 
 void
@@ -87,6 +68,7 @@ start(void *dat, const char *el, const char **attr)
                 lon = atof(value);
             }
             data->nodes[id] = Node(lon, lat);
+            data->prev_id = id;
         }
     }
 
@@ -98,6 +80,23 @@ start(void *dat, const char *el, const char **attr)
         {
             uint64_t node_id = atoll(value);
             data->nodes[node_id].uses++;
+        }
+    }
+
+    else if (strcmp(el, "tag") == 0)
+    {
+        string key;
+        while (*attr != NULL)
+        {
+            const char* name = *attr++;
+            const char* value = *attr++;
+
+            if ( strcmp(name, "k") == 0 )
+                key = value;
+            else if ( strcmp(name, "v") == 0 )
+            {
+                data->tag[key] = value;
+            }
         }
     }
 
@@ -163,7 +162,7 @@ start2(void *dat, const char *el, const char **attr)
                 key = value;
             else if ( strcmp(name, "v") == 0 )
             {
-                data->dir_modifiers[key][value](data->directions);
+                data-> directions |= data->dir_modifiers[key][value];
             }
         }
     }
@@ -171,8 +170,19 @@ start2(void *dat, const char *el, const char **attr)
 }
 
     void
-end(void *data, const char *el)
+end(void *dat, const char *el)
 {
+    Parse_data * data = (Parse_data * ) dat;
+
+        if (strcmp(el, "node") == 0)
+        {
+            if(data->tag["railway"] == "station" )
+            {
+                data->nodes[data->prev_id].uses = 2;
+                cout << "pouet" << endl;
+            }
+        data->tag.clear();
+        }
 }
 
     void
@@ -188,7 +198,7 @@ end2(void *dat, const char *el)
             data->links.push_back(make_tuple(data->source_id, data->prev_id, data->source, data->prev, data->geom.str(), data->length));
         }
 
-        if(data->directions != 0x0)
+        if(data->directions == 0x32)
         {
             list<tuple<uint64_t, uint64_t, Node*, Node*, string, double> >::iterator it;
             for(it = data->links.begin(); it != data->links.end(); it++)
@@ -203,7 +213,8 @@ end2(void *dat, const char *el)
                 sqlite3_bind_int(data->stmt, 6, (data->directions.test(2)));
                 sqlite3_bind_int(data->stmt, 7, (!data->directions.test(3)));
                 sqlite3_bind_int(data->stmt, 8, (data->directions.test(0)));
-                sqlite3_bind_double(data->stmt, 9, get<5>(*it));
+                sqlite3_bind_int(data->stmt, 9, (data->directions.test(5)));
+                sqlite3_bind_double(data->stmt, 10, get<5>(*it));
                 if(sqlite3_step(data->stmt) != SQLITE_DONE)
                 {
                     std::cerr << "Unable to insert link "
@@ -238,61 +249,62 @@ main(int argc, char** argv)
 
     sqlite3_exec(data.db, "DROP TABLE nodes", NULL, NULL, NULL);
     sqlite3_exec(data.db, "DROP TABLE links", NULL, NULL, NULL);
-    sqlite3_exec(data.db, "CREATE TABLE links(id int primary key, source int, target int, geom text, bike bool, bike_r bool, car bool, car_r bool, foot bool, length double)", NULL, NULL, NULL);
+    sqlite3_exec(data.db, "CREATE TABLE links(id int primary key, source int, target int, geom text, bike bool, bike_r bool, car bool, car_r bool, foot bool, subway bool, length double)", NULL, NULL, NULL);
     sqlite3_exec(data.db, "CREATE TABLE nodes(id int primary key, lon double, lat double)", NULL, NULL, NULL);
 
-    // Accessible à tous
+    // Anyone can use it
     const unsigned short Forall = Bike + Foot + Car;
-    data.dir_modifiers["highway"]["primary"] = Direction_modifier(OR, Forall); // 111111
-    data.dir_modifiers["highway"]["primary_link"] = Direction_modifier(OR,Forall); // 111111
-    data.dir_modifiers["highway"]["secondary"] = Direction_modifier(OR,Forall); // 111111
-    data.dir_modifiers["highway"]["tertiary"] = Direction_modifier(OR,Forall); // 111111
-    data.dir_modifiers["highway"]["unclassified"] = Direction_modifier(OR,Forall); // 111111
-    data.dir_modifiers["highway"]["residential"] = Direction_modifier(OR,Forall); // 111111
-    data.dir_modifiers["highway"]["living_street"] = Direction_modifier(OR,Forall); // 111111
-    data.dir_modifiers["highway"]["road"] = Direction_modifier(OR,Forall); // 111111
-    data.dir_modifiers["highway"]["service"] = Direction_modifier(OR,Forall); // 111111
-    data.dir_modifiers["highway"]["track"] = Direction_modifier(OR,Forall); // 111111
+    data.dir_modifiers["highway"]["primary"] = Forall;
+    data.dir_modifiers["highway"]["primary_link"] = Forall;
+    data.dir_modifiers["highway"]["secondary"] = Forall;
+    data.dir_modifiers["highway"]["tertiary"] = Forall;
+    data.dir_modifiers["highway"]["unclassified"] = Forall;
+    data.dir_modifiers["highway"]["residential"] = Forall;
+    data.dir_modifiers["highway"]["living_street"] = Forall;
+    data.dir_modifiers["highway"]["road"] = Forall;
+    data.dir_modifiers["highway"]["service"] = Forall;
+    data.dir_modifiers["highway"]["track"] = Forall; 
 
-    // Accessible qu'aux voitures
-    data.dir_modifiers["highway"]["motorway"] = Direction_modifier(OR,Car); // 11000
-    data.dir_modifiers["highway"]["trunk"] = Direction_modifier(OR,Car); // 11000
-    data.dir_modifiers["highway"]["trunk_link"] = Direction_modifier(OR,Car); // 11000
-    data.dir_modifiers["highway"]["motorway_link"] = Direction_modifier(OR,Car); // 11000
+    // Only cars can use it
+    data.dir_modifiers["highway"]["motorway"] = Car;
+    data.dir_modifiers["highway"]["trunk"] = Car;
+    data.dir_modifiers["highway"]["trunk_link"] = Car;
+    data.dir_modifiers["highway"]["motorway_link"] = Car;
 
-    // Accessible qu'aux piétons et cyclistes
-    data.dir_modifiers["highway"]["path"] = Direction_modifier(OR, Bike + Car); // 00111
+    // Only bikes or pedestrians can use it
+    data.dir_modifiers["highway"]["path"] = Bike + Foot;
 
-    // Accessible qu'au piétons
-    data.dir_modifiers["highway"]["pedestrian"] = Direction_modifier(OR,Foot); // 00001
-    data.dir_modifiers["highway"]["footway"] = Direction_modifier(OR,Foot); // 00001
-    // Accessible aussi aux piétons
-    data.dir_modifiers["highway"]["steps"] = Direction_modifier(OR,Foot); // 00001
-    data.dir_modifiers["pedestrians"]["yes"] = Direction_modifier(OR,Foot);
-    data.dir_modifiers["foot"]["yes"] = Direction_modifier(OR,Foot);
-    data.dir_modifiers["foot"]["designated"] =  Direction_modifier(OR,Foot);
+    // Pedestrians
+    data.dir_modifiers["highway"]["pedestrian"] = Foot;
+    data.dir_modifiers["highway"]["footway"] = Foot;
+    data.dir_modifiers["highway"]["steps"] = Foot; 
+    data.dir_modifiers["pedestrians"]["yes"] = Foot;
+    data.dir_modifiers["foot"]["yes"] = Foot;
+    data.dir_modifiers["foot"]["designated"] = Foot;
 
+    // For bikes
+    data.dir_modifiers["highway"]["cycleway"] = Bike;
+    data.dir_modifiers["cycleway"]["lane"] = Bike;
+    data.dir_modifiers["cycleway"]["track"] = Bike;
+    data.dir_modifiers["cycleway"]["share_busway"] = Bike;
+    data.dir_modifiers["cycleway"]["yes"] = Bike;
+    data.dir_modifiers["cycle"]["yes"] = Bike;
+    data.dir_modifiers["busway"]["yes"] = Bike;
+    data.dir_modifiers["busway"]["track"] = Bike;
 
-    // Accessible qu'au cyclistes
-    data.dir_modifiers["highway"]["cycleway"] = Direction_modifier(OR,Bike); // 00110
-    // Accessible aussi aux cylistes
-    data.dir_modifiers["cycleway"]["lane"] = Direction_modifier(OR,Bike);
-    data.dir_modifiers["cycleway"]["track"] = Direction_modifier(OR,Bike);
-    data.dir_modifiers["cycleway"]["share_busway"] = Direction_modifier(OR,Bike);
-    data.dir_modifiers["cycleway"]["yes"] = Direction_modifier(OR,Bike);
-    data.dir_modifiers["cycle"]["yes"] = Direction_modifier(OR,Bike);
-    data.dir_modifiers["busway"]["yes"] = Direction_modifier(OR,Bike);
-    data.dir_modifiers["busway"]["track"] = Direction_modifier(OR,Bike);
-    // Vélos accessibles en contre-sens
-    data.dir_modifiers["cycleway"]["oposite_lane"] = Direction_modifier(OR,Opposite_bike); // 00010
-    data.dir_modifiers["cycleway"]["oposite"] = Direction_modifier(OR,Opposite_bike); // 00010
-    data.dir_modifiers["cycleway"]["oposite_track"] = Direction_modifier(OR,Opposite_bike); // 00010
-    data.dir_modifiers["busway"]["oposite_lane"] = Direction_modifier(OR,Opposite_bike); // 00010
+    // Bikes don't care about oneway
+    data.dir_modifiers["cycleway"]["oposite_lane"] = Opposite_bike;
+    data.dir_modifiers["cycleway"]["oposite"] = Opposite_bike;
+    data.dir_modifiers["cycleway"]["oposite_track"] = Opposite_bike;
+    data.dir_modifiers["busway"]["oposite_lane"] = Opposite_bike;
 
-    // Modificateurs qui rendent sens unique
-    data.dir_modifiers["junction"]["roundabout"] = Direction_modifier(OR,Oneway); //10101
-    data.dir_modifiers["oneway"]["yes"] = Direction_modifier(OR,Oneway); //10101
-    data.dir_modifiers["oneway"]["true"] = Direction_modifier(OR,Oneway); //10101
+    // Oneway
+    data.dir_modifiers["junction"]["roundabout"] = Oneway;
+    data.dir_modifiers["oneway"]["yes"] = Oneway;
+    data.dir_modifiers["oneway"]["true"] = Oneway;
+
+    // It's a subway!
+    data.dir_modifiers["railway"]["subway"] = Subway;
 
     data.ways_count = 0;
     //==================== STEP 1 =======================//
@@ -332,7 +344,7 @@ main(int argc, char** argv)
     XML_SetUserData(parser2, &data);
 
     if(sqlite3_prepare_v2(data.db,
-                "INSERT INTO links(source, target, geom, bike, bike_r, car, car_r, foot, length) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO links(source, target, geom, bike, bike_r, car, car_r, foot, subway, length) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 -1,
                 &data.stmt,
                 NULL))
@@ -391,7 +403,7 @@ main(int argc, char** argv)
                 cout << "\r[" << setfill('=') << setw(advance) << ">" <<setfill(' ') << setw(51-advance) << "]" << flush;
                 next_step += step;
             }
-            if((*i).second.inserted && (*i).second.uses > 1)
+            if( (*i).second.inserted )
             {
                 sqlite3_bind_int64(data.stmt, 1, (*i).first);
                 sqlite3_bind_double(data.stmt, 2, (*i).second.lon);
