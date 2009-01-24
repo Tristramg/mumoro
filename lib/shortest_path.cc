@@ -96,6 +96,33 @@ namespace Mumoro
             return false;
     }
 
+    bool add_direct(sqlite3_stmt * stmt, Transport_mode m)
+    {
+       switch(m)
+       {
+           case Car: return (sqlite3_column_int(stmt, 6) != 0); break;
+           case Bike: return (sqlite3_column_int(stmt,4) != 0); break;
+           case Foot: return (sqlite3_column_int(stmt,3) != 0); break;
+           case Subway: return (sqlite3_column_int(stmt,7) != 0); break;
+           default: return false;
+       }
+    }
+
+    bool add_reverse(sqlite3_stmt * stmt, Transport_mode m)
+    {
+       switch(m)
+       {
+           case Car: return (sqlite3_column_int(stmt, 7) != 0); break;
+           case Bike: return (sqlite3_column_int(stmt,5) ); break;
+           case Foot: return (sqlite3_column_int(stmt,4) != 0); break;
+           case Subway: return (sqlite3_column_int(stmt,8) != 0); break;
+           default: return false;
+       }
+    }
+
+
+
+
     int Shortest_path::node_internal_id_or_add(uint64_t node_id)
     {
         std::map<uint64_t, int>::const_iterator it = foot_map.find(node_id);
@@ -145,8 +172,6 @@ std::back_insert_iterator<std::vector<Edge_property> > ii(edge_prop);
         source = node_internal_id_or_add(sqlite3_column_int64(stmt, 0)); 
         target = node_internal_id_or_add(sqlite3_column_int64(stmt, 1)); 
 
-
- 
         prop.length = FunctionPtr(new Const_cost(cost / foot_speed));
         prop.first = source;
         prop.second = target;
