@@ -1,0 +1,8 @@
+CMakeCache.txt
+Makefile
+CMakeFiles/
+cmake_install.cmake
+tools/osm2mumoro
+lib/libshortestpath.a
+ui/gui/moc_object.cxx
+ui/gui/mumoro
