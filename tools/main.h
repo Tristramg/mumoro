@@ -29,7 +29,7 @@
 #include <sqlite3.h>
 #include <sstream>
 #ifndef _MAIN_H
-#define	_MAIN_H
+#define _MAIN_H
 
 const unsigned short Foot = 0x01,
       Bike = 0x02,
@@ -54,27 +54,10 @@ struct Node
 
 typedef __gnu_cxx::hash_map<uint64_t, Node, std::tr1::hash<uint64_t> > NodeMapType;
 
-struct Parse_data
-{
-    uint64_t source_id;
-    uint64_t prev_id;
-    Node * source;
-    Node * prev;
-    std::stringstream geom;
-    NodeMapType nodes;
-    uint64_t ways_count;
-    int link_length;
-    uint64_t ways_progress;
-    std::bitset<6> directions;
-    std::list<boost::tuple<uint64_t, uint64_t, Node*, Node*, std::string, double> > links;
-    std::map<std::string, std::map<std::string, unsigned short> > dir_modifiers ;
-    double length;
-    double prev_lon;
-    double prev_lat;
-    sqlite3 *db;
-    sqlite3_stmt *stmt;
-     std::map<std::string, std::string> tag;
-};
 
-#endif	/* _MAIN_H */
+typedef std::map<std::string, std::map<std::string, unsigned short> > Dir_params ;
+
+Dir_params get_dir_params();
+
+#endif /* _MAIN_H */
 

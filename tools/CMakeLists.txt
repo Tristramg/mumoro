@@ -8,5 +8,5 @@ INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR} ${SQL_INCLUDE_DIR})
 
 ADD_DEFINITIONS(-O3 -Wall -pedantic )
 
-ADD_EXECUTABLE(osm2mumoro main.cc)
+ADD_EXECUTABLE(osm2mumoro main.cc parameters.cc)
 TARGET_LINK_LIBRARIES(osm2mumoro ${Boost} ${SQL} ${EXPAT})
