@@ -40,15 +40,16 @@ const unsigned short Foot = 0x01,
 
 struct Node
 {
+    uint64_t id;
     double lon;
     double lat;
     ushort uses;
     bool inserted;
 
-    Node() : lon(0), lat(0), uses(0), inserted(false) {};
+    Node() : inserted(false) {};
 
-    Node(double _lon, double _lat) :
-        lon(_lon), lat(_lat), uses(0), inserted(false)
+    Node(double _lon, double _lat, uint64_t _id) :
+        id(_id), lon(_lon), lat(_lat), inserted(false)
     {};
 };
 

@@ -21,7 +21,6 @@
 using namespace std;
 using namespace boost;
 
-uint64_t source_id;
 uint64_t prev_id;
 Node * source;
 Node * prev;
@@ -31,15 +30,14 @@ uint64_t ways_count;
 int link_length;
 uint64_t ways_progress;
 std::bitset<6> directions;
-std::list<boost::tuple<uint64_t, uint64_t, Node*, Node*, std::string, double> > links;
+std::list<boost::tuple<Node*, Node*, std::string, double> > links;
 double length;
-double prev_lon;
-double prev_lat;
 sqlite3 *db;
 sqlite3_stmt *stmt;
 std::map<std::string, std::string> tag;
 Dir_params dir_modifiers;
-
+int nodes_inserted;
+int links_inserted;
 
 double rad(double deg)
 {
@@ -53,12 +51,6 @@ double distance(double lon1, double lat1, double lon2, double lat2)
     return acos( sin( rad(lat1) ) * sin( rad(lat2) ) +
             cos( rad(lat1) ) * cos( rad(lat2) ) * cos( rad(lon2-lon1 ) )
             ) * r;
-}
-
-    char
-bool2char(bool b)
-{
-    return (b?'t':'f');
 }
 
     void
@@ -85,7 +77,7 @@ start(void *dat, const char *el, const char **attr)
             {
                 lon = atof(value);
             }
-            nodes[id] = Node(lon, lat);
+            nodes[id] = Node(lon, lat, id);
             prev_id = id;
         }
     }
@@ -133,31 +125,27 @@ start2(void *dat, const char *el, const char **attr)
         const char* value = *attr++;
         if (strcmp(name, "ref") == 0)
         {
-            prev_id = atoll(value);
-            Node * n = &(nodes[prev_id]);
+            uint64_t id = atoll(value);
+            Node * n = &(nodes[id]);
 
             if(link_length == 0)
             {
-                source = n;// node_id;
-                source_id = prev_id;
+                source = n;
             }
             else
             {
                 geom << ", ";
-                length += distance(prev_lon, prev_lat, n->lon, n->lat);
+                length += distance(prev->lon, prev->lat, n->lon, n->lat);
             }
 
             geom << n->lon << " " << n->lat;
-            prev_lon = n->lon;
-            prev_lat = n->lat;
             prev = n;
             link_length++;
 
             if(n->uses > 1 && link_length > 1)
             {
-                links.push_back(make_tuple(source_id, prev_id, source, n, geom.str(), length));
+                links.push_back(make_tuple(source, n, geom.str(), length));
                 source = n;
-                source_id = prev_id;
                 length = 0;
 
                 geom.str("");
@@ -208,26 +196,26 @@ end2(void *dat, const char *el)
         cout << "\r[" << setfill('=') << setw(advance) << ">" <<setfill(' ') << setw(50-advance) << "] " << flush;
         if(link_length >= 2)       
         {
-            links.push_back(make_tuple(source_id, prev_id, source, prev, geom.str(), length));
+            links.push_back(make_tuple(source, prev, geom.str(), length));
         }
 
         if(directions != 0)
         {
-            list<tuple<uint64_t, uint64_t, Node*, Node*, string, double> >::iterator it;
+            list<tuple<Node*, Node*, string, double> >::iterator it;
             for(it = links.begin(); it != links.end(); it++)
             {
-                get<2>(*it)->inserted = true;
-                get<3>(*it)->inserted = true;
-                sqlite3_bind_int64(stmt, 1, get<0>(*it));
-                sqlite3_bind_int64(stmt, 2, get<1>(*it));
-                sqlite3_bind_text(stmt, 3, get<4>(*it).c_str(), -1, SQLITE_STATIC);
+                get<0>(*it)->inserted = true;
+                get<1>(*it)->inserted = true;
+                sqlite3_bind_int64(stmt, 1, get<0>(*it)->id);
+                sqlite3_bind_int64(stmt, 2, get<1>(*it)->id);
+                sqlite3_bind_text(stmt, 3, get<2>(*it).c_str(), -1, SQLITE_STATIC);
                 sqlite3_bind_int(stmt, 4, directions.test(1));
                 sqlite3_bind_int(stmt, 5, (!directions.test(3) || directions.test(4)));
                 sqlite3_bind_int(stmt, 6, (directions.test(2)));
                 sqlite3_bind_int(stmt, 7, (!directions.test(3)));
                 sqlite3_bind_int(stmt, 8, (directions.test(0)));
                 sqlite3_bind_int(stmt, 9, (directions.test(5)));
-                sqlite3_bind_double(stmt, 10, get<5>(*it));
+                sqlite3_bind_double(stmt, 10, get<3>(*it));
                 if(sqlite3_step(stmt) != SQLITE_DONE)
                 {
                     cerr << "Unable to insert link "
@@ -235,6 +223,7 @@ end2(void *dat, const char *el)
                     exit(EXIT_FAILURE);
                 }
                 sqlite3_reset(stmt);
+                links_inserted++;
             }
         }
         links.clear();
@@ -252,19 +241,18 @@ main(int argc, char** argv)
     dir_modifiers = get_dir_params();
     if (argc != 3)
     {
-        cout << "Usage : " << argv[0] << " in_database.osm out_database" << endl;
+        cout << "Usage: " << argv[0] << " in_database.osm out_database" << endl;
         return (EXIT_FAILURE);
     }
 
-    directions = 0x00;
     sqlite3_open(argv[2], &db);
 
+    // We make sure the database is as we want it
     sqlite3_exec(db, "DROP TABLE nodes", NULL, NULL, NULL);
     sqlite3_exec(db, "DROP TABLE links", NULL, NULL, NULL);
     sqlite3_exec(db, "CREATE TABLE links(id int primary key, source int, target int, geom text, bike bool, bike_r bool, car bool, car_r bool, foot bool, subway bool, length double)", NULL, NULL, NULL);
     sqlite3_exec(db, "CREATE TABLE nodes(id int primary key, lon double, lat double)", NULL, NULL, NULL);
 
-    ways_count = 0;
     //==================== STEP 1 =======================//
     cout << "Step 1: reading the xml file, extracting the Nodes list" << flush;
 
@@ -310,8 +298,7 @@ main(int argc, char** argv)
         exit(EXIT_FAILURE);
     }
     sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
-    link_length = 0;
-    ways_progress = 0;
+
     do // loop over whole file content
     {
         char buf[BUFSIZ];
@@ -331,8 +318,8 @@ main(int argc, char** argv)
     sqlite3_exec(db, "COMMIT TRANSACTION", NULL, NULL, NULL);
     sqlite3_finalize(stmt);
     cout << "DONE!" << endl << endl;
-    //==================== STEP 3 =======================//
 
+    //==================== STEP 3 =======================//
     cout << "Step 3: storing the intersection nodes in the database" << endl;
 
     sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
@@ -357,6 +344,7 @@ main(int argc, char** argv)
             cout << "\r[" << setfill('=') << setw(advance) << ">" <<setfill(' ') << setw(50-advance) << "] " << flush;
             next_step += step;
         }
+
         if( (*i).second.inserted )
         {
             sqlite3_bind_int64(stmt, 1, (*i).first);
@@ -369,13 +357,17 @@ main(int argc, char** argv)
                 exit(EXIT_FAILURE);
             }
             sqlite3_reset(stmt);
-
+            nodes_inserted++;
         }
     }
     sqlite3_finalize(stmt);
     sqlite3_exec(db, "COMMIT TRANSACTION", NULL, NULL, NULL);
     cout << "DONE!" << endl << endl;
 
+    cout << "Nodes in database: " << nodes_inserted << endl;
+    cout << "Links in database: " << links_inserted << endl;
+    cout << "Happy routing! :)" << endl << endl;
+        
     sqlite3_close(db);
     return (EXIT_SUCCESS);
 }
