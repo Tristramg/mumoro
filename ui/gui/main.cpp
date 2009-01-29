@@ -32,7 +32,7 @@ using namespace Mumoro;
 
 
 MyMarble::MyMarble(const char * db, QWidget * w) :
-    MarbleWidget(w), p(db), start_defined(false), end_defined(false) {}
+    MarbleWidget(w), p(db, Mumoro::Foot), start_defined(false), end_defined(false) {}
 
     void  MyMarble::customPaint( GeoPainter *painter ){
 

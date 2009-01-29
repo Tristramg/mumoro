@@ -47,7 +47,8 @@ namespace Mumoro
     struct Edge_property
     {
         int link_id; /**< identifiant du chaînon dans la base */
-        FunctionPtr length; /**< longeur du chaînon : critère à minimiser */
+        FunctionPtr cost; /**< cost function on the edge */
+        double length; /**< length of the link in meters */
         unsigned int first; /**< Identifiant du nœud de départ renuméroté */
         unsigned int second; /**< Identifiant du nœud d'arrivée renuméroté */
         Transport_mode mode; /**< What mean of transport does this link belongs to */

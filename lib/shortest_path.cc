@@ -51,7 +51,7 @@ namespace Mumoro
         if ( today_opening.contains(current) || yesterday_opening.contains(current) )
             return in + m_cost;
         else
-          return in + m_cost + (today_opening.end() - current).total_seconds();
+            return in + m_cost + (today_opening.end() - current).total_seconds();
     }
 
     struct Combine_distance
@@ -98,29 +98,45 @@ namespace Mumoro
 
     bool add_direct(sqlite3_stmt * stmt, Transport_mode m)
     {
-       switch(m)
-       {
-           case Car: return (sqlite3_column_int(stmt, 6) != 0); break;
-           case Bike: return (sqlite3_column_int(stmt,4) != 0); break;
-           case Foot: return (sqlite3_column_int(stmt,3) != 0); break;
-           case Subway: return (sqlite3_column_int(stmt,7) != 0); break;
-           default: return false;
-       }
+        switch(m)
+        {
+            case Car: return (sqlite3_column_int(stmt, 6) != 0); break;
+            case Bike: return (sqlite3_column_int(stmt,4) != 0); break;
+            case Foot: return (sqlite3_column_int(stmt,3) != 0); break;
+            case Subway: return (sqlite3_column_int(stmt,7) != 0); break;
+            default: return false;
+        }
     }
 
     bool add_reverse(sqlite3_stmt * stmt, Transport_mode m)
     {
-       switch(m)
-       {
-           case Car: return (sqlite3_column_int(stmt, 7) != 0); break;
-           case Bike: return (sqlite3_column_int(stmt,5) ); break;
-           case Foot: return (sqlite3_column_int(stmt,4) != 0); break;
-           case Subway: return (sqlite3_column_int(stmt,8) != 0); break;
-           default: return false;
-       }
+        switch(m)
+        {
+            case Car: return (sqlite3_column_int(stmt, 7) != 0); break;
+            case Bike: return (sqlite3_column_int(stmt,5) != 0); break;
+            case Foot: return (sqlite3_column_int(stmt,4) != 0); break;
+            case Subway: return (sqlite3_column_int(stmt,8) != 0); break;
+            default: return false;
+        }
     }
 
+    FunctionPtr direct_cost(sqlite3_stmt * stmt, Transport_mode m)
+    {
+        double length = sqlite3_column_double(stmt, 2);
+        switch(m)
+        {
+            case Car: return FunctionPtr( new Const_cost(length / car_speed) ); break;
+            case Bike: return FunctionPtr( new Const_cost(length / bike_speed) ); break;
+            case Foot: return FunctionPtr( new Const_cost(length / foot_speed) ); break;
+            case Subway: return FunctionPtr( new Const_cost(length / subway_speed) ); break;
+            default: return FunctionPtr( new Const_cost(INFINITY) ); 
+        }
+    }
 
+    FunctionPtr reverse_cost(sqlite3_stmt * stmt, Transport_mode m)
+    {
+        return direct_cost(stmt, m);
+    }
 
 
     int Shortest_path::node_internal_id_or_add(uint64_t node_id)
@@ -137,7 +153,7 @@ namespace Mumoro
             return (*it).second;
         }
     }
-    
+
     int Shortest_path::node_internal_id(uint64_t node_id)
     {
         std::map<uint64_t, int>::const_iterator it = foot_map.find(node_id);
@@ -159,38 +175,46 @@ namespace Mumoro
 
         sqlite3_prepare_v2(db, "select source, target, length, foot, bike, bike_r, car, car_r, subway from links", -1, &stmt, NULL);
 
-       std::vector<Edge_property> edge_prop;
-        double cost;
+        std::vector<Edge_property> edge_prop;
         uint64_t source, target;
         Edge_property prop;
 
-std::back_insert_iterator<std::vector<Edge_property> > ii(edge_prop);
+        std::back_insert_iterator<std::vector<Edge_property> > ii(edge_prop);
 
-    while(sqlite3_step(stmt) == SQLITE_ROW)
-    {
-        cost = sqlite3_column_double(stmt,2);
-        source = node_internal_id_or_add(sqlite3_column_int64(stmt, 0)); 
-        target = node_internal_id_or_add(sqlite3_column_int64(stmt, 1)); 
+        while(sqlite3_step(stmt) == SQLITE_ROW)
+        {
+            double length = sqlite3_column_double(stmt,2);
+            source = node_internal_id_or_add(sqlite3_column_int64(stmt, 0)); 
+            target = node_internal_id_or_add(sqlite3_column_int64(stmt, 1)); 
 
-        prop.length = FunctionPtr(new Const_cost(cost / foot_speed));
-        prop.first = source;
-        prop.second = target;
-        prop.mode = Foot;
-        *ii++ = prop;
-        prop.length = FunctionPtr(new Const_cost(cost / foot_speed));
-        prop.first = target;
-        prop.second = source;
-        prop.mode = Foot;
-        *ii++ = prop;
-    }
+            if( add_direct(stmt, m) )
+            {
+                prop.length = length;
+                prop.cost = direct_cost(stmt, m);
+                prop.first = source;
+                prop.second = target;
+                prop.mode = m;
+                *ii++ = prop;
+            }
 
-    sort(edge_prop.begin(), edge_prop.end());
+            if( add_reverse(stmt, m) )
+            {
+                prop.length = length;
+                prop.cost = reverse_cost(stmt, m);
+                prop.first = target;
+                prop.second = source;
+                prop.mode = m;
+                *ii++ = prop;
+            }
+        }
 
-    std::cout << "# Going to create the graph" << std::endl;
-    cg = CGraph(edge_prop.begin(), edge_prop.end(), edge_prop.begin(), node_count, edge_prop.size());
+        sort(edge_prop.begin(), edge_prop.end());
 
-    std::cout << "# Number of nodes: " << boost::num_vertices(cg) << ", nombre d'arcs : " << boost::num_edges(cg) << std::endl;
-    std::cout << "# Loading the graph done " << std::endl;
+        std::cout << "# Going to create the graph" << std::endl;
+        cg = CGraph(edge_prop.begin(), edge_prop.end(), edge_prop.begin(), node_count, edge_prop.size());
+
+        std::cout << "# Number of nodes: " << boost::num_vertices(cg) << ", nombre d'arcs : " << boost::num_edges(cg) << std::endl;
+        std::cout << "# Loading the graph done " << std::endl;
     }
 
     Shortest_path::Shortest_path(const char * db, Transport_mode m) :
@@ -217,7 +241,7 @@ std::back_insert_iterator<std::vector<Edge_property> > ii(edge_prop);
             boost::dijkstra_shortest_paths(cg, start_idx,
                     boost::predecessor_map(&p[0])
                     .distance_map(&d[0])
-                    .weight_map(get(&Edge_property::length, cg))
+                    .weight_map(get(&Edge_property::cost, cg))
                     .visitor(dijkstra_goal_visitor(end_idx))
                     .distance_combine(Combine_distance())
                     .distance_zero(timestamp)

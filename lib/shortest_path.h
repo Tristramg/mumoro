@@ -62,11 +62,12 @@ namespace Mumoro
     const double foot_speed = 1; /**< in m/s, almost 4km/h */
     const double bike_speed = 4; /**< in m/s, arround 15km/h */
     const double car_speed = 8; /**< in m/s, arround 30km/h */
+    const double subway_speed = 9;
 
     bool add_direct(sqlite3_stmt *, Transport_mode);
     bool add_reverse(sqlite3_stmt *, Transport_mode);
-    double direct_cost(sqlite3_stmt *, Transport_mode);
-    double reverse_coust(sqlite3_stmt *, Transport_mode);
+    FunctionPtr direct_cost(sqlite3_stmt *, Transport_mode);
+    FunctionPtr reverse_coust(sqlite3_stmt *, Transport_mode);
     /**
      * Classe permettant de calculer à proprement parler le plus court chemin
      */
