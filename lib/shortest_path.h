@@ -30,8 +30,14 @@
 namespace Mumoro
 {
     /** Describes a node */
-    struct Node
+    class Node
     {
+        public:
+        /** Builds a node from a given id
+         *
+         * \throw Node_not_found()
+         */
+        Node(uint64_t id);
         uint64_t id; /**< id of the node */
         double lon; /**< longitude in decimal degrees */
         double lat; /**< latitude in decimal degrees */
@@ -79,7 +85,6 @@ namespace Mumoro
         int node_count; /**< Nombre total de nœuds dans le graphe */
 
         sqlite3 * db;
-        sqlite3_stmt * node_stmt;
 
         /**
          * Initialise le graphe
@@ -120,26 +125,15 @@ namespace Mumoro
          */
         Node match(double lon, double lat);
 
-        /** Returns the coordinates of a node
-         *
-         * \throw Node_not_found()
-         * If the given node id isn't found in the database
-         */
-        std::pair<double, double> node_lon_lat(uint64_t node_id);
-        
 
         /** Returns the number of nodes */
         int nodes() const;
 
-        /** Calcule le plus court chemin entre deux nœuds
-         * Retourne la liste des link_id à emprunter
-    g    * 
-         * Dans le cas où des chaînons sont marqués comme forcés, le chemin employé est celui de proche en proche
-         * (sans aucune preuve d'optimialité
+        /** Calculates the shortest path between start and end at a given time
+         *
+         * Returns a list of path elements
          */
-        std::list<int> compute(int start, int end, int start_time = 3600);
-
-        std::list<std::pair<double, double> > compute_lon_lat(int, int);
+        std::list<Path_elt> compute(uint64_t start, uint64_t end, int start_time = 3600);
     };
 }
 

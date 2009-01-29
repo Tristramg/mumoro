@@ -171,12 +171,9 @@ namespace Mumoro
         sqlite3_stmt * stmt;
         sqlite3_open(db_file, &db);
 
-        sqlite3_prepare_v2(db, "SELECT lon,lat FROM nodes WHERE id = ?", -1, &node_stmt, NULL);
-
         sqlite3_prepare_v2(db, "select source, target, length, foot, bike, bike_r, car, car_r, subway from links", -1, &stmt, NULL);
 
         std::vector<Edge_property> edge_prop;
-        uint64_t source, target;
         Edge_property prop;
 
         std::back_insert_iterator<std::vector<Edge_property> > ii(edge_prop);
@@ -184,8 +181,8 @@ namespace Mumoro
         while(sqlite3_step(stmt) == SQLITE_ROW)
         {
             double length = sqlite3_column_double(stmt,2);
-            source = node_internal_id_or_add(sqlite3_column_int64(stmt, 0)); 
-            target = node_internal_id_or_add(sqlite3_column_int64(stmt, 1)); 
+            int source = node_internal_id_or_add(sqlite3_column_int64(stmt, 0)); 
+            int target = node_internal_id_or_add(sqlite3_column_int64(stmt, 1)); 
 
             if( add_direct(stmt, m) )
             {
@@ -217,14 +214,14 @@ namespace Mumoro
         std::cout << "# Loading the graph done " << std::endl;
     }
 
-    Shortest_path::Shortest_path(const char * db, Transport_mode m) :
-        node_count(0)     {
-            init(db, m);
-        }
-
-    std::list<int> Shortest_path::compute(int start, int end, int start_time)
+    Shortest_path::Shortest_path(const char * db, Transport_mode m)
     {
-        std::list<int> path;
+        init(db, m);
+    }
+
+    std::list<Path_elt> Shortest_path::compute(uint64_t start, uint64_t end, int start_time)
+    {
+        std::list<Path_elt> path;
 
         std::vector<cvertex> p(boost::num_vertices(cg));
         std::vector<double> d(boost::num_vertices(cg));
@@ -252,13 +249,15 @@ namespace Mumoro
         }
         if (p[end_idx] == end_idx)
             std::cerr << "No predecessor found for " << end_idx << std::endl;
-        path.push_front(end_idx);
+        //path.push_front(end_idx);
         while (p[end_idx] != end_idx)
         {
-            // cedge cur_edge = boost::edge(p[end_idx], end_idx, cg).first;
+            cedge cur_edge = boost::edge(p[end_idx], end_idx, cg).first;
+            Path_elt el;
+            
             //path.push_front(std::pair<int,int>(cg[cur_edge].link_id, cg[cur_edge].mode));
             end_idx = p[end_idx];
-            path.push_front(end_idx);
+            //path.push_front(end_idx);
         }
         return path;
     }
@@ -272,25 +271,6 @@ namespace Mumoro
     {
     }
 
-    std::list<std::pair<double, double> >Shortest_path::compute_lon_lat(int s, int e)
-    {
-        std::list<int> n = compute(s,e);
-        std::list<std::pair<double, double> > nodes;
-        std::list<int>::iterator i;
-        for(i = n.begin(); i != n.end(); i++)
-            nodes.push_back(node_lon_lat(rev_map[*i]));
-        return nodes;
-    }
-
-    std::pair<double, double> Shortest_path::node_lon_lat(uint64_t node_id)
-    {
-        sqlite3_reset(node_stmt);
-        sqlite3_bind_int64(node_stmt, 1, node_id);
-        sqlite3_step(node_stmt);
-        return std::pair<double,double>(
-                sqlite3_column_double(node_stmt, 0),
-                sqlite3_column_double(node_stmt, 1));
-    }
     Node Shortest_path::match(double lon, double lat)
     {
         float tol = 0.002;
