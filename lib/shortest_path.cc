@@ -145,7 +145,6 @@ namespace Mumoro
         if (it == foot_map.end())
         {
             foot_map[node_id] = node_count++;
-            rev_map[node_count-1] = node_id;
             return (node_count - 1);
         }
         else
@@ -168,6 +167,7 @@ namespace Mumoro
 
     void Shortest_path::init(const char * db_file, Transport_mode m)
     {
+        node_count = 0;
         sqlite3_stmt * stmt;
         sqlite3_open(db_file, &db);
 
@@ -211,7 +211,35 @@ namespace Mumoro
         cg = CGraph(edge_prop.begin(), edge_prop.end(), edge_prop.begin(), node_count, edge_prop.size());
 
         std::cout << "# Number of nodes: " << boost::num_vertices(cg) << ", nombre d'arcs : " << boost::num_edges(cg) << std::endl;
+
+        sqlite3_prepare_v2(db, "SELECT lon, lat from nodes WHERE id=?",
+                -1, &get_node_stmt, NULL);
+        std::map<uint64_t, int>::const_iterator nodes_it;
+        for( nodes_it = foot_map.begin(); nodes_it != foot_map.end(); nodes_it++ )
+        {
+            sqlite3_reset(get_node_stmt);
+            sqlite3_bind_int64(get_node_stmt, 1, (*nodes_it).first);
+            if(sqlite3_step(get_node_stmt) != SQLITE_ROW)
+                {
+                    std::cerr << "Unable to insert link "
+                        << "Error " << sqlite3_errcode(db) << ": " << sqlite3_errmsg(db) << std::endl;
+                    exit(EXIT_FAILURE);
+                };
+            cg[(*nodes_it).second].id = (*nodes_it).first;
+            cg[(*nodes_it).second].lon = sqlite3_column_double(get_node_stmt, 0);
+            cg[(*nodes_it).second].lat = sqlite3_column_double(get_node_stmt, 1);
+        }
+
         std::cout << "# Loading the graph done " << std::endl;
+
+        std::stringstream q;
+        q << "SELECT id, lon, lat FROM nodes WHERE"
+            << " lon > ? AND lon < ? "
+            << " AND lat > ? AND lat < ? "
+            << " ORDER BY abs(lon - ?)"
+            << " + abs(lat - ?)";
+        sqlite3_prepare_v2(db, q.str().c_str(), -1, &match_stmt, NULL);
+
     }
 
     Shortest_path::Shortest_path(const char * db, Transport_mode m)
@@ -254,10 +282,14 @@ namespace Mumoro
         {
             cedge cur_edge = boost::edge(p[end_idx], end_idx, cg).first;
             Path_elt el;
+            el.source = cg[p[end_idx]];
+            el.target = cg[end_idx];
+            el.length = cg[cur_edge].length;
+            el.duration = d[end_idx] - d[p[end_idx]];
+            el.mode = cg[cur_edge].mode;
             
-            //path.push_front(std::pair<int,int>(cg[cur_edge].link_id, cg[cur_edge].mode));
+            path.push_front(el);
             end_idx = p[end_idx];
-            //path.push_front(end_idx);
         }
         return path;
     }
@@ -274,25 +306,21 @@ namespace Mumoro
     Node Shortest_path::match(double lon, double lat)
     {
         float tol = 0.002;
-        std::stringstream q;
-        q << "SELECT id, lon, lat FROM nodes WHERE lon > " << lon - tol 
-            << " AND lon < " << lon + tol
-            << " AND lat > " << lat - tol
-            << " AND lat < " << lat + tol
-            << " ORDER BY abs(lon - " << lon << ")"
-            << " + abs(lat - " << lat << ")";
-        sqlite3_stmt * stmt;
-        sqlite3_prepare_v2(db, q.str().c_str(), -1, &stmt, NULL);
         Node ret;
-        if(sqlite3_step(stmt) != SQLITE_ROW)
+        sqlite3_reset(match_stmt);
+        sqlite3_bind_double(match_stmt, 1, lon - tol);
+        sqlite3_bind_double(match_stmt, 2, lon + tol);
+        sqlite3_bind_double(match_stmt, 3, lat - tol);
+        sqlite3_bind_double(match_stmt, 4, lat + tol);
+        if(sqlite3_step(match_stmt) != SQLITE_ROW)
         {
             throw Node_not_found();
         }
         else
         {
-            ret.id = sqlite3_column_int64(stmt, 0);
-            ret.lon = sqlite3_column_double(stmt, 1);
-            ret.lat = sqlite3_column_double(stmt, 2);
+            ret.id = sqlite3_column_int64(match_stmt, 0);
+            ret.lon = sqlite3_column_double(match_stmt, 1);
+            ret.lat = sqlite3_column_double(match_stmt, 2);
             return ret;
         }
     }

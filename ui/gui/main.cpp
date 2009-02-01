@@ -58,13 +58,13 @@ MyMarble::MyMarble(const char * db, QWidget * w) :
             painter->drawAnnotation (s, "End", QSize(80, 50), 10, 30, 15, 15 );
         }
         painter->setPen( QColor( 255, 0, 0 ) );
-        std::list<std::pair<double,double> >::const_iterator i = path.begin();
+        std::list<Mumoro::Path_elt>::const_iterator i = path.begin();
         GeoDataLineString l;
         for(i = path.begin(); i != path.end(); i++)
         {
-            l.append( new GeoDataCoordinates( (*i).first, (*i).second, 0,
-                        GeoDataCoordinates::Degree));
-
+            l.append( new GeoDataCoordinates( (*i).source.lon,
+                        (*i).source.lat, 0,
+                        GeoDataCoordinates::Degree) );
         }
         painter->drawPolyline(l);
     }
@@ -106,7 +106,7 @@ void MyMarble::mouseClickGeoPosition(qreal lon ,qreal lat,GeoDataCoordinates::Un
             
             qDebug() << "start" << start.id<<start.lon<<start.lon;
             qDebug() << "end" << end.id<<end.lon<<end.lon;
-            path = p.compute_lon_lat(start.id, end.id);
+            path = p.compute(start.id, end.id);
             qDebug() << "Computed path of size: " << path.size();
         }
     }

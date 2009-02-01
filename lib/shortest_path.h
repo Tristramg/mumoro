@@ -29,20 +29,6 @@
 
 namespace Mumoro
 {
-    /** Describes a node */
-    class Node
-    {
-        public:
-        /** Builds a node from a given id
-         *
-         * \throw Node_not_found()
-         */
-        Node(uint64_t id);
-        uint64_t id; /**< id of the node */
-        double lon; /**< longitude in decimal degrees */
-        double lat; /**< latitude in decimal degrees */
-    };
-
     /** Describes a step in a path
      * 
      * It is usualy an arc in the network (between two consecutive bus stops
@@ -81,10 +67,12 @@ namespace Mumoro
     {
         CGraph cg; /**< Graphe qui est généré à la construction de l'instance */
         std::map<uint64_t, int> foot_map; /**< Conversion entre les identifiants des nœuds de la base de données et les identifiants renumérotés */
-        std::map<int, uint64_t> rev_map;
         int node_count; /**< Nombre total de nœuds dans le graphe */
 
         sqlite3 * db;
+        sqlite3_stmt * insert_node_stmt;
+        sqlite3_stmt * get_node_stmt;
+        sqlite3_stmt * match_stmt;
 
         /**
          * Initialise le graphe

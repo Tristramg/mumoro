@@ -56,11 +56,16 @@ namespace Mumoro
         bool operator<(Edge_property e) const;
     };
 
-    struct Vertex_property
+    /** Describes a node */
+    class Node
     {
+        public:
+            uint64_t id; /**< id of the node */
+            double lon; /**< longitude in decimal degrees */
+            double lat; /**< latitude in decimal degrees */
     };
 
-    /** Défini les caractéristiques du graphe :
+     /** Défini les caractéristiques du graphe :
      * — forme compacte pour optimiser les performances (contre-partie : contruction plus délicate)
      * — graphe orienté
      * — caractéristiques des nœuds sont Vertex_property
@@ -69,7 +74,7 @@ namespace Mumoro
      * Le graphe doit être construit en fournissant une liste ordonnée lexicalement de couples de nœuds <dépat,arrivée>
      * Les idenfiants des nœuds doivent nécessairement commencer à 0 et former une séquence
      */
-    typedef boost::compressed_sparse_row_graph<boost::directedS, Vertex_property, Edge_property > CGraph;
+    typedef boost::compressed_sparse_row_graph<boost::directedS, Node, Edge_property > CGraph;
 
     /** Définit un nœud du graphe */
     typedef boost::graph_traits<CGraph>::vertex_descriptor cvertex;
