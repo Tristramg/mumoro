@@ -57,16 +57,20 @@ MyMarble::MyMarble(const char * db, QWidget * w) :
             GeoDataPoint s(end.lon, end.lat, 0.0, GeoDataPoint::Degree );
             painter->drawAnnotation (s, "End", QSize(80, 50), 10, 30, 15, 15 );
         }
-        painter->setPen( QColor( 255, 0, 0 ) );
         std::list<Mumoro::Path_elt>::const_iterator i = path.begin();
-        GeoDataLineString l;
         for(i = path.begin(); i != path.end(); i++)
         {
-            l.append( new GeoDataCoordinates( (*i).source.lon,
-                        (*i).source.lat, 0,
-                        GeoDataCoordinates::Degree) );
+            if( (*i).mode == Mumoro::Bike )
+                painter->setPen( QColor( 255, 0, 0 ) );
+            if( (*i).mode == Mumoro::Foot )
+                painter->setPen( QColor( 0, 255, 0 ) );
+            if( (*i).mode == Mumoro::Subway )
+                painter->setPen( QColor( 255, 0, 255 ) );
+
+            painter->drawLine(
+                    GeoDataPoint((*i).source.lon, (*i).source.lat, 0, GeoDataCoordinates::Degree),
+                    GeoDataPoint((*i).target.lon, (*i).target.lat, 0, GeoDataCoordinates::Degree) );
         }
-        painter->drawPolyline(l);
     }
 
 

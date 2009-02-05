@@ -25,7 +25,7 @@ class MyMarble : public MarbleWidget
 {
     Mumoro::Node start, end; 
     Mumoro::Shortest_path p;
-    std::list<std::pair<double,double> > path;
+    std::list<Mumoro::Path_elt> path;
     int click_action;
     enum {NAV, SEL_START, SEL_DEST};
     bool start_defined;
