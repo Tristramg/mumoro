@@ -1,0 +1,24 @@
+# For ubuntu Ibex
+
+# Tools for building
+sudo apt-get install build-essential git-core cmake subversion
+
+# Dependencies
+sudo apt-get libsqlite3-dev libexpat-dev libboost-dev libqt4-dev
+
+# Build marbe
+svn co svn://anonsvn.kde.org/home/kde/trunk/KDE/kdeedu/marble
+cd marble; cmake -DQTONLY=ON .; make; sudo make install; cd ..
+
+
+# Clone the repository
+git clone git://github.com/Tristramg/mumoro.git
+
+# Patch a boost header
+sudo patch /usr/include/boost/graph/dijkstra_shortest_paths.hpp < mumoro/lib/boost_graph.patch
+
+# Build everything
+cd mumoro; cmake .; make;
+
+# Run the application with the given sample file (Toulouse center)
+./ui/gui/mumoro toulouse.mum
