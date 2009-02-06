@@ -98,6 +98,7 @@ namespace Mumoro
          * into the graph and returns its internal id
          */
         int node_internal_id_or_add( uint64_t node_id);
+        int node_internal_id_or_add( uint64_t node_id, std::map<uint64_t, int> &);
 
         /** Internaly, nodes are renumbered.
          * This function returns the internal node id,

@@ -1,21 +1,20 @@
-# For ubuntu Ibex
+## For ubuntu Ibex
+# Thank to the \_o< for testing the instructions
 
 # Tools for building
-sudo apt-get install build-essential git-core cmake subversion
+sudo aptitude -R install build-essential git-core cmake subversion
 
 # Dependencies
-sudo apt-get libsqlite3-dev libexpat-dev libboost-dev libqt4-dev
+sudo aptitude -R libsqlite3-dev libexpat-dev libboost-graph1.35-dev libqt4-dev
 
-# Build marbe
+# Build marble
+# Don't be affraid, you don't need kde
+# libmarble is too old on ibex (+depends on KDE)
 svn co svn://anonsvn.kde.org/home/kde/trunk/KDE/kdeedu/marble
 cd marble; cmake -DQTONLY=ON .; make; sudo make install; cd ..
 
-
 # Clone the repository
 git clone git://github.com/Tristramg/mumoro.git
-
-# Patch a boost header
-sudo patch /usr/include/boost/graph/dijkstra_shortest_paths.hpp < mumoro/lib/boost_graph.patch
 
 # Build everything
 cd mumoro; cmake .; make;

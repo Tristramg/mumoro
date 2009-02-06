@@ -24,8 +24,22 @@ using namespace boost;
 using namespace boost::posix_time;
 using namespace boost::gregorian;
 
+
 namespace Mumoro
 {
+	
+	struct compare
+	{
+		bool operator()(const double & a, const double & b) const
+		{
+			return a < b;
+		}
+		
+		bool operator()(const FunctionPtr &, const double &) const
+		{
+			return false;
+		}
+	};
 
     Const_cost::Const_cost(double cost) : m_cost(cost) {}
 
@@ -139,18 +153,23 @@ namespace Mumoro
     }
 
 
-    int Shortest_path::node_internal_id_or_add(uint64_t node_id)
+    int Shortest_path::node_internal_id_or_add(uint64_t node_id, std::map<uint64_t, int> & m)
     {
-        std::map<uint64_t, int>::const_iterator it = foot_map.find(node_id);
-        if (it == foot_map.end())
+        std::map<uint64_t, int>::const_iterator it = m.find(node_id);
+        if (it == m.end())
         {
-            foot_map[node_id] = node_count++;
+            m[node_id] = node_count++;
             return (node_count - 1);
         }
         else
         {
             return (*it).second;
         }
+    }
+
+    int Shortest_path::node_internal_id_or_add( uint64_t node_id)
+    {
+        return node_internal_id_or_add(node_id, foot_map);
     }
 
     int Shortest_path::node_internal_id(uint64_t node_id)
@@ -205,10 +224,61 @@ namespace Mumoro
             }
         }
 
+        std::map<uint64_t, int> tmp_map;
+        int offset = node_count;
+        node_count = 0;
+        sqlite3_prepare_v2(db, "select source, target, length, foot, bike, bike_r, car, car_r, subway from links", -1, &stmt, NULL);
+        while(sqlite3_step(stmt) == SQLITE_ROW)
+        {
+            double length = sqlite3_column_double(stmt,2);
+            int source = node_internal_id_or_add(sqlite3_column_int64(stmt, 0), tmp_map) + offset; 
+            int target = node_internal_id_or_add(sqlite3_column_int64(stmt, 1), tmp_map) + offset; 
+
+            if( add_direct(stmt, Subway) )
+            {
+                prop.length = length;
+                prop.cost = direct_cost(stmt, m);
+                prop.first = source;
+                prop.second = target;
+                prop.mode = Subway;
+                *ii++ = prop;
+            }
+
+            if( add_reverse(stmt, Subway) )
+            {
+                prop.length = length;
+                prop.cost = reverse_cost(stmt, m);
+                prop.first = target;
+                prop.second = source;
+                prop.mode = Subway;
+                *ii++ = prop;
+            }
+        }
+
+        sqlite3_prepare_v2(db, "SELECT lon, lat from nodes WHERE id=?",
+                -1, &get_node_stmt, NULL);
+        
+        std::map<uint64_t, int>::const_iterator mi;
+        for( mi = tmp_map.begin(); mi != tmp_map.end(); mi++ )
+        {
+            sqlite3_reset(get_node_stmt);
+            sqlite3_bind_int64(get_node_stmt, 1, (*mi).first);
+            if(sqlite3_step(get_node_stmt) != SQLITE_ROW)
+            {
+                std::cerr << "Unable to insert link "
+                    << "Error " << sqlite3_errcode(db) << ": " << sqlite3_errmsg(db) << std::endl;
+                exit(EXIT_FAILURE);
+            };
+            float lon = sqlite3_column_double(get_node_stmt, 0);
+            float lat = sqlite3_column_double(get_node_stmt, 1);
+
+        }
+
         sort(edge_prop.begin(), edge_prop.end());
 
         std::cout << "# Going to create the graph" << std::endl;
-        cg = CGraph(edge_prop.begin(), edge_prop.end(), edge_prop.begin(), node_count, edge_prop.size());
+        cg = CGraph(edge_prop.begin(), edge_prop.end(), edge_prop.begin(), node_count + offset, edge_prop.size());
+        std::cout << "2nd layer = " << node_count << " 1rst layer = " << offset << std::endl;
 
         std::cout << "# Number of nodes: " << boost::num_vertices(cg) << ", nombre d'arcs : " << boost::num_edges(cg) << std::endl;
 
@@ -220,11 +290,11 @@ namespace Mumoro
             sqlite3_reset(get_node_stmt);
             sqlite3_bind_int64(get_node_stmt, 1, (*nodes_it).first);
             if(sqlite3_step(get_node_stmt) != SQLITE_ROW)
-                {
-                    std::cerr << "Unable to insert link "
-                        << "Error " << sqlite3_errcode(db) << ": " << sqlite3_errmsg(db) << std::endl;
-                    exit(EXIT_FAILURE);
-                };
+            {
+                std::cerr << "Unable to insert link "
+                    << "Error " << sqlite3_errcode(db) << ": " << sqlite3_errmsg(db) << std::endl;
+                exit(EXIT_FAILURE);
+            };
             cg[(*nodes_it).second].id = (*nodes_it).first;
             cg[(*nodes_it).second].lon = sqlite3_column_double(get_node_stmt, 0);
             cg[(*nodes_it).second].lat = sqlite3_column_double(get_node_stmt, 1);
@@ -259,7 +329,7 @@ namespace Mumoro
 
         ptime epoch(date(1970, Jan, 1), seconds(0));
         ptime now(day_clock::local_day(), seconds(start_time));
-        int timestamp = (now - epoch).total_seconds();
+        double timestamp = (now - epoch).total_seconds();
 
         try
         {
@@ -270,6 +340,7 @@ namespace Mumoro
                     .visitor(dijkstra_goal_visitor(end_idx))
                     .distance_combine(Combine_distance())
                     .distance_zero(timestamp)
+                    .distance_compare(compare())
                     );
         }
         catch (found_goal fg)
@@ -287,7 +358,7 @@ namespace Mumoro
             el.length = cg[cur_edge].length;
             el.duration = d[end_idx] - d[p[end_idx]];
             el.mode = cg[cur_edge].mode;
-            
+
             path.push_front(el);
             end_idx = p[end_idx];
         }
