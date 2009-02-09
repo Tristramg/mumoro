@@ -193,7 +193,11 @@ int main( int argc, char *argv[] )
         Layer sub = foo.p.add_layer(argv[1], Subway, false);
         std::cout << "Read the subway layer " << std::endl;
 
-        foo.p.connect(foot, sub, FunctionPtr(new Const_cost(30)),  FunctionPtr( new Const_cost(15) ), argv[1], "metroA" );
+        Layer velouse = foo.p.add_layer(argv[1], Bike, false);
+        std::cout << "Added the cycling layer " << std::endl;
+
+        foo.p.connect(foot, sub, FunctionPtr(new Const_cost(200)),  FunctionPtr( new Const_cost(60) ), argv[1], "metroA" );
+        foo.p.connect(foot, velouse, FunctionPtr(new Const_cost(60)),  FunctionPtr( new Const_cost(30) ), argv[1], "velouse" );
         std::cout << "Connected both layers" << std::endl;
 
         foo.p.build();
