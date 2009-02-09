@@ -81,13 +81,14 @@ namespace Mumoro
     class Shortest_path
     {
         CGraph cg; /**< Graphe qui est généré à la construction de l'instance */
-        sqlite3 * db;
-        Layer l;
-
+        
+        std::vector<Layer> layers;
+        std::vector<Edge_property> edge_prop;
         /**
          * Initialise le graphe
          */
         void init(const char *, Transport_mode m);
+        int offset();
 
 
         public:
@@ -110,6 +111,7 @@ namespace Mumoro
          */
         Node match(double lon, double lat);
 
+        Layer add_layer(const char * db, Transport_mode mode, bool acessible);
 
         /** Returns the number of nodes */
         int nodes() const;

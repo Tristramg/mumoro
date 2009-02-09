@@ -203,20 +203,26 @@ namespace Mumoro
         return direct_cost(stmt, m);
     }
 
-    void Shortest_path::init(const char * db_file, Transport_mode m)
+    int Shortest_path::offset()
     {
+        int count = 0;
+        std::vector<Layer>::const_iterator i;
+        for(i = layers.begin(); i != layers.end(); i++)
+            count += (*i).nodes_map.size();
+        return count;
+    }
 
+    Layer Shortest_path::add_layer(const char * db_file, Transport_mode mode, bool acessible)
+    {
+        sqlite3 * db;
         sqlite3_open(db_file, &db);
         sqlite3_stmt * stmt;
         sqlite3_prepare_v2(db, "select source, target, length, foot, bike, bike_r, car, car_r, subway, lon1, lat1, lon2, lat2 from links", -1, &stmt, NULL);
 
-        std::vector<Edge_property> edge_prop;
         Edge_property prop;
+        Layer l(offset());
 
         std::back_insert_iterator<std::vector<Edge_property> > ii(edge_prop);
-
-
-
         while(sqlite3_step(stmt) == SQLITE_ROW)
         {
             double length = sqlite3_column_double(stmt,2);
@@ -229,80 +235,55 @@ namespace Mumoro
             uint64_t sid = sqlite3_column_int64(stmt,0);
             uint64_t tid = sqlite3_column_int64(stmt,1); 
 
-
-            if( add_direct(stmt, m) )
+            if( add_direct(stmt, mode) )
             {
                 int source = l.add_node(sid, lon1, lat1);
                 int target = l.add_node(tid, lon2, lat2);
 
                 prop.length = length;
-                prop.cost = direct_cost(stmt, m);
+                prop.cost = direct_cost(stmt, mode);
                 prop.first = source;
                 prop.second = target;
-                prop.mode = m;
+                prop.mode = mode;
                 *ii++ = prop;
             }
 
-            if( add_reverse(stmt, m) )
+            if( add_reverse(stmt, mode) )
             {
                 int source = l.add_node(sid, lon1, lat1);
                 int target = l.add_node(tid, lon2, lat2);
 
                 prop.length = length;
-                prop.cost = reverse_cost(stmt, m);
+                prop.cost = reverse_cost(stmt, mode);
                 prop.first = target;
                 prop.second = source;
-                prop.mode = m;
+                prop.mode = mode;
                 *ii++ = prop;
             }
         }
+        layers.push_back(l);
+        return l;
+    }
 
+    void Shortest_path::init(const char * db_file, Transport_mode m)
+    {
+        Layer foot = add_layer(db_file, Foot, false);
         std::cout << "Read the first layer" << std::endl;
 
-        Layer sub(l.cnt());
-
-        sqlite3_prepare_v2(db, "select source, target, length, foot, bike, bike_r, car, car_r, subway, lon1, lat1, lon2, lat2 from links", -1, &stmt, NULL);
-        while(sqlite3_step(stmt) == SQLITE_ROW)
-        {
-            double length = sqlite3_column_double(stmt,2);
-
-            double lon1 = sqlite3_column_double(stmt,9);
-            double lat1 = sqlite3_column_double(stmt,10);
-            double lon2 = sqlite3_column_double(stmt,11);
-            double lat2 = sqlite3_column_double(stmt,12);
-
-            uint64_t sid = sqlite3_column_int64(stmt,0);
-            uint64_t tid = sqlite3_column_int64(stmt,1); 
-
-
-            if( add_direct(stmt, Subway) )
-            {
-                int source = sub.add_node(sid, lon1, lat1);
-                int target = sub.add_node(tid, lon2, lat2);
-                std::cout << lon1 <<lat1<<lon2<<lat2<<std::endl;
-
-                prop.length = length;
-                prop.cost = direct_cost(stmt, Subway);
-                prop.first = source;
-                prop.second = target;
-                prop.mode = Subway;
-                *ii++ = prop;
-
-                prop.cost = reverse_cost(stmt, Subway);
-                prop.first = target;
-                prop.second = source;
-                *ii++ = prop;
-            }
-        }
-
+        Layer sub = add_layer(db_file, Subway, false);
         std::cout << "Read the subway layer " << std::endl;
 
+        std::back_insert_iterator<std::vector<Edge_property> > ii(edge_prop);
+        sqlite3 * db;
+        sqlite3_stmt * stmt;
+        sqlite3_open(db_file, &db);
+        Edge_property prop;
         sqlite3_prepare_v2(db, "select lon, lat from metroA", -1, &stmt, NULL);
         while(sqlite3_step(stmt) == SQLITE_ROW)
         {
             double lon = sqlite3_column_double(stmt,0);
             double lat = sqlite3_column_double(stmt,1);
-            int matched = l.match(lon, lat);
+            int matched = foot.match(lon, lat);
             int matched2 = sub.match(lon, lat);
 
             std::cout << "Matched " << matched2 << " to " << matched << std::endl;
@@ -324,18 +305,17 @@ namespace Mumoro
         sort(edge_prop.begin(), edge_prop.end());
 
         std::cout << "# Going to create the graph" << std::endl;
-        cg = CGraph(edge_prop.begin(), edge_prop.end(), edge_prop.begin(), l.cnt() + sub.cnt(), edge_prop.size());
-        std::cout << "2nd layer = " << l.cnt() << " 1rst layer = " << sub.cnt() << std::endl;
+        cg = CGraph(edge_prop.begin(), edge_prop.end(), edge_prop.begin(), offset(), edge_prop.size());
 
         std::cout << "# Number of nodes: " << boost::num_vertices(cg) << ", nombre d'arcs : " << boost::num_edges(cg) << std::endl;
 
         std::map<uint64_t, int>::const_iterator nodes_it;
-        for( nodes_it = l.nodes_map.begin(); nodes_it != l.nodes_map.end(); nodes_it++ )
+        for( nodes_it = foot.nodes_map.begin(); nodes_it != foot.nodes_map.end(); nodes_it++ )
         {
             int id = (*nodes_it).second;
             cg[id].id = (*nodes_it).first;
-            cg[id].lon = l.get(id).lon;
-            cg[id].lat = l.get(id).lat;
+            cg[id].lon = foot.get(id).lon;
+            cg[id].lat = foot.get(id).lat;
         }
 
         for( nodes_it = sub.nodes_map.begin(); nodes_it != sub.nodes_map.end(); nodes_it++ )
@@ -409,8 +389,8 @@ namespace Mumoro
 
     Node Shortest_path::match(double lon, double lat)
     {
-        int id = l.match(lon, lat);
-        return l.get(id);
+        int id = layers[0].match(lon, lat);
+        return layers[0].get(id);
     }
 
 
