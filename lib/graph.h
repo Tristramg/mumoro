@@ -60,7 +60,6 @@ namespace Mumoro
     class Node
     {
         public:
-            Node() : id(-1), lon(0), lat(0) {};
             uint64_t id; /**< id of the node */
             double lon; /**< longitude in decimal degrees */
             double lat; /**< latitude in decimal degrees */

@@ -54,17 +54,15 @@ namespace Mumoro
         Layer(int=0);
         int add_node(uint64_t, double, double);
         int match(double lon, double lat);
-        Node get(int);
+        Node get(int) const;
         int cnt() { return count; }
     };
-
 
     /** Exception thrown when asking for a non existing node */
     struct Node_not_found {}; 
 
     /** Exception thrown when no path is found */
     struct Path_not_found {};
-
 
     const double foot_speed = 1; /**< in m/s, almost 4km/h */
     const double bike_speed = 4; /**< in m/s, arround 15km/h */
@@ -87,22 +85,10 @@ namespace Mumoro
         /**
          * Initialise le graphe
          */
-        void init(const char *, Transport_mode m);
         int offset();
 
-
         public:
-
-        /** Constructeur
-         *
-         * str : string de connection vers la base de cartographie
-         */
-        Shortest_path(const char *, Transport_mode mode = Car);
-
-        /**
-         * Destructeur
-         */
-        ~Shortest_path();
+        void build();
 
         /** Finds the closest node to the given coordiantes
          *
@@ -113,14 +99,14 @@ namespace Mumoro
 
         Layer add_layer(const char * db, Transport_mode mode, bool acessible);
 
-        /** Returns the number of nodes */
-        int nodes() const;
+        void connect(Layer &, Layer &, FunctionPtr, FunctionPtr, const std::string, const std::string); 
+
 
         /** Calculates the shortest path between start and end at a given time
          *
          * Returns a list of path elements
          */
-        std::list<Path_elt> compute(uint64_t start, uint64_t end, int start_time = 3600);
+        std::list<Path_elt> compute(cvertex start_idx, cvertex end_idx, int start_time = 3600);
     };
 }
 

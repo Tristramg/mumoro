@@ -64,7 +64,7 @@ namespace Mumoro
             return best_n + offset;
     }
 
-    Node Layer::get(int id)
+    Node Layer::get(int id) const
     {
         if(id < offset || id >= count + offset)
         {
@@ -102,7 +102,6 @@ namespace Mumoro
     Velouse_cost::Velouse_cost(time_duration opening, time_duration closing, double cost):
         m_opening(opening), m_open_duration(closing), m_cost(cost)
     {
-        //       assert(closing < opening);
     }
 
     double Velouse_cost::operator()(double in) const
@@ -132,11 +131,9 @@ namespace Mumoro
     }; // exception for termination
 
     // visitor that terminates when we find the goal
-
     class dijkstra_goal_visitor : public boost::default_dijkstra_visitor
     {
         public:
-
             dijkstra_goal_visitor(cvertex goal) : m_goal(goal)
         {
         }
@@ -265,43 +262,41 @@ namespace Mumoro
         return l;
     }
 
-    void Shortest_path::init(const char * db_file, Transport_mode m)
+    void Shortest_path::connect(Layer & a, Layer & b, FunctionPtr down, FunctionPtr up, const std::string db_file, const std::string table)
     {
-        Layer foot = add_layer(db_file, Foot, false);
-        std::cout << "Read the first layer" << std::endl;
-
-        Layer sub = add_layer(db_file, Subway, false);
-        std::cout << "Read the subway layer " << std::endl;
-
-        std::back_insert_iterator<std::vector<Edge_property> > ii(edge_prop);
+        std::string q = "SELECT lon, lat FROM ";
+        q += table;
         sqlite3 * db;
         sqlite3_stmt * stmt;
-        sqlite3_open(db_file, &db);
+        sqlite3_open(db_file.c_str(), &db);
         Edge_property prop;
-        sqlite3_prepare_v2(db, "select lon, lat from metroA", -1, &stmt, NULL);
+        sqlite3_prepare_v2(db, q.c_str(), -1, &stmt, NULL);
+
         while(sqlite3_step(stmt) == SQLITE_ROW)
         {
             double lon = sqlite3_column_double(stmt,0);
             double lat = sqlite3_column_double(stmt,1);
-            int matched = foot.match(lon, lat);
-            int matched2 = sub.match(lon, lat);
+            int matched = a.match(lon, lat);
+            int matched2 = b.match(lon, lat);
 
-            std::cout << "Matched " << matched2 << " to " << matched << std::endl;
             prop.length = 0;
-            prop.cost =  FunctionPtr( new Const_cost(30) );
+            prop.cost =  down;
             prop.first = matched2;
             prop.second = matched;
-            prop.mode = Car;
-            *ii++ = prop;
+            prop.mode = Switch;
+            edge_prop.push_back(prop);
 
             prop.first = matched;
-            prop.cost =  FunctionPtr( new Const_cost(15) );
+            prop.cost =  up;
             prop.second = matched2;
-            *ii++ = prop;
+            edge_prop.push_back(prop);
         }
 
-        std::cout << "Connected both layers" << std::endl;
 
+    }
+
+    void Shortest_path::build()
+    {
         sort(edge_prop.begin(), edge_prop.end());
 
         std::cout << "# Going to create the graph" << std::endl;
@@ -309,41 +304,27 @@ namespace Mumoro
 
         std::cout << "# Number of nodes: " << boost::num_vertices(cg) << ", nombre d'arcs : " << boost::num_edges(cg) << std::endl;
 
+        std::vector<Layer>::const_iterator li;
         std::map<uint64_t, int>::const_iterator nodes_it;
-        for( nodes_it = foot.nodes_map.begin(); nodes_it != foot.nodes_map.end(); nodes_it++ )
+        for(li = layers.begin(); li != layers.end(); li++)
         {
-            int id = (*nodes_it).second;
-            cg[id].id = (*nodes_it).first;
-            cg[id].lon = foot.get(id).lon;
-            cg[id].lat = foot.get(id).lat;
-        }
-
-        for( nodes_it = sub.nodes_map.begin(); nodes_it != sub.nodes_map.end(); nodes_it++ )
-        {
-            int id = (*nodes_it).second;
-            cg[id].id = (*nodes_it).first;
-            cg[id].lon = sub.get(id).lon;
-            cg[id].lat = sub.get(id).lat;
-            std::cout << sub.get(id).lon;
+            for( nodes_it = (*li).nodes_map.begin(); nodes_it != (*li).nodes_map.end(); nodes_it++ )
+            {
+                int id = (*nodes_it).second;
+                cg[id].id = (*nodes_it).first;
+                cg[id].lon = (*li).get(id).lon;
+                cg[id].lat = (*li).get(id).lat;
+            }
         }
         std::cout << "# Loading the graph done " << std::endl;
     }
 
-    Shortest_path::Shortest_path(const char * db, Transport_mode m)
-    {
-        init(db, m);
-    }
-
-    std::list<Path_elt> Shortest_path::compute(uint64_t start, uint64_t end, int start_time)
+    std::list<Path_elt> Shortest_path::compute(cvertex start_idx, cvertex end_idx, int start_time)
     {
         std::list<Path_elt> path;
 
         std::vector<cvertex> p(boost::num_vertices(cg));
         std::vector<double> d(boost::num_vertices(cg));
-
-        cvertex start_idx = start;//node_internal_id(start), end_idx = node_internal_id(end);
-        cvertex end_idx = end;
-        std::cout << "Going to calc from " << start << "=" << start_idx << " to " << end << "=" << end_idx << std::endl;
 
         ptime epoch(date(1970, Jan, 1), seconds(0));
         ptime now(day_clock::local_day(), seconds(start_time));
@@ -366,7 +347,7 @@ namespace Mumoro
         }
         if (p[end_idx] == end_idx)
             std::cerr << "No predecessor found for " << end_idx << std::endl;
-        //path.push_front(end_idx);
+
         while (p[end_idx] != end_idx)
         {
             cedge cur_edge = boost::edge(p[end_idx], end_idx, cg).first;
@@ -383,15 +364,9 @@ namespace Mumoro
         return path;
     }
 
-    Shortest_path::~Shortest_path()
-    {
-    }
-
     Node Shortest_path::match(double lon, double lat)
     {
         int id = layers[0].match(lon, lat);
         return layers[0].get(id);
     }
-
-
 }

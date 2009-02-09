@@ -31,8 +31,8 @@ using namespace Marble;
 using namespace Mumoro;
 
 
-MyMarble::MyMarble(const char * db, QWidget * w) :
-    MarbleWidget(w), p(db, Mumoro::Foot), start_defined(false), end_defined(false) {}
+MyMarble::MyMarble(QWidget * w) :
+    MarbleWidget(w), start_defined(false), end_defined(false) {}
 
     void  MyMarble::customPaint( GeoPainter *painter ){
 
@@ -69,7 +69,7 @@ MyMarble::MyMarble(const char * db, QWidget * w) :
                 pen.setColor( QColor( 0, 255, 0 ) );
             if( (*i).mode == Mumoro::Subway )
                 pen.setColor( QColor( 255, 0, 255 ) );
-            if( (*i).mode == Mumoro::Car )
+            if( (*i).mode == Mumoro::Switch )
                 pen.setColor( QColor( 0, 0, 255 ) );
 
             painter->setPen(pen);
@@ -169,7 +169,6 @@ int main( int argc, char *argv[] )
     QPushButton quit( "&Quit" );
     QRadioButton nav( "&Navigate" );
 
-
     QLabel info;
 
     QVBoxLayout left;
@@ -182,11 +181,24 @@ int main( int argc, char *argv[] )
     widg.setLayout( &left );
     dock.setWidget(&widg);
 
-    MyMarble foo( argv[1] );
+    MyMarble foo;
     foo.setMapThemeId( "earth/openstreetmap/openstreetmap.dgml" );
     foo.setDownloadUrl("http://download.kde.org/apps/marble/");
     foo.setShowOverviewMap( false );
     foo.setShowCompass( false );
+
+        Layer foot = foo.p.add_layer(argv[1], Foot, false);
+        std::cout << "Read the first layer" << std::endl;
+
+        Layer sub = foo.p.add_layer(argv[1], Subway, false);
+        std::cout << "Read the subway layer " << std::endl;
+
+        foo.p.connect(foot, sub, FunctionPtr(new Const_cost(30)),  FunctionPtr( new Const_cost(15) ), argv[1], "metroA" );
+        std::cout << "Connected both layers" << std::endl;
+
+        foo.p.build();
+
+
 
     foo.enableInput();
 

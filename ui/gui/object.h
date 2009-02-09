@@ -24,7 +24,6 @@ using namespace Marble;
 class MyMarble : public MarbleWidget
 {
     Mumoro::Node start, end; 
-    Mumoro::Shortest_path p;
     std::list<Mumoro::Path_elt> path;
     int click_action;
     enum {NAV, SEL_START, SEL_DEST};
@@ -33,8 +32,9 @@ class MyMarble : public MarbleWidget
     bool path_calculated;
     Q_OBJECT
     public:
+    Mumoro::Shortest_path p;
         QString gen_info();
-        MyMarble( const char*, QWidget * w = 0 );
+        MyMarble( QWidget * w = 0 );
         void customPaint( GeoPainter *painter );
     public slots:
     void mouseClickGeoPosition(qreal,qreal,GeoDataCoordinates::Unit);
