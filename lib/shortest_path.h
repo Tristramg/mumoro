@@ -54,7 +54,7 @@ namespace Mumoro
     const double foot_speed = 1; /**< in m/s, almost 4km/h */
     const double bike_speed = 4; /**< in m/s, arround 15km/h */
     const double car_speed = 8; /**< in m/s, arround 30km/h */
-    const double subway_speed = 9;
+    const double subway_speed = 12;
 
     bool add_direct(sqlite3_stmt *, Transport_mode);
     bool add_reverse(sqlite3_stmt *, Transport_mode);
@@ -73,6 +73,9 @@ namespace Mumoro
         sqlite3_stmt * insert_node_stmt;
         sqlite3_stmt * get_node_stmt;
         sqlite3_stmt * match_stmt;
+        sqlite3_stmt * match_stmt2;
+        sqlite3_stmt * insert_match;
+        sqlite3_stmt * insert_match2;
 
         /**
          * Initialise le graphe
@@ -112,7 +115,7 @@ namespace Mumoro
          * \throw Node_not_found()
          * If no node is found within a certain radius
          */
-        Node match(double lon, double lat);
+        Node match(double lon, double lat, bool alt=false);
 
 
         /** Returns the number of nodes */
