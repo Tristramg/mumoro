@@ -216,6 +216,10 @@ end2(void *dat, const char *el)
                 sqlite3_bind_int(stmt, 8, (directions.test(0)));
                 sqlite3_bind_int(stmt, 9, (directions.test(5)));
                 sqlite3_bind_double(stmt, 10, get<3>(*it));
+                sqlite3_bind_double(stmt, 11, get<0>(*it)->lon);
+                sqlite3_bind_double(stmt, 12, get<0>(*it)->lat);
+                sqlite3_bind_double(stmt, 13, get<1>(*it)->lon);
+                sqlite3_bind_double(stmt, 14, get<1>(*it)->lat);
                 if(sqlite3_step(stmt) != SQLITE_DONE)
                 {
                     cerr << "Unable to insert link "
@@ -250,7 +254,7 @@ main(int argc, char** argv)
     // We make sure the database is as we want it
     sqlite3_exec(db, "DROP TABLE nodes", NULL, NULL, NULL);
     sqlite3_exec(db, "DROP TABLE links", NULL, NULL, NULL);
-    sqlite3_exec(db, "CREATE TABLE links(id int primary key, source int, target int, geom text, bike bool, bike_r bool, car bool, car_r bool, foot bool, subway bool, length double)", NULL, NULL, NULL);
+    sqlite3_exec(db, "CREATE TABLE links(id int primary key, source int, target int, geom text, bike bool, bike_r bool, car bool, car_r bool, foot bool, subway bool, length double, lon1 double, lat1 double, lon2 double, lat2 double)", NULL, NULL, NULL);
     sqlite3_exec(db, "CREATE TABLE nodes(id int primary key, lon double, lat double)", NULL, NULL, NULL);
 
     //==================== STEP 1 =======================//
@@ -288,7 +292,7 @@ main(int argc, char** argv)
     XML_SetElementHandler(parser2, start2, end2);
 
     if(sqlite3_prepare_v2(db,
-                "INSERT INTO links(source, target, geom, bike, bike_r, car, car_r, foot, subway, length) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO links(source, target, geom, bike, bike_r, car, car_r, foot, subway, length, lon1, lat1, lon2, lat2) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 -1,
                 &stmt,
                 NULL))
