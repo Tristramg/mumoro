@@ -44,6 +44,21 @@ namespace Mumoro
         Transport_mode mode; /**< Transport mode used on that link */
     };
 
+    class Layer
+    {
+        int offset;
+        int count;
+        std::vector<std::pair<double, double> > coord;
+        public:
+        std::map<uint64_t, int> nodes_map;
+        Layer(int=0);
+        int add_node(uint64_t, double, double);
+        int match(double lon, double lat);
+        Node get(int);
+        int cnt() { return count; }
+    };
+
+
     /** Exception thrown when asking for a non existing node */
     struct Node_not_found {}; 
 
@@ -66,16 +81,8 @@ namespace Mumoro
     class Shortest_path
     {
         CGraph cg; /**< Graphe qui est généré à la construction de l'instance */
-        std::map<uint64_t, int> foot_map; /**< Conversion entre les identifiants des nœuds de la base de données et les identifiants renumérotés */
-        int node_count; /**< Nombre total de nœuds dans le graphe */
-
         sqlite3 * db;
-        sqlite3_stmt * insert_node_stmt;
-        sqlite3_stmt * get_node_stmt;
-        sqlite3_stmt * match_stmt;
-        sqlite3_stmt * match_stmt2;
-        sqlite3_stmt * insert_match;
-        sqlite3_stmt * insert_match2;
+        Layer l;
 
         /**
          * Initialise le graphe
@@ -96,26 +103,12 @@ namespace Mumoro
          */
         ~Shortest_path();
 
-        /** Internaly, nodes are renumbered.
-         * This function returns the internal node id, or adds the node
-         * into the graph and returns its internal id
-         */
-        int node_internal_id_or_add( uint64_t node_id);
-        int node_internal_id_or_add( uint64_t node_id, std::map<uint64_t, int> &);
-
-        /** Internaly, nodes are renumbered.
-         * This function returns the internal node id,
-         *
-         * \throw Node_not_found()
-         */
-        int node_internal_id(uint64_t node_id);
-
         /** Finds the closest node to the given coordiantes
          *
          * \throw Node_not_found()
          * If no node is found within a certain radius
          */
-        Node match(double lon, double lat, bool alt=false);
+        Node match(double lon, double lat);
 
 
         /** Returns the number of nodes */

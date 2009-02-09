@@ -184,6 +184,7 @@ int main( int argc, char *argv[] )
 
     MyMarble foo( argv[1] );
     foo.setMapThemeId( "earth/openstreetmap/openstreetmap.dgml" );
+    foo.setDownloadUrl("http://download.kde.org/apps/marble/");
     foo.setShowOverviewMap( false );
     foo.setShowCompass( false );
 

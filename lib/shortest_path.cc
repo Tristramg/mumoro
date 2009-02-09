@@ -27,6 +27,58 @@ using namespace boost::gregorian;
 
 namespace Mumoro
 {
+    Layer::Layer(int off) : offset(off), count(0) {}
+
+    int Layer::add_node(uint64_t id, double lon, double lat)
+    {
+        std::map<uint64_t, int>::const_iterator it = nodes_map.find(id);
+        if (it == nodes_map.end())
+        {
+            coord.push_back(std::make_pair(lon, lat));
+            nodes_map[id] = offset + count ;
+            count++;
+            return (offset + count - 1);
+        }
+        else
+        {
+            return (*it).second;
+        }
+    }
+
+    int Layer::match(double lon, double lat)
+    {
+        double best = INFINITY;
+        int best_n = -1;
+        for(size_t i=0; i < coord.size(); i++)
+        {
+            double d = pow((coord[i].first - lon),2) + pow((coord[i].second - lat),2);
+            if( d < best )
+            {
+                best = d;
+                best_n = i;
+            }
+        }
+        if( best_n == -1 )
+            throw Node_not_found();
+        else
+            return best_n + offset;
+    }
+
+    Node Layer::get(int id)
+    {
+        if(id < offset || id >= count + offset)
+        {
+            std::cout << "offset " << offset << " id " << id <<std::endl;
+            throw Node_not_found();
+        }
+        Node n;
+        n.id = id;
+        n.lon = coord[id-offset].first;
+        n.lat = coord[id-offset].second;
+        return n;
+    }
+
+
     struct compare
     {
         bool operator()(const double & a, const double & b) const
@@ -151,65 +203,37 @@ namespace Mumoro
         return direct_cost(stmt, m);
     }
 
-
-    int Shortest_path::node_internal_id_or_add(uint64_t node_id, std::map<uint64_t, int> & m)
-    {
-        std::map<uint64_t, int>::const_iterator it = m.find(node_id);
-        if (it == m.end())
-        {
-            m[node_id] = node_count++;
-            return (node_count - 1);
-        }
-        else
-        {
-            return (*it).second;
-        }
-    }
-
-    int Shortest_path::node_internal_id_or_add( uint64_t node_id)
-    {
-        return node_internal_id_or_add(node_id, foot_map);
-    }
-
-    int Shortest_path::node_internal_id(uint64_t node_id)
-    {
-        std::map<uint64_t, int>::const_iterator it = foot_map.find(node_id);
-        if (it == foot_map.end())
-        {
-            std::cerr << "Node not found: " << node_id << std::endl;
-            throw Node_not_found();
-        }
-        else
-            return (*it).second;
-    }
-
     void Shortest_path::init(const char * db_file, Transport_mode m)
     {
- 
+
         sqlite3_open(db_file, &db);
-        std::string q="SELECT id, lon, lat FROM tmp_nodes WHERE lon > ? AND lon < ?  AND lat > ? AND lat < ?  ORDER BY abs(lon - ?) + abs(lat - ?)";
-        sqlite3_prepare_v2(db, q.c_str(), -1, &match_stmt, NULL);
-
-        std::string q2="SELECT id, lon, lat FROM tmp_nodes2 WHERE lon > ? AND lon < ?  AND lat > ? AND lat < ?  ORDER BY abs(lon - ?) + abs(lat - ?)";
-        sqlite3_prepare_v2(db, q2.c_str(), -1, &match_stmt2, NULL);
-        node_count = 0;
         sqlite3_stmt * stmt;
-
-        sqlite3_prepare_v2(db, "select source, target, length, foot, bike, bike_r, car, car_r, subway from links", -1, &stmt, NULL);
+        sqlite3_prepare_v2(db, "select source, target, length, foot, bike, bike_r, car, car_r, subway, lon1, lat1, lon2, lat2 from links", -1, &stmt, NULL);
 
         std::vector<Edge_property> edge_prop;
         Edge_property prop;
 
         std::back_insert_iterator<std::vector<Edge_property> > ii(edge_prop);
 
+
+
         while(sqlite3_step(stmt) == SQLITE_ROW)
         {
+            double length = sqlite3_column_double(stmt,2);
+
+            double lon1 = sqlite3_column_double(stmt,9);
+            double lat1 = sqlite3_column_double(stmt,10);
+            double lon2 = sqlite3_column_double(stmt,11);
+            double lat2 = sqlite3_column_double(stmt,12);
+
+            uint64_t sid = sqlite3_column_int64(stmt,0);
+            uint64_t tid = sqlite3_column_int64(stmt,1); 
+
+
             if( add_direct(stmt, m) )
             {
-double length = sqlite3_column_double(stmt,2);
-            int source = node_internal_id_or_add(sqlite3_column_int64(stmt, 0)); 
-            int target = node_internal_id_or_add(sqlite3_column_int64(stmt, 1)); 
-
+                int source = l.add_node(sid, lon1, lat1);
+                int target = l.add_node(tid, lon2, lat2);
 
                 prop.length = length;
                 prop.cost = direct_cost(stmt, m);
@@ -221,11 +245,10 @@ double length = sqlite3_column_double(stmt,2);
 
             if( add_reverse(stmt, m) )
             {
-                double length = sqlite3_column_double(stmt,2);
-            int source = node_internal_id_or_add(sqlite3_column_int64(stmt, 0)); 
-            int target = node_internal_id_or_add(sqlite3_column_int64(stmt, 1)); 
+                int source = l.add_node(sid, lon1, lat1);
+                int target = l.add_node(tid, lon2, lat2);
 
-               prop.length = length;
+                prop.length = length;
                 prop.cost = reverse_cost(stmt, m);
                 prop.first = target;
                 prop.second = source;
@@ -236,63 +259,27 @@ double length = sqlite3_column_double(stmt,2);
 
         std::cout << "Read the first layer" << std::endl;
 
-        sqlite3_prepare_v2(db, "SELECT lon, lat from nodes WHERE id=?",
-                -1, &get_node_stmt, NULL);
+        Layer sub(l.cnt());
 
-
-        sqlite3_exec(db, "DROP TABLE tmp_nodes", NULL, NULL, NULL);
-        sqlite3_exec(db, "CREATE TABLE tmp_nodes(id int, lon double, lat double)", NULL, NULL, NULL);
-        sqlite3_exec(db, "CREATE INDEX ON tmp_nodes(lon, lat)", NULL, NULL, NULL);
-        sqlite3_prepare_v2(db, "INSERT INTO tmp_nodes (id, lon, lat) VALUES (?, ?, ?)", -1, &insert_match, NULL);
-
-        sqlite3_exec(db, "DROP TABLE tmp_nodes2", NULL, NULL, NULL);
-        sqlite3_exec(db, "CREATE TABLE tmp_nodes2(id int, lon double, lat double)", NULL, NULL, NULL);
-        sqlite3_exec(db, "CREATE INDEX ON tmp_nodes2(lon, lat)", NULL, NULL, NULL);
-        sqlite3_prepare_v2(db, "INSERT INTO tmp_nodes2 (id, lon, lat) VALUES (?, ?, ?)", -1, &insert_match2, NULL);
-       
-       
-        std::map<uint64_t, int>::const_iterator mi;
-        for( mi = foot_map.begin(); mi != foot_map.end(); mi++ )
-        {
-            sqlite3_reset(get_node_stmt);
-            sqlite3_bind_int64(get_node_stmt, 1, (*mi).first);
-            if(sqlite3_step(get_node_stmt) != SQLITE_ROW)
-            {
-                std::cerr << "Unable to get a node "
-                    << "Error " << sqlite3_errcode(db) << ": " << sqlite3_errmsg(db) << std::endl;
-                exit(EXIT_FAILURE);
-            };
-            float lon = sqlite3_column_double(get_node_stmt, 0);
-            float lat = sqlite3_column_double(get_node_stmt, 1);
-
-            sqlite3_reset(insert_match);
-            sqlite3_bind_int64(insert_match, 1, (*mi).second);
-            sqlite3_bind_double(insert_match, 2, lon);
-            sqlite3_bind_double(insert_match, 3, lat);
-
-            if(sqlite3_step(insert_match) != SQLITE_DONE)
-            {
-                std::cerr << "Unable to insert a node "
-                    << "Error " << sqlite3_errcode(db) << ": " << sqlite3_errmsg(db) << std::endl;
-                exit(EXIT_FAILURE);
-            };
-        }
-
-        std::cout << "Added nodes for a future map match" << std::endl;
-
-
-        
-        std::map<uint64_t, int> tmp_map;
-        int offset = node_count;
-        node_count = 0;
-        sqlite3_prepare_v2(db, "select source, target, length, foot, bike, bike_r, car, car_r, subway from links", -1, &stmt, NULL);
+        sqlite3_prepare_v2(db, "select source, target, length, foot, bike, bike_r, car, car_r, subway, lon1, lat1, lon2, lat2 from links", -1, &stmt, NULL);
         while(sqlite3_step(stmt) == SQLITE_ROW)
         {
-           if( add_direct(stmt, Subway) )
+            double length = sqlite3_column_double(stmt,2);
+
+            double lon1 = sqlite3_column_double(stmt,9);
+            double lat1 = sqlite3_column_double(stmt,10);
+            double lon2 = sqlite3_column_double(stmt,11);
+            double lat2 = sqlite3_column_double(stmt,12);
+
+            uint64_t sid = sqlite3_column_int64(stmt,0);
+            uint64_t tid = sqlite3_column_int64(stmt,1); 
+
+
+            if( add_direct(stmt, Subway) )
             {
-             double length = sqlite3_column_double(stmt,2);
-            int source = node_internal_id_or_add(sqlite3_column_int64(stmt, 0), tmp_map) + offset; 
-            int target = node_internal_id_or_add(sqlite3_column_int64(stmt, 1), tmp_map) + offset; 
+                int source = sub.add_node(sid, lon1, lat1);
+                int target = sub.add_node(tid, lon2, lat2);
+                std::cout << lon1 <<lat1<<lon2<<lat2<<std::endl;
 
                 prop.length = length;
                 prop.cost = direct_cost(stmt, Subway);
@@ -301,68 +288,35 @@ double length = sqlite3_column_double(stmt,2);
                 prop.mode = Subway;
                 *ii++ = prop;
 
-                prop.length = length;
                 prop.cost = reverse_cost(stmt, Subway);
                 prop.first = target;
                 prop.second = source;
-                prop.mode = Subway;
                 *ii++ = prop;
             }
         }
 
         std::cout << "Read the subway layer " << std::endl;
 
-        for( mi = tmp_map.begin(); mi != tmp_map.end(); mi++ )
-        {
-            sqlite3_reset(get_node_stmt);
-            sqlite3_bind_int64(get_node_stmt, 1, (*mi).first);
-            if(sqlite3_step(get_node_stmt) != SQLITE_ROW)
-            {
-                std::cerr << "Unable to get a node "
-                    << "Error " << sqlite3_errcode(db) << ": " << sqlite3_errmsg(db) << std::endl;
-                exit(EXIT_FAILURE);
-            };
-            float lon = sqlite3_column_double(get_node_stmt, 0);
-            float lat = sqlite3_column_double(get_node_stmt, 1);
-
-            sqlite3_reset(insert_match2);
-            std::cout << "Debug: " << (*mi).second << " " << offset << std::endl;
-            sqlite3_bind_int(insert_match2, 1, (*mi).second + offset);
-            sqlite3_bind_double(insert_match2, 2, lon);
-            sqlite3_bind_double(insert_match2, 3, lat);
-
-            if(sqlite3_step(insert_match2) != SQLITE_DONE)
-            {
-                std::cerr << "Unable to insert a node "
-                    << "Error " << sqlite3_errcode(db) << ": " << sqlite3_errmsg(db) << std::endl;
-                exit(EXIT_FAILURE);
-            };
-        }
-
-        std::cout << "Added subway nodes for match" << std::endl;
-
-
         sqlite3_prepare_v2(db, "select lon, lat from metroA", -1, &stmt, NULL);
         while(sqlite3_step(stmt) == SQLITE_ROW)
         {
-            float lon = sqlite3_column_double(stmt, 0);
-            float lat = sqlite3_column_double(stmt, 1);
-            Node matched = match(lon, lat);
-            Node matched2 = match(lon, lat, true);
-            
-            std::cout << "Matched " << matched2.id << "to " << matched.id << std::endl;
+            double lon = sqlite3_column_double(stmt,0);
+            double lat = sqlite3_column_double(stmt,1);
+            int matched = l.match(lon, lat);
+            int matched2 = sub.match(lon, lat);
+
+            std::cout << "Matched " << matched2 << " to " << matched << std::endl;
             prop.length = 0;
             prop.cost =  FunctionPtr( new Const_cost(30) );
-            prop.first = matched2.id;
-            prop.second = matched.id;
+            prop.first = matched2;
+            prop.second = matched;
             prop.mode = Car;
             *ii++ = prop;
 
-            prop.first = matched.id;
+            prop.first = matched;
             prop.cost =  FunctionPtr( new Const_cost(15) );
-            prop.second = matched2.id;
+            prop.second = matched2;
             *ii++ = prop;
-            
         }
 
         std::cout << "Connected both layers" << std::endl;
@@ -370,41 +324,27 @@ double length = sqlite3_column_double(stmt,2);
         sort(edge_prop.begin(), edge_prop.end());
 
         std::cout << "# Going to create the graph" << std::endl;
-        cg = CGraph(edge_prop.begin(), edge_prop.end(), edge_prop.begin(), node_count + offset, edge_prop.size());
-        std::cout << "2nd layer = " << node_count << " 1rst layer = " << offset << std::endl;
+        cg = CGraph(edge_prop.begin(), edge_prop.end(), edge_prop.begin(), l.cnt() + sub.cnt(), edge_prop.size());
+        std::cout << "2nd layer = " << l.cnt() << " 1rst layer = " << sub.cnt() << std::endl;
 
         std::cout << "# Number of nodes: " << boost::num_vertices(cg) << ", nombre d'arcs : " << boost::num_edges(cg) << std::endl;
 
-        sqlite3_prepare_v2(db, "SELECT lon, lat from nodes WHERE id=?",
-                -1, &get_node_stmt, NULL);
         std::map<uint64_t, int>::const_iterator nodes_it;
-        for( nodes_it = foot_map.begin(); nodes_it != foot_map.end(); nodes_it++ )
+        for( nodes_it = l.nodes_map.begin(); nodes_it != l.nodes_map.end(); nodes_it++ )
         {
-            sqlite3_reset(get_node_stmt);
-            sqlite3_bind_int64(get_node_stmt, 1, (*nodes_it).first);
-            if(sqlite3_step(get_node_stmt) != SQLITE_ROW)
-            {
-                std::cerr << "Unable to get node (1) "
-                    << "Error " << sqlite3_errcode(db) << ": " << sqlite3_errmsg(db) << std::endl;
-                exit(EXIT_FAILURE);
-            };
-            cg[(*nodes_it).second].id = (*nodes_it).first;
-            cg[(*nodes_it).second].lon = sqlite3_column_double(get_node_stmt, 0);
-            cg[(*nodes_it).second].lat = sqlite3_column_double(get_node_stmt, 1);
+            int id = (*nodes_it).second;
+            cg[id].id = (*nodes_it).first;
+            cg[id].lon = l.get(id).lon;
+            cg[id].lat = l.get(id).lat;
         }
-        for( nodes_it = tmp_map.begin(); nodes_it != tmp_map.end(); nodes_it++ )
+
+        for( nodes_it = sub.nodes_map.begin(); nodes_it != sub.nodes_map.end(); nodes_it++ )
         {
-            sqlite3_reset(get_node_stmt);
-            sqlite3_bind_int64(get_node_stmt, 1, (*nodes_it).first);
-            if(sqlite3_step(get_node_stmt) != SQLITE_ROW)
-            {
-                std::cerr << "Unable to get node (2) "
-                    << "Error " << sqlite3_errcode(db) << ": " << sqlite3_errmsg(db) << std::endl;
-                exit(EXIT_FAILURE);
-            };
-            cg[(*nodes_it).second + offset].id = (*nodes_it).first;
-            cg[(*nodes_it).second + offset].lon = sqlite3_column_double(get_node_stmt, 0);
-            cg[(*nodes_it).second + offset].lat = sqlite3_column_double(get_node_stmt, 1);
+            int id = (*nodes_it).second;
+            cg[id].id = (*nodes_it).first;
+            cg[id].lon = sub.get(id).lon;
+            cg[id].lat = sub.get(id).lat;
+            std::cout << sub.get(id).lon;
         }
         std::cout << "# Loading the graph done " << std::endl;
     }
@@ -463,42 +403,14 @@ double length = sqlite3_column_double(stmt,2);
         return path;
     }
 
-    int Shortest_path::nodes() const
-    {
-        return node_count;
-    }
-
     Shortest_path::~Shortest_path()
     {
     }
 
-    Node Shortest_path::match(double lon, double lat, bool alt)
+    Node Shortest_path::match(double lon, double lat)
     {
-        sqlite3_stmt * stmt = match_stmt;
-        if(alt)
-            stmt = match_stmt2;
-        float tol = 0.1;
-        Node ret;
-        sqlite3_reset(stmt);
-        sqlite3_bind_double(stmt, 1, lon - tol);
-        sqlite3_bind_double(stmt, 2, lon + tol);
-        sqlite3_bind_double(stmt, 3, lat - tol);
-        sqlite3_bind_double(stmt, 4, lat + tol);
-        sqlite3_bind_double(stmt, 5, lon);
-        sqlite3_bind_double(stmt, 6, lat);
-
-        if(sqlite3_step(stmt) != SQLITE_ROW)
-        {
-            std::cerr << "Match failed lon=" << lon << ", lat=" << lat << std::endl;
-            throw Node_not_found();
-        }
-        else
-        {
-            ret.id = sqlite3_column_int64(stmt, 0);
-            ret.lon = sqlite3_column_double(stmt, 1);
-            ret.lat = sqlite3_column_double(stmt, 2);
-            return ret;
-        }
+        int id = l.match(lon, lat);
+        return l.get(id);
     }
 
 
