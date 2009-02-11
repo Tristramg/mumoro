@@ -336,7 +336,7 @@ namespace Mumoro
                     boost::predecessor_map(&p[0])
                     .distance_map(&d[0])
                     .weight_map(get(&Edge_property::cost, cg))
-                    .visitor(dijkstra_goal_visitor(end_idx))
+    //                .visitor(dijkstra_goal_visitor(end_idx))
                     .distance_combine(Combine_distance())
                     .distance_zero(timestamp)
                     .distance_compare(compare())
