@@ -75,6 +75,7 @@ namespace Mumoro
         n.id = id;
         n.lon = coord[id-offset].first;
         n.lat = coord[id-offset].second;
+
         return n;
     }
 
@@ -325,6 +326,7 @@ namespace Mumoro
 
         std::vector<cvertex> p(boost::num_vertices(cg));
         std::vector<double> d(boost::num_vertices(cg));
+        
 
         ptime epoch(date(1970, Jan, 1), seconds(0));
         ptime now(day_clock::local_day(), seconds(start_time));
@@ -362,6 +364,54 @@ namespace Mumoro
             end_idx = p[end_idx];
         }
         return path;
+    }
+
+    std::string Shortest_path::compute_xml(cvertex start_idx, cvertex end_idx, int start_time)
+    {
+        std::list<Path_elt> path = compute(start_idx, end_idx, start_time);
+        std::stringstream out;
+        out << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+           << "<cimd>"; 
+        Transport_mode cur_mode = NaM;
+        bool open = false;
+        Node last_node;
+        
+        std::list<Path_elt>::const_iterator it;
+        for( it = path.begin(); it != path.end(); it++)
+        {
+            if( (*it).mode != cur_mode )
+            {
+                cur_mode = (*it).mode;
+                if( open )
+                {
+                    out << "    <nd id=\"" << last_node.id << "\" lon=\"" << last_node.lon << "\" lat=\"" << last_node.lat << "\" />\n";
+
+                    out << "  </transport>\n";
+                }
+                else
+                {
+                    open = true;
+                }
+                int ref;
+                switch((*it).mode)
+                {
+                    case Foot: ref = 2; break;
+                    case Car: ref = 1; break;
+                    case Subway: ref = 5; break;
+                    case Bike: ref = 3; break;
+                    case Bus: ref = 4; break;
+                    case Switch: ref = 6; break;
+                    default: ref = 7;
+                }
+
+                out << "  <transport ref=\"" << ref << "\">\n";
+            }
+            out << "    <nd id=\"" << (*it).source.id << "\" lon=\"" << (*it).source.lon << "\" lat=\"" << (*it).source.lat << "\" />\n";
+            last_node = (*it).target;
+        }
+        out << "    <nd id=\"" << last_node.id << "\" lon=\"" << last_node.lon << "\" lat=\"" << last_node.lat << "\" />\n";
+        out << "  </transport>\n</cimd>\n";
+        return out.str();
     }
 
     Node Shortest_path::match(double lon, double lat)

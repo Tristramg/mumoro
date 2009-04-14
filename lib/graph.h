@@ -42,7 +42,7 @@ namespace Mumoro
         virtual double operator()(double) const;
     };
 
-    typedef enum {Foot, Bike, Car, Subway, Bike_at_hand, Switch} Transport_mode;
+    typedef enum {Foot, Bike, Car, Subway, Bike_at_hand, Switch, Bus, NaM} Transport_mode;
     /** Properties of an edge */
     struct Edge_property
     {

@@ -107,6 +107,8 @@ namespace Mumoro
          * Returns a list of path elements
          */
         std::list<Path_elt> compute(cvertex start_idx, cvertex end_idx, int start_time = 3600);
+
+        std::string compute_xml(cvertex start_idx, cvertex end_idx, int start_time = 3600);
     };
 }
 
