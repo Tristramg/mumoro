@@ -26,17 +26,57 @@
 #include <cstring>
 #include <bitset>
 #include <iomanip>
-#include <sqlite3.h>
+#include <iostream>
+#include <fstream>
+#include <stdint.h>
 #include <sstream>
+
 #ifndef _MAIN_H
 #define _MAIN_H
 
-const unsigned short Foot = 0x01,
-      Bike = 0x02,
-      Car = 0x04,
-      Oneway = 0x08,
-      Opposite_bike = 0x16,
-      Subway = 0x32;
+const int unknown = -1;
+const int foot_forbiden = 0;
+const int foot_allowed = 1;
+
+const int car_forbiden = 0;
+const int car_residential = 1;
+const int car_tertiary = 2;
+const int car_secondary = 3;
+const int car_primary = 4;
+const int car_trunk = 5;
+const int car_motorway = 6;
+
+const int bike_forbiden = 0;
+const int bike_opposite_lane = 1;
+const int bike_allowed = 2;
+const int bike_lane = 3;
+const int bike_busway = 4;
+const int bike_track = 5;
+
+class Edge_property
+{
+    public:
+    int car_direct;
+    int car_reverse;
+    int bike_direct;
+    int bike_reverse;
+    int foot;
+
+    Edge_property();
+
+    // Can at least one mean use that edge
+    bool accessible();
+    bool direct_accessible();
+    bool reverse_accessible();
+
+    // Update the properties given new information
+    void update(const std::string & tag, const std::string & val);
+
+    // Infer unknown data
+    void normalize();
+
+    void reset();
+};
 
 struct Node
 {
@@ -54,11 +94,6 @@ struct Node
 };
 
 typedef __gnu_cxx::hash_map<uint64_t, Node, std::tr1::hash<uint64_t> > NodeMapType;
-
-
-typedef std::map<std::string, std::map<std::string, unsigned short> > Dir_params ;
-
-Dir_params get_dir_params();
 
 #endif /* _MAIN_H */
 

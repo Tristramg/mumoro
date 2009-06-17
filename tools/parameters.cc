@@ -16,64 +16,170 @@
 */
 
 #include "main.h"
+Edge_property::Edge_property() :
+        car_direct(unknown),
+        car_reverse(unknown),
+        bike_direct(unknown),
+        bike_reverse(unknown),
+        foot(unknown)
+    {
+    }
 
-Dir_params get_dir_params()
+bool Edge_property::accessible()
 {
-    Dir_params dir_modifiers;
+    return direct_accessible() || reverse_accessible();
+}
 
-    // Anyone can use it
-    const unsigned short Forall = Bike + Foot + Car;
-    dir_modifiers["highway"]["primary"] = Forall;
-    dir_modifiers["highway"]["primary_link"] = Forall;
-    dir_modifiers["highway"]["secondary"] = Forall;
-    dir_modifiers["highway"]["tertiary"] = Forall;
-    dir_modifiers["highway"]["unclassified"] = Forall;
-    dir_modifiers["highway"]["residential"] = Forall;
-    dir_modifiers["highway"]["living_street"] = Forall;
-    dir_modifiers["highway"]["road"] = Forall;
-    dir_modifiers["highway"]["service"] = Forall;
-    dir_modifiers["highway"]["track"] = Forall; 
+bool Edge_property::direct_accessible()
+{
+    return car_direct > 0 || bike_direct > 0 || foot > 0;
+}
 
-    // Only cars can use it
-    dir_modifiers["highway"]["motorway"] = Car;
-    dir_modifiers["highway"]["trunk"] = Car;
-    dir_modifiers["highway"]["trunk_link"] = Car;
-    dir_modifiers["highway"]["motorway_link"] = Car;
+bool Edge_property::reverse_accessible()
+{
+    return car_reverse > 0 || bike_reverse > 0 || foot > 0;
+}
 
-    // Only bikes or pedestrians can use it
-    dir_modifiers["highway"]["path"] = Bike + Foot;
 
-    // Pedestrians
-    dir_modifiers["highway"]["pedestrian"] = Foot;
-    dir_modifiers["highway"]["footway"] = Foot;
-    dir_modifiers["highway"]["steps"] = Foot; 
-    dir_modifiers["pedestrians"]["yes"] = Foot;
-    dir_modifiers["foot"]["yes"] = Foot;
-    dir_modifiers["foot"]["designated"] = Foot;
 
-    // For bikes
-    dir_modifiers["highway"]["cycleway"] = Bike;
-    dir_modifiers["cycleway"]["lane"] = Bike;
-    dir_modifiers["cycleway"]["track"] = Bike;
-    dir_modifiers["cycleway"]["share_busway"] = Bike;
-    dir_modifiers["cycleway"]["yes"] = Bike;
-    dir_modifiers["cycle"]["yes"] = Bike;
-    dir_modifiers["busway"]["yes"] = Bike;
-    dir_modifiers["busway"]["track"] = Bike;
+void Edge_property::reset()
+{
+    car_direct = unknown;
+    car_reverse = unknown;
+    bike_direct = unknown;
+    bike_reverse = unknown;
+    foot = unknown;
+}
 
-    // Bikes don't care about oneway
-    dir_modifiers["cycleway"]["oposite_lane"] = Opposite_bike;
-    dir_modifiers["cycleway"]["oposite"] = Opposite_bike;
-    dir_modifiers["cycleway"]["oposite_track"] = Opposite_bike;
-    dir_modifiers["busway"]["oposite_lane"] = Opposite_bike;
+void Edge_property::normalize()
+{
+    if(car_reverse == unknown && car_direct != unknown)
+        car_reverse = car_direct;
+    if(bike_reverse == unknown && bike_direct != unknown)
+        bike_reverse = bike_direct;
+    if(car_direct == unknown) car_direct = car_forbiden;
+    if(bike_direct == unknown) bike_direct = bike_forbiden;
+    if(car_reverse == unknown) car_reverse = car_forbiden;
+    if(bike_reverse == unknown) bike_reverse = bike_forbiden;
+    if(foot == unknown) foot = foot_forbiden;
+}
 
-    // Oneway
-    dir_modifiers["junction"]["roundabout"] = Oneway;
-    dir_modifiers["oneway"]["yes"] = Oneway;
-    dir_modifiers["oneway"]["true"] = Oneway;
+void Edge_property::update(const std::string & key, const std::string & val)
+{
+    if(key == "highway")
+    {
+        if(val == "cycleway" || val == "path" || val == "footway" ||
+                val == "steps" || val == "pedestrian")
+        {
+            bike_direct = bike_track;
+            foot = foot_allowed;
+        }
+        else if(val == "primary" || val == "primary_link")
+        {
+            car_direct = car_primary;
+            foot = foot_allowed;
+            bike_direct = bike_allowed;
+        }
+        else if(val == "secondary")
+        {
+            car_direct = car_secondary;
+            foot = foot_allowed;
+            bike_direct = bike_allowed;
+        }
+        else if(val == "tertiary")
+        {
+            car_direct = car_tertiary;
+            foot = foot_allowed;
+            bike_direct = bike_allowed;
+        }
+        else if(val == "unclassified" || val == "residential" || val == "living_street" ||
+                val == "road" || val == "service" || val == "track")
+        {
+            car_direct = car_residential;
+            foot = foot_allowed;
+            bike_direct = bike_allowed;
+        }
+        else if(val == "motorway" || val == "motorway_link")
+        {
+            car_direct = car_motorway;
+            foot = foot_forbiden;
+            bike_direct = bike_forbiden;
+        }
+        else if(val == "trunk" || val == "trunk_link")
+        {
+            car_direct = car_motorway;
+            foot = foot_forbiden;
+            bike_direct = bike_forbiden;
+        }
+    }
 
-    // It's a subway!
-    dir_modifiers["railway"]["subway"] = Subway;
+    else if(key == "pedestrian" || key == "foot")
+    {
+        if(val == "yes" || val == "designated")
+            foot = foot_allowed;
+        else if(val == "no")
+            foot = foot_forbiden;
+        else
+            std::cerr << "I don't know what to do with: " << key << "=" << val << std::endl;
+    }
 
-    return dir_modifiers;
+    // http://wiki.openstreetmap.org/wiki/Cycleway
+    // http://wiki.openstreetmap.org/wiki/Map_Features#Cycleway
+    else if(key == "cycleway")
+    {
+        if(val == "lane")
+            bike_direct = bike_lane;
+        else if(val == "track")
+            bike_direct = bike_track;
+        else if(val == "opposite_lane")
+            bike_reverse = bike_lane;
+        else if(val == "opposite_track")
+            bike_reverse = bike_track;
+        else if(val == "opposite")
+            bike_reverse = bike_allowed;
+        else if(val == "share_busway")
+            bike_direct = bike_busway;
+        else
+            std::cerr << "I don't know what to do with: " << key << "=" << val << std::endl;
+    }
+
+    else if(key == "bicycle")
+    {
+        if(val == "yes" || val == "permissive" || val == "destination")
+            bike_direct = bike_allowed;
+        else if(val == "no")
+            bike_direct = bike_forbiden;
+        else
+            std::cerr << "I don't know what to do with: " << key << "=" << val << std::endl;
+    }
+
+    else if(key == "busway")
+    {
+        if(val == "yes" || val == "track")
+            bike_direct = bike_busway;
+        else if(val == "oposite_lane")
+            bike_reverse = bike_busway;
+        else
+            std::cerr << "I don't know what to do with: " << key << "=" << val << std::endl;
+    }
+
+    else if(key == "oneway")
+    {
+        if(val == "yes" || val == "true" || val == "1")
+        {
+            car_reverse = car_forbiden;
+            if(bike_reverse == unknown)
+                bike_reverse = bike_forbiden;
+        }
+    }
+
+    else if(key == "junction")
+    {
+        if(val == "roundabout")
+        {
+            car_reverse = car_forbiden;
+            if(bike_reverse == unknown)
+                bike_reverse = bike_forbiden;
+        }
+    }
 }

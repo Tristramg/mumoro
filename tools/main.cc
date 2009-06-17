@@ -21,23 +21,18 @@
 using namespace std;
 using namespace boost;
 
-uint64_t prev_id;
 Node * source;
 Node * prev;
 std::stringstream geom;
 NodeMapType nodes;
 uint64_t ways_count;
-int link_length;
+int edge_length;
 uint64_t ways_progress;
-std::bitset<6> directions;
-std::list<boost::tuple<Node*, Node*, std::string, double> > links;
+Edge_property ep;
+std::list<boost::tuple<Node*, Node*, std::string, double> > edges;
 double length;
-sqlite3 *db;
-sqlite3_stmt *stmt;
-std::map<std::string, std::string> tag;
-Dir_params dir_modifiers;
-int nodes_inserted;
-int links_inserted;
+int edges_inserted;
+ofstream edges_file;
 
 double rad(double deg)
 {
@@ -78,7 +73,6 @@ start(void *dat, const char *el, const char **attr)
                 lon = atof(value);
             }
             nodes[id] = Node(lon, lat, id);
-            prev_id = id;
         }
     }
 
@@ -90,23 +84,6 @@ start(void *dat, const char *el, const char **attr)
         {
             uint64_t node_id = atoll(value);
             nodes[node_id].uses++;
-        }
-    }
-
-    else if (strcmp(el, "tag") == 0)
-    {
-        string key;
-        while (*attr != NULL)
-        {
-            const char* name = *attr++;
-            const char* value = *attr++;
-
-            if ( strcmp(name, "k") == 0 )
-                key = value;
-            else if ( strcmp(name, "v") == 0 )
-            {
-                tag[key] = value;
-            }
         }
     }
 
@@ -128,7 +105,7 @@ start2(void *dat, const char *el, const char **attr)
             uint64_t id = atoll(value);
             Node * n = &(nodes[id]);
 
-            if(link_length == 0)
+            if(edge_length == 0)
             {
                 source = n;
             }
@@ -140,19 +117,23 @@ start2(void *dat, const char *el, const char **attr)
 
             geom << n->lon << " " << n->lat;
             prev = n;
-            link_length++;
+            edge_length++;
 
-            if(n->uses > 1 && link_length > 1)
+            if(n->uses > 1 && edge_length > 1)
             {
-                links.push_back(make_tuple(source, n, geom.str(), length));
+                edges.push_back(make_tuple(source, n, geom.str(), length));
                 source = n;
                 length = 0;
 
                 geom.str("");
                 geom << n->lon << " " << n->lat;
-                link_length = 1;
+                edge_length = 1;
             }
+            if (edge_length > 2)
+                cout << "GOT ONE !" << endl;
         }
+        else
+            cout << "WTF ??" << endl;
     }
 
     else if(strcmp(el, "tag") == 0)
@@ -167,7 +148,7 @@ start2(void *dat, const char *el, const char **attr)
                 key = value;
             else if ( strcmp(name, "v") == 0 )
             {
-                directions |= dir_modifiers[key][value];
+                ep.update(key, value);
             }
         }
     }
@@ -177,14 +158,6 @@ start2(void *dat, const char *el, const char **attr)
     void
 end(void *dat, const char *el)
 {
-    if (strcmp(el, "node") == 0)
-    {
-        if(tag["railway"] == "station" )
-        {
-            nodes[prev_id].uses = 2;
-        }
-        tag.clear();
-    }
 }
 
     void
@@ -194,68 +167,55 @@ end2(void *dat, const char *el)
     {
         int advance = (ways_progress++ * 50 / (ways_count));
         cout << "\r[" << setfill('=') << setw(advance) << ">" <<setfill(' ') << setw(50-advance) << "] " << flush;
-        if(link_length >= 2)       
+        if(edge_length >= 2)       
         {
-            links.push_back(make_tuple(source, prev, geom.str(), length));
+            edges.push_back(make_tuple(source, prev, geom.str(), length));
         }
-
-        if(directions != 0)
+            if (edge_length > 2)
+                cout << "GOT ONE !" << endl;
+ 
+        if(ep.accessible())
         {
+            ep.normalize();
             list<tuple<Node*, Node*, string, double> >::iterator it;
-            for(it = links.begin(); it != links.end(); it++)
+            for(it = edges.begin(); it != edges.end(); it++)
             {
                 get<0>(*it)->inserted = true;
                 get<1>(*it)->inserted = true;
-                sqlite3_bind_int64(stmt, 1, get<0>(*it)->id);
-                sqlite3_bind_int64(stmt, 2, get<1>(*it)->id);
-                sqlite3_bind_text(stmt, 3, get<2>(*it).c_str(), -1, SQLITE_STATIC);
-                sqlite3_bind_int(stmt, 4, directions.test(1));
-                sqlite3_bind_int(stmt, 5, (!directions.test(3) || directions.test(4)));
-                sqlite3_bind_int(stmt, 6, (directions.test(2)));
-                sqlite3_bind_int(stmt, 7, (!directions.test(3)));
-                sqlite3_bind_int(stmt, 8, (directions.test(0)));
-                sqlite3_bind_int(stmt, 9, (directions.test(5)));
-                sqlite3_bind_double(stmt, 10, get<3>(*it));
-                sqlite3_bind_double(stmt, 11, get<0>(*it)->lon);
-                sqlite3_bind_double(stmt, 12, get<0>(*it)->lat);
-                sqlite3_bind_double(stmt, 13, get<1>(*it)->lon);
-                sqlite3_bind_double(stmt, 14, get<1>(*it)->lat);
-                if(sqlite3_step(stmt) != SQLITE_DONE)
+                if(ep.direct_accessible())
                 {
-                    cerr << "Unable to insert link "
-                        << "Error " << sqlite3_errcode(db) << ": " << sqlite3_errmsg(db) << endl;
-                    exit(EXIT_FAILURE);
+                    edges_file << edges_inserted << "," <<  // id
+                        get<0>(*it)->id << "," << // source
+                        get<1>(*it)->id << "," << // target
+                        get<3>(*it) << "," << // length
+                        ep.car_direct << "," <<
+                        ep.car_reverse << "," <<
+                        ep.bike_direct << "," <<
+                        ep.bike_reverse << "," <<
+                        ep.foot << "," <<
+                        "LINESTRING(\"" << get<2>(*it) << "\")" << endl;
+                    edges_inserted++;
                 }
-                sqlite3_reset(stmt);
-                links_inserted++;
             }
+            edges.clear();
+            length = 0;
+            geom.str("");
+            edge_length = 0;
+            ep.reset();
         }
-        links.clear();
-        length = 0;
-        geom.str("");
-        link_length = 0;
-        directions = 0x0;
-    }
 
+    }
 }
 
     int
 main(int argc, char** argv)
 {
-    dir_modifiers = get_dir_params();
-    if (argc != 3)
+    if (argc != 2)
     {
-        cout << "Usage: " << argv[0] << " in_database.osm out_database" << endl;
+        cout << "Usage: " << argv[0] << " in_database.osm" << endl;
         return (EXIT_FAILURE);
     }
 
-    sqlite3_open(argv[2], &db);
-
-    // We make sure the database is as we want it
-    sqlite3_exec(db, "DROP TABLE nodes", NULL, NULL, NULL);
-    sqlite3_exec(db, "DROP TABLE links", NULL, NULL, NULL);
-    sqlite3_exec(db, "CREATE TABLE links(id int primary key, source int, target int, geom text, bike bool, bike_r bool, car bool, car_r bool, foot bool, subway bool, length double, lon1 double, lat1 double, lon2 double, lat2 double)", NULL, NULL, NULL);
-    sqlite3_exec(db, "CREATE TABLE nodes(id int primary key, lon double, lat double)", NULL, NULL, NULL);
 
     //==================== STEP 1 =======================//
     cout << "Step 1: reading the xml file, extracting the Nodes list" << flush;
@@ -286,22 +246,16 @@ main(int argc, char** argv)
 
 
     //===================== STEP 2 ==========================//
-    cout << "Step 2: building links and inserting in the database" << endl;
+    cout << "Step 2: building edges and saving them in the file edges.csv" << endl;
     rewind(fp);
     XML_Parser parser2 = XML_ParserCreate(NULL);
     XML_SetElementHandler(parser2, start2, end2);
 
-    if(sqlite3_prepare_v2(db,
-                "INSERT INTO links(source, target, geom, bike, bike_r, car, car_r, foot, subway, length, lon1, lat1, lon2, lat2) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                -1,
-                &stmt,
-                NULL))
-    {
-        cerr << "Unable to prepare link insert statement. "
-            << "Error: " << sqlite3_errmsg(db) << endl;
-        exit(EXIT_FAILURE);
-    }
-    sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
+    edges_file.open ("edges.csv");
+    // By default outstream only give 4 digits after the dot (~10m precision)
+    edges_file << setprecision(9);
+    edges_file << "\"edge_id\",\"source\",\"target\",\"length\",\"car\",\"car reverse\",\"bike\",\"bike reverse\",\"foot\",\"WKT\"" << endl;
+
 
     do // loop over whole file content
     {
@@ -319,25 +273,19 @@ main(int argc, char** argv)
         }
     }
     while (!done);
-    sqlite3_exec(db, "COMMIT TRANSACTION", NULL, NULL, NULL);
-    sqlite3_finalize(stmt);
+    edges_file.close();
     cout << "DONE!" << endl << endl;
 
     //==================== STEP 3 =======================//
-    cout << "Step 3: storing the intersection nodes in the database" << endl;
-
-    sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, NULL);
-    if(sqlite3_prepare_v2(db,
-                "INSERT INTO nodes(id, lon, lat) VALUES(?,?,?)",
-                -1,
-                &stmt,
-                NULL))
-    {
-        cerr << "Unable to prepare node insert statement. "
-            << "Error: " << sqlite3_errmsg(db) << endl;
-        exit(EXIT_FAILURE);
-    }
+    cout << "Step 3: storing the intersection nodes in the file nodes.csv" << endl;
     uint64_t count = 0, step = nodes.size() / 50, next_step = 0;
+
+    ofstream nodes_file;
+    nodes_file.open ("nodes.csv");
+    // By default outstream only give 4 digits after the dot (~10m precision)
+    nodes_file << setprecision(9);
+    nodes_file << "\"node_id\",\"longitude\",\"latitude\",\"altitude\"" << endl;
+    int nodes_inserted = 0;
 
     for(NodeMapType::const_iterator i = nodes.begin(); i != nodes.end(); i++)
     {
@@ -351,28 +299,19 @@ main(int argc, char** argv)
 
         if( (*i).second.inserted )
         {
-            sqlite3_bind_int64(stmt, 1, (*i).first);
-            sqlite3_bind_double(stmt, 2, (*i).second.lon);
-            sqlite3_bind_double(stmt, 3, (*i).second.lat);
-            if(sqlite3_step(stmt) != SQLITE_DONE)
-            {
-                cerr << "Unable to insert node. "
-                    << "Error " << sqlite3_errcode(db) << ": " << sqlite3_errmsg(db) << endl;
-                exit(EXIT_FAILURE);
-            }
-            sqlite3_reset(stmt);
+            nodes_file << (*i).first << "," <<
+                (*i).second.lon << "," << 
+                (*i).second.lon << "," << endl;
             nodes_inserted++;
         }
     }
-    sqlite3_finalize(stmt);
-    sqlite3_exec(db, "COMMIT TRANSACTION", NULL, NULL, NULL);
+    nodes_file.close();
     cout << "DONE!" << endl << endl;
 
     cout << "Nodes in database: " << nodes_inserted << endl;
-    cout << "Links in database: " << links_inserted << endl;
+    cout << "edges in database: " << edges_inserted << endl;
     cout << "Happy routing! :)" << endl << endl;
-        
-    sqlite3_close(db);
+
     return (EXIT_SUCCESS);
 }
 
