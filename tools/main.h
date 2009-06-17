@@ -28,6 +28,8 @@
 #include <iomanip>
 #include <sqlite3.h>
 #include <sstream>
+#include <stdint.h>
+#include <stdio.h>
 #ifndef _MAIN_H
 #define _MAIN_H
 
