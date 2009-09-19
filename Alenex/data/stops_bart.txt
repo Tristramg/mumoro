@@ -1,0 +1,47 @@
+stop_id,stop_name,stop_desc,stop_lat,stop_lon,zone_id,stop_url
+COLS,Coliseum/Oakland Airport BART,,37.7542813804,-122.197788821,21,http://www.bart.gov/stations/COLS/
+CONC,Concord BART,,37.9720158312,-122.029861348,33,http://www.bart.gov/stations/CONC/
+DALY,Daly City BART,,37.7061205485,-122.469080674,48,http://www.bart.gov/stations/DALY/
+DBRK,Downtown Berkeley BART,,37.8698684624,-122.268050932,14,http://www.bart.gov/stations/DBRK/
+DELN,El Cerrito Del Norte BART,,37.9256508785,-122.31721887,11,http://www.bart.gov/stations/DELN/
+DUBL,Dublin/Pleasanton BART,,37.7016736171,-121.900352519,29,http://www.bart.gov/stations/DUBL/
+EMBR,Embarcadero BART,,37.7930224405,-122.396813153,40,http://www.bart.gov/stations/EMBR/
+FRMT,Fremont BART,,37.5573342821,-121.976395442,27,http://www.bart.gov/stations/FRMT/
+FTVL,Fruitvale BART,,37.7746238056,-122.224327698,20,http://www.bart.gov/stations/FTVL/
+GLEN,Glen Park BART,,37.7329415443,-122.434114331,46,http://www.bart.gov/stations/GLEN/
+HAYW,Hayward Station BART,,37.6703868939,-122.088002125,24,http://www.bart.gov/stations/HAYW/
+LAFY,Lafayette BART,,37.8934254672,-122.123798472,36,http://www.bart.gov/stations/LAFY/
+LAKE,Lake Merritt BART,,37.7976023716,-122.265498391,19,http://www.bart.gov/stations/LAKE/
+MCAR,MacArthur BART,,37.8284094079,-122.267187102,16,http://www.bart.gov/stations/MCAR/
+MONT,Montgomery St. BART,,37.7893359611,-122.401485489,41,http://www.bart.gov/stations/MONT/
+NBRK,North Berkeley BART,,37.87402614,-122.283881911,13,http://www.bart.gov/stations/NBRK/
+NCON,North Concord/Martinez BART,,38.002576647,-122.025106029,31,http://www.bart.gov/stations/NCON/
+ORIN,Orinda BART,,37.8783608699,-122.183791135,37,http://www.bart.gov/stations/ORIN/
+PHIL,Pleasant Hill BART,,37.9277362737,-122.056847034,34,http://www.bart.gov/stations/PHIL/
+PITT,Pittsburg/Bay Point BART,,38.0189343386,-121.941904488,30,http://www.bart.gov/stations/PITT/
+PLZA,El Cerrito Plaza BART,,37.9030588009,-122.29927151,12,http://www.bart.gov/stations/PLZA/
+POWL,Powell St. BART,,37.7849710021,-122.407012285,42,http://www.bart.gov/stations/POWL/
+ROCK,Rockridge BART,,37.8441838514,-122.252731522,38,http://www.bart.gov/stations/ROCK/
+SANL,San Leandro BART,,37.7226192073,-122.161311154,22,http://www.bart.gov/stations/SANL/
+SHAY,South Hayward BART,,37.6347995391,-122.057550587,25,http://www.bart.gov/stations/SHAY/
+SSAN,South San Francisco BART,,37.66433,-122.44399,5,http://www.bart.gov/stations/SSAN/
+UCTY,Union City BART,,37.591202687,-122.017857962,26,http://www.bart.gov/stations/UCTY/
+WCRK,Walnut Creek BART,,37.9046388803,-122.068018135,35,http://www.bart.gov/stations/WCRK/
+WOAK,West Oakland BART,,37.8046747595,-122.294582214,39,http://www.bart.gov/stations/WOAK/
+COLM,Colma BART,,37.6845808931,-122.467369242,32,http://www.bart.gov/stations/COLM/
+MLBR,Millbrae BART,,37.600006,-122.386534,8,http://www.bart.gov/stations/MLBR/
+RICH,Richmond BART,,37.9371699076,-122.3534001,10,http://www.bart.gov/stations/RICH/
+SBRN,San Bruno BART,,37.637143,-122.415912,6,http://www.bart.gov/stations/SBRN/
+SFIA,San Francisco Int BART,,37.6159,-122.392534,7,http://www.bart.gov/stations/SFIA/
+OAK,Oakland Airport Terminals AirBART,,37.712811,-122.213165,,http://www.bart.gov/guide/airport/inbound_oak.aspx
+12TH_N,12th St. Oakland City Center BART,,37.8030927157,-122.271655014,18,http://www.bart.gov/stations/12TH/
+MCAR_S,MacArthur BART,,37.8284094079,-122.267187102,16,http://www.bart.gov/stations/MCAR/
+12TH,12th St. Oakland City Center BART,,37.8030927157,-122.271655014,18,http://www.bart.gov/stations/12TH/
+16TH,16th St. Mission BART,,37.765228,-122.419478,44,http://www.bart.gov/stations/16TH/
+19TH,19th St. Oakland BART,,37.8076295249,-122.268869226,17,http://www.bart.gov/stations/19TH/
+24TH,24th St. Mission BART,,37.752411,-122.418292,45,http://www.bart.gov/stations/24TH/
+ASBY,Ashby BART,,37.853061,-122.269946,15,http://www.bart.gov/stations/ASHB/
+BALB,Balboa Park BART,,37.7219808677,-122.447414196,47,http://www.bart.gov/stations/BALB/
+BAYF,Bay Fair BART,,37.6978321791,-122.127858508,23,http://www.bart.gov/stations/BAYF/
+CAST,Castro Valley BART,,37.6907303057,-122.077460002,28,http://www.bart.gov/stations/CAST/
+CIVC,Civic Center BART,,37.7796055874,-122.413851084,43,http://www.bart.gov/stations/CIVC/
