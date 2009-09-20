@@ -30,7 +30,8 @@
 #include <fstream>
 #include <stdint.h>
 #include <sstream>
-
+#include <stdint.h>
+#include <stdio.h>
 #ifndef _MAIN_H
 #define _MAIN_H
 
