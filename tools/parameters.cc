@@ -127,7 +127,7 @@ void Edge_property::update(const std::string & key, const std::string & val)
     // http://wiki.openstreetmap.org/wiki/Map_Features#Cycleway
     else if(key == "cycleway")
     {
-        if(val == "lane")
+        if(val == "lane" || val == "lane_right" || val == "yes")
             bike_direct = bike_lane;
         else if(val == "track")
             bike_direct = bike_track;
