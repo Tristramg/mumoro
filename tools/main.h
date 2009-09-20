@@ -93,6 +93,16 @@ struct Node
     {};
 };
 
+struct Edge
+{
+   Node * source;
+   Node * target;
+   std::string geom;
+   double length;
+   Edge(Node *, Node *, const std::string &, double);
+};
+
+
 typedef __gnu_cxx::hash_map<uint64_t, Node, std::tr1::hash<uint64_t> > NodeMapType;
 
 #endif /* _MAIN_H */

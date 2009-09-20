@@ -117,6 +117,7 @@ void MyMarble::mouseClickGeoPosition(qreal lon ,qreal lat,GeoDataCoordinates::Un
             qDebug() << "start" << start.id<<start.lon<<start.lon;
             qDebug() << "end" << end.id<<end.lon<<end.lon;
             path = p.compute(start.id, end.id);
+            std::cout << p.compute_xml(start.id, end.id);
             qDebug() << "Computed path of size: " << path.size();
         }
     }

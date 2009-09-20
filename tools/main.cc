@@ -29,7 +29,7 @@ uint64_t ways_count;
 int edge_length;
 uint64_t ways_progress;
 Edge_property ep;
-std::list<boost::tuple<Node*, Node*, std::string, double> > edges;
+std::list<Edge> edges;
 double length;
 int edges_inserted;
 ofstream edges_file;
@@ -48,8 +48,12 @@ double distance(double lon1, double lat1, double lon2, double lat2)
             ) * r;
 }
 
+Edge::Edge(Node * s, Node * t, const std::string & g, double l) :
+    source(s), target(t), geom(g), length(l)
+{
+}
     void
-start(void *dat, const char *el, const char **attr)
+start(void *, const char *el, const char **attr)
 {
     if (strcmp(el, "node") == 0)
     {
@@ -94,7 +98,7 @@ start(void *dat, const char *el, const char **attr)
 }
 
     void
-start2(void *dat, const char *el, const char **attr)
+start2(void *, const char *el, const char **attr)
 {
     if (strcmp(el, "nd") == 0)
     {
@@ -121,7 +125,7 @@ start2(void *dat, const char *el, const char **attr)
 
             if(n->uses > 1 && edge_length > 1)
             {
-                edges.push_back(make_tuple(source, n, geom.str(), length));
+                edges.push_back(Edge(source, n, geom.str(), length));
                 source = n;
                 length = 0;
 
@@ -156,12 +160,12 @@ start2(void *dat, const char *el, const char **attr)
 }
 
     void
-end(void *dat, const char *el)
+end(void *, const char *)
 {
 }
 
     void
-end2(void *dat, const char *el)
+end2(void *, const char *el)
 {
     if(strcmp(el, "way") == 0)
     {
@@ -169,7 +173,7 @@ end2(void *dat, const char *el)
         cout << "\r[" << setfill('=') << setw(advance) << ">" <<setfill(' ') << setw(50-advance) << "] " << flush;
         if(edge_length >= 2)       
         {
-            edges.push_back(make_tuple(source, prev, geom.str(), length));
+            edges.push_back(Edge(source, prev, geom.str(), length));
         }
             if (edge_length > 2)
                 cout << "GOT ONE !" << endl;
@@ -177,23 +181,23 @@ end2(void *dat, const char *el)
         if(ep.accessible())
         {
             ep.normalize();
-            list<tuple<Node*, Node*, string, double> >::iterator it;
+            list<Edge>::iterator it;
             for(it = edges.begin(); it != edges.end(); it++)
             {
-                get<0>(*it)->inserted = true;
-                get<1>(*it)->inserted = true;
+                (*it).source->inserted = true;
+                (*it).target->inserted = true;
                 if(ep.direct_accessible())
                 {
                     edges_file << edges_inserted << "," <<  // id
-                        get<0>(*it)->id << "," << // source
-                        get<1>(*it)->id << "," << // target
-                        get<3>(*it) << "," << // length
+                        (*it).source->id << "," << // source
+                        (*it).source->id << "," << // target
+                        (*it).length << "," << // length
                         ep.car_direct << "," <<
                         ep.car_reverse << "," <<
                         ep.bike_direct << "," <<
                         ep.bike_reverse << "," <<
                         ep.foot << "," <<
-                        "LINESTRING(\"" << get<2>(*it) << "\")" << endl;
+                        "LINESTRING(\"" << (*it).geom << "\")" << endl;
                     edges_inserted++;
                 }
             }
@@ -301,7 +305,7 @@ main(int argc, char** argv)
         {
             nodes_file << (*i).first << "," <<
                 (*i).second.lon << "," << 
-                (*i).second.lon << "," << endl;
+                (*i).second.lat << "," << endl;
             nodes_inserted++;
         }
     }
