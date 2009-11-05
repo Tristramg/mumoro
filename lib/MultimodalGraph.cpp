@@ -289,7 +289,7 @@ size_t MultimodalGraph::load_edges_pg(const std::string & layer, const std::stri
     {
         count++;
         int property = 0, rev_property = 0;
-        int foot = 0, bike = 0, bike_reverse = 0, car = 0, car_reverse = 0;
+        int foot = 9, bike = 9, bike_reverse = 9, car = 9, car_reverse = 9;
         std::string source, target ;
         float length = 0;
         (*rit)["source"].to(source);
@@ -380,7 +380,7 @@ size_t MultimodalGraph::load_nodes(const std::string & layer, const std::string 
 
     while( getline(nodesf, s) )
     {
-        if(!parse(s.c_str(), nodes_rule, space_p).full)
+        if(!parse(s.c_str(), nodes_rule, space_p).hit)
             std::cerr << " Parsing error. Line was: " << s << std::endl;
         else
         {
@@ -439,7 +439,7 @@ size_t MultimodalGraph::connect_closest(const std::string & layer1, const std::s
                 count++;
             }
         }
-        catch(match_failed) {}
+        catch(Match_failed) {}
     }
     return count;
 }
@@ -509,7 +509,7 @@ node_t Matching::match(float lon, float lat) const
         }
     }
     if(best > 200)
-        throw match_failed();
+        throw Match_failed();
     return best_n;
 }
 

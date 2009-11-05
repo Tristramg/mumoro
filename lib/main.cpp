@@ -20,12 +20,13 @@ int main(int argc, char *argv[])
     {
         MultimodalGraph g;
         g.init_pg("dbname=mumoro");
-        std::string path = "";
-        //std::string path = "../instances/San Francisco/";
+        std::string path = "./";
+//        std::string path = "/home/tristram/MOSPP-instances/instances/San Francisco/";
         std::pair<int, int> a, b, c, d;
 
-        d = g.load_pg("bike", "tlse_nodes", "tlse_edges", Bike);
+        //d = g.load_pg("bike", "tlse_nodes", "tlse_edges", Bike);
         a = g.load_pg("foot", "tlse_nodes", "tlse_edges", Foot);
+        d = g.load("bike", path + "nodes.csv", path + "edges.csv", Bike);
         // b = g.load("bart", path + "stops_bart.txt", path+"stop_times_bart.txt", PublicTransport);
         // c = g.load("muni", path + "stops_muni.txt", path+"stop_times_muni.txt", PublicTransport);
 
@@ -36,7 +37,7 @@ int main(int argc, char *argv[])
         interconnexion.cost = 0;
         interconnexion.nb_changes = 1;
 
-        g.connect_closest("foot", "bart", interconnexion);
+//        g.connect_closest("foot", "bart", interconnexion);
         //g.connect_closest("foot", "muni", interconnexion);
         g.connect_same_nodes("bike", "foot", interconnexion, false);
 
@@ -44,13 +45,15 @@ int main(int argc, char *argv[])
 
         cout << a.first << " " << a.second << " " <<  boost::num_vertices(g.graph()) << " " << boost::num_edges(g.graph()) << flush;
         ptime stime(microsec_clock::local_time());
-        node_t start = rand() % d.first;
+        node_t start = rand() % d.first + a.first; 
+        node_t dest = rand() % a.first;
 
         //   relaxed_martins(start, invalid_node, g, &Edge::nb_changes, &Edge::elevation);
         ptime etime(microsec_clock::local_time());
         cout << " " << (etime - stime).total_milliseconds() << endl;
 
-        martins(start, invalid_node, g, &Edge::nb_changes, 30000);
+        vector<Path> p = martins(start, dest, g, &Edge::nb_changes, 30000);
+        cout << "==" << p.size() << "==" << endl;
         //ssmosp(g, start);
         ptime ftime(microsec_clock::local_time());
         cout << " " << (ftime - etime).total_milliseconds() << endl;

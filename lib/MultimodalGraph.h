@@ -14,7 +14,7 @@ typedef enum {Foot, Bike, Car, PublicTransport} Mode;
 
 double distance(double lon1, double lat1, double lon2, double lat2);
 
-struct match_failed {};
+struct Match_failed {};
 
 class Duration
 {
