@@ -88,10 +88,10 @@ template<size_t N>
             >
             > Type;
 
-    typedef typename nth_index<typename my_queue<N>::Type, 0>::type& by_cost;
-    typedef typename nth_index<typename my_queue<N>::Type, 1>::type& by_nodes;
-    typedef typename nth_index<typename my_queue<N>::Type, 0>::type::iterator cost_it;
-    typedef typename nth_index<typename my_queue<N>::Type, 1>::type::iterator nodes_it;
+    typedef typename nth_index<Type, 0>::type& by_cost;
+    typedef typename nth_index<Type, 1>::type& by_nodes;
+    typedef typename nth_index<Type, 0>::type::iterator cost_it;
+    typedef typename nth_index<Type, 1>::type::iterator nodes_it;
 };
 
 
