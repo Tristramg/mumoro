@@ -51,7 +51,7 @@ int main(int argc, char ** argv)
   g.init_pg("dbname=mumoro user=tristram");
   //std::string path = "../instances/San Francisco/";
   std::pair<int, int> a, b, c, d;
-        std::string path = "/home/tristram/MOSPP-instances/instances/San Francisco/";
+  std::string path = "/Library/WebServer/Documents/gtfs/";
  
   a = g.load_pg("foot", "sf_nodes", "sf_edges", Foot);
   d = g.load_pg("bike", "sf_nodes", "sf_edges", Bike);
@@ -68,8 +68,7 @@ int main(int argc, char ** argv)
   cout << "Foot: " << a.first << " " << a.second << endl;
 
   g.connect_same_nodes("bike", "foot", interconnexion, false);
-
-        g.connect_closest("foot", "bart", interconnexion);
+  g.connect_closest("foot", "bart", interconnexion);
 
   while(FCGI_Accept() >= 0)
   {
@@ -85,21 +84,34 @@ int main(int argc, char ** argv)
 
      if(query_map.find("start") == query_map.end())
      {
-       error_msg << "No start defined ";
+       error_msg << "No start defined. ";
        fail = true;
      }
 
      if(query_map.find("dest") == query_map.end())
      {
-       error_msg << "No destination defined";
+       error_msg << "No destination defined. ";
        fail = true;
+     }
+
+     if(!g.layers["bike"].exists(query_map["start"]))
+     {
+	     error_msg << "Start node(" << query_map["start"] << ") not found. ";
+	     fail = true;
+     }
+
+     if(!g.layers["bike"].exists(query_map["dest"]))
+     {
+	     error_msg << "Destination node(" << query_map["dest"] << ") not found. ";
+	     fail = true;
      }
 
      if(fail)
      {
-       output << "{\"Error\": \"" << error_msg.str() << "\"}";
+       output << "{\"error\": \"" << error_msg.str() << "\"}";
        printf("%s", output.str().c_str());
      }
+
      else
      {
        std::vector<Path> p;
