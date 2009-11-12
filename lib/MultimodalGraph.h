@@ -74,7 +74,6 @@ class MultimodalGraph
 {
 private:
     Graph_t g;
-    std::map<std::string, Matching> layers;
     size_t load_edges(const std::string & layer, const std::string & edges, Mode m);
     size_t load_nodes(const std::string & layer, const std::string & nodes, Mode m);
     size_t load_nodes_pg(const std::string & layer, const std::string & table, Mode m);
@@ -82,6 +81,7 @@ private:
     pqxx::connection * conn;
 public:
     const Graph_t & graph() const;
+    std::map<std::string, Matching> layers;
 
     bool init_pg(const std::string & pg_conn);
     std::pair<size_t, size_t>
