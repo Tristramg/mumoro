@@ -115,8 +115,8 @@ int main(int argc, char ** argv)
      else
      {
        std::vector<Path> p;
-       p = martins(boost::lexical_cast<int>(query_map["start"]),
-           boost::lexical_cast<int>(query_map["dest"]), g, &Edge::nb_changes);
+       p = martins(boost::lexical_cast<int>(g.layers["bike"][query_map["start"]]),
+           boost::lexical_cast<int>(g.layers["foot"][query_map["dest"]]), g, &Edge::nb_changes);
        bool first_path = true;
        output << "{\n \"paths\":\n    [";
        for(std::vector<Path>::const_iterator i = p.begin(); i != p.end(); i++)
