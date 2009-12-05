@@ -6,8 +6,19 @@ import layer
 
 class HelloWorld:
     def __init__(self):
-        self.l = layer.Layer('foot', mumoro.Foot, {'nodes': 'sf_nodes', 'edges': 'sf_edges'})
-        self.g = layer.MultimodalGraph([self.l])
+        foot = layer.Layer('foot', mumoro.Foot, {'nodes': 'sf_nodes', 'edges': 'sf_edges'})
+        bart = layer.GTFSLayer('bart', 'google_transit.zip', dbname='bart.db') 
+        muni = layer.GTFSLayer('muni', 'san-francisco-municipal-transportation-agency_20091125_0358.zip', dbname='muni.db') 
+
+        e = mumoro.Edge()
+        e.nb_changes=1
+        e.duration = mumoro.Duration(60);
+        e2 = mumoro.Edge()
+        e2.nb_changes=0
+        e2.duration = mumoro.Duration(30);
+        self.g = layer.MultimodalGraph([foot, bart, muni])
+        self.g.connect_nearest_nodes(bart, foot, e, e2)
+        self.g.connect_nearest_nodes(muni, foot, e, e2)
 
 
     def path(self, start=None, dest=None):
@@ -66,6 +77,7 @@ class HelloWorld:
                             }
                     features.append(connection);
                 last_node = node
+                last_coord = coord
                 coordinates.append([coord[0], coord[1]])
             geometry['coordinates'] = coordinates
             feature['geometry'] = geometry
@@ -81,9 +93,6 @@ class HelloWorld:
             return "{{'node': {0}}}".format(id)
         else:
             return '{"error": "No node found"}'
-
-        
-
     match.exposed = True
     path.exposed = True
 
@@ -95,7 +104,6 @@ cherrypy.tree.mount(HelloWorld(), '/', config={
                 'tools.staticdir.index': 'index.html',
             },
     })
-
 
 cherrypy.quickstart()
 

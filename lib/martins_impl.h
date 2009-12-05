@@ -24,9 +24,9 @@ float delta(float a, float b);
 template<size_t N>
 struct Label
 {
-    node_t node;
+    int node;
     array<float, N> cost;
-    node_t pred;
+    int pred;
     size_t pred_idx;
 
     bool operator==(const Label & l)
@@ -84,7 +84,7 @@ template<size_t N>
             Label<N>,
             indexed_by<
             ordered_non_unique<member<Label<N>, array<float, N>, &Label<N>::cost> >,
-            hashed_non_unique<member<Label<N>, node_t, &Label<N>::node > >
+            hashed_non_unique<member<Label<N>, int, &Label<N>::node > >
             >
             > Type;
 
@@ -143,9 +143,11 @@ template<size_t N>
 }
 
 template<size_t N, typename Comp>
-vector<Path> martins(node_t start_node, node_t dest_node, MultimodalGraph & g, int start_time, std::vector<float Edge::*> objectives, Comp std_comp)
+vector<Path> martins(int start_node, int dest_node, Graph & g, int start_time, std::vector<float Edge::*> objectives, Comp std_comp)
 {
-    vector< deque< Label<N> > > P(num_vertices(g.graph()));
+    std::cout << "Running martins from " << start_node << " to " << dest_node
+        << ". Total nodes: " << num_vertices(g.g) << ", total edges: " << num_edges(g.g) << std::endl;
+    vector< deque< Label<N> > > P(num_vertices(g.g));
     typename my_queue<N>::Type Q;
 
     Label<N> start;
@@ -164,17 +166,17 @@ vector<Path> martins(node_t start_node, node_t dest_node, MultimodalGraph & g, i
         Q.erase(cost_q_it.begin());
         P[l.node].push_back(l);
         graph_traits<Graph_t>::out_edge_iterator ei, end;
-        tie(ei,end) = out_edges(l.node, g.graph());
+        tie(ei,end) = out_edges(l.node, g.g);
         for(; ei != end; ei++)
         {
             Label<N> l2;
             l2.pred = l.node;
-            l2.node = boost::target(*ei,g.graph());
+            l2.node = boost::target(*ei,g.g);
             l2.pred_idx = P[l.node].size() - 1;
 
-            l2.cost[0] = g.graph()[*ei].duration(l.cost[0]);
+            l2.cost[0] = g.g[*ei].duration(l.cost[0]);
             for(size_t i=1; i < N; i++)
-                l2.cost[i] = l.cost[i] + g.graph()[*ei].*objectives[i-1];
+                l2.cost[i] = l.cost[i] + g.g[*ei].*objectives[i-1];
 
             if(!is_dominated_by_any(Q, l2, std_comp) && !is_dominated_by_any(P[l2.node],l2, std_comp) && (dest_node == invalid_node || !is_dominated_by_any(P[dest_node],l2, std_comp)))
             {
@@ -209,11 +211,11 @@ vector<Path> martins(node_t start_node, node_t dest_node, MultimodalGraph & g, i
             if(N >= 4)
                 p.cost.push_back(it->cost[3]);
             Label<N> last = *it;
-            p.nodes.push_front(g.graph()[last.node]);
+            p.nodes.push_front(last.node);
             while(last.node != start.node)
             {
                 last = P[last.pred][last.pred_idx];
-                p.nodes.push_front(g.graph()[last.node]);
+                p.nodes.push_front(last.node);
             }
             ret.push_back(p);
         }

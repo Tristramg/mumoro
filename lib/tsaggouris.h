@@ -1,6 +1,6 @@
-#include "MultimodalGraph.h"
+#include "graph_wrapper.h"
 #ifndef TSAGGOURIS_H
 #define TSAGGOURIS_H
-void ssmosp(MultimodalGraph & g, node_t start);
+void ssmosp(Graph & g, int start);
 
 #endif // TSAGGOURIS_H

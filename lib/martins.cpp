@@ -1,19 +1,25 @@
 #include "martins_impl.h"
-
-vector<Path> martins(node_t start_node, node_t dest_node, MultimodalGraph & g, int start_time)
+#include "martins.h"
+vector<Path> martins(int start_node, int dest_node, Graph & g, int start_time)
 {
     vector<float Edge::*> objectives;
     return martins<1>(start_node, dest_node, g, start_time, objectives, Dominates<1>());
 }
 
-vector<Path> martins(node_t start_node, node_t dest_node, MultimodalGraph & g, float Edge::*obj2, int start_time)
+vector<Path> martins_py(int start_node, int dest_node, Graph & g)
+{
+    vector<float Edge::*> objectives;
+    objectives.push_back(&Edge::nb_changes);
+    return martins<2>(start_node, dest_node, g, 30000, objectives, Dominates<2>());
+}
+vector<Path> martins(int start_node, int dest_node, Graph & g, float Edge::*obj2, int start_time)
 {
     vector<float Edge::*> objectives;
     objectives.push_back(obj2);
     return martins<2>(start_node, dest_node, g, start_time, objectives, Dominates<2>());
 }
 
-vector<Path> martins(node_t start_node, node_t dest_node, MultimodalGraph & g, float Edge::*obj2, float Edge::*obj3, int start_time)
+vector<Path> martins(int start_node, int dest_node, Graph & g, float Edge::*obj2, float Edge::*obj3, int start_time)
 {
     vector<float Edge::*> objectives;
     objectives.push_back(obj2);
@@ -22,7 +28,7 @@ vector<Path> martins(node_t start_node, node_t dest_node, MultimodalGraph & g, f
 }
 
 
-vector<Path> martins(node_t start_node, node_t dest_node, MultimodalGraph & g, float Edge::*obj2, float Edge::*obj3, float Edge::*obj4, int start_time)
+vector<Path> martins(int start_node, int dest_node, Graph & g, float Edge::*obj2, float Edge::*obj3, float Edge::*obj4, int start_time)
 {
     vector<float Edge::*> objectives;
     objectives.push_back(obj2);
@@ -31,7 +37,7 @@ vector<Path> martins(node_t start_node, node_t dest_node, MultimodalGraph & g, f
     return martins<4>(start_node, dest_node, g, start_time, objectives, Dominates<4>());
 }
 
-vector<Path> relaxed_martins(node_t start_node, node_t dest_node, MultimodalGraph & g, float Edge::*obj2, float Edge::*obj3, int start_time)
+vector<Path> relaxed_martins(int start_node, int dest_node, Graph & g, float Edge::*obj2, float Edge::*obj3, int start_time)
 {
     vector<float Edge::*> objectives;
     objectives.push_back(obj2);
