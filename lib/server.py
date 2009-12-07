@@ -7,19 +7,19 @@ import layer
 class HelloWorld:
     def __init__(self):
         foot = layer.Layer('foot', mumoro.Foot, {'nodes': 'sf_nodes', 'edges': 'sf_edges'})
-        bart = layer.GTFSLayer('bart', 'google_transit.zip', dbname='bart.db') 
-        muni = layer.GTFSLayer('muni', 'san-francisco-municipal-transportation-agency_20091125_0358.zip', dbname='muni.db') 
+#        bart = layer.GTFSLayer('bart', 'google_transit.zip', dbname='bart.db') 
+#        muni = layer.GTFSLayer('muni', 'san-francisco-municipal-transportation-agency_20091125_0358.zip', dbname='muni.db') 
 
+        pt = layer.GTFSLayer('muni', 'pt')
         e = mumoro.Edge()
-        e.nb_changes=1
+        e.mode_change = 1
         e.duration = mumoro.Duration(60);
         e2 = mumoro.Edge()
-        e2.nb_changes=0
+        e2.mode_change = 0
         e2.duration = mumoro.Duration(30);
-        self.g = layer.MultimodalGraph([foot, bart, muni])
-        self.g.connect_nearest_nodes(bart, foot, e, e2)
-        self.g.connect_nearest_nodes(muni, foot, e, e2)
 
+        self.g = layer.MultimodalGraph([foot, pt])
+        self.g.connect_nearest_nodes(pt, foot, e, e2)
 
     def path(self, start=None, dest=None):
         cherrypy.response.headers['Content-Type']= 'application/json'
@@ -28,7 +28,7 @@ class HelloWorld:
             return json.dumps({'error': 'No route found'}) 
         
         ret = {
-                'objectives': ['Duration', 'Changes'],
+                'objectives': ['Duration', 'Mode changes', 'Line changes'],
                 'paths': []
                 }
 
@@ -57,10 +57,10 @@ class HelloWorld:
                 coord = self.g.coordinates(node)
                 if coord == None:
                     print node
-                if(self.g.layer(last_node) != self.g.layer(node)):
+                if(last_coord[3] != coord[3]):
                     geometry['coordinates'] = coordinates
                     feature['geometry'] = geometry
-                    feature['properties'] = {'layer': self.g.layer(last_node)}
+                    feature['properties'] = {'layer': last_coord[3]}
                     features.append(feature)
 
                     feature = {'type': 'feature'}
@@ -81,7 +81,7 @@ class HelloWorld:
                 coordinates.append([coord[0], coord[1]])
             geometry['coordinates'] = coordinates
             feature['geometry'] = geometry
-            feature['properties'] = {'layer': self.g.layer(last_node)}
+            feature['properties'] = {'layer': last_coord[3]}
             features.append(feature)
             p_str['features'] = features
             ret['paths'].append(p_str)

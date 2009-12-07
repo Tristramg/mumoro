@@ -34,8 +34,53 @@ def duration(length, property, mode):
     else:
         raise NotAccessible()
 
+class BaseLayer:
+    def map(self, original_id):
+        c = self.nodes_db.cursor()
+        c.execute('SELECT id FROM nodes WHERE original_id=?', (original_id,))
+        row = c.fetchone()
+        if row:
+            return int(row[0]) + self.offset
+        else:
+            print "Unable to find id {0}".format(original_id)
 
-class Layer:
+    def match(self, lon, lat):
+        epsilon = 0.001
+        query =  "SELECT id FROM nodes WHERE lon >= ? AND lon <= ? AND lat >= ? AND lat <= ? ORDER BY (lon-?)*(lon-?) + (lat-?) * (lat-?) LIMIT 1"
+        cur = self.nodes_db.cursor()
+        cur.execute(query, (float(lon) - epsilon, float(lon) + epsilon, float(lat) - epsilon, float(lat) + epsilon, lon, lon, lat, lat))
+        row = cur.fetchone()
+        if row:
+            return int(row[0]) + self.offset
+
+    def coordinates(self, node):
+        query = "SELECT lon, lat, original_id, network FROM nodes WHERE id=?"
+        cur = self.nodes_db.cursor()
+        cur.execute(query, (node - self.offset,))
+        row = cur.fetchone()
+        if row[3] == "osm":
+            network = self.name
+        else:
+            network = row[3]
+        if row:
+            return (row[0], row[1], row[2], network)
+        else:
+            print "Unknow node {0} on layer {1}".format(node, self.name)
+
+    def nodes(self):
+        query = "SELECT id, original_id, lon, lat FROM nodes"
+        cur = self.nodes_db.cursor()
+        cur.execute(query)
+        for row in cur:
+            yield {
+                    'id': int(row[0]) + self.offset,
+                    'original_id': row[1],
+                    'lon': float(row[2]),
+                    'lat': float(row[3])
+                    }
+
+
+class Layer(BaseLayer):
     def __init__(self, name, mode, data):
         self.mode = mode
         self.data = data
@@ -49,10 +94,11 @@ class Layer:
         self.nodes_db = sqlite3.connect(':memory:', check_same_thread = False)
         self.nodes_db.executescript('''
                 CREATE TABLE nodes(
-                    osm_id INTEGER PRIMARY KEY,
+                    original_id INTEGER PRIMARY KEY,
                     id INTEGER,
                     lon REAL,
-                    lat REAL
+                    lat REAL,
+                    network TEXT
                 );
                 CREATE INDEX lon_lat_idx ON nodes(lon, lat);
                 CREATE INDEX id_idx ON nodes(id);
@@ -61,25 +107,15 @@ class Layer:
         nodes_cur.execute('SELECT id, st_x(the_geom) as lon, st_y(the_geom) as lat FROM {0}'.format(data['nodes']))
         self.count = 0
         for n in nodes_cur:
-            self.nodes_db.execute('INSERT into nodes (id, osm_id, lon, lat) VALUES(?, ?, ?, ?)', (self.count, n[0], n[1], n[2]))
+            self.nodes_db.execute('INSERT into nodes (id, original_id, lon, lat, network) VALUES(?, ?, ?, ?, "osm")', (self.count, n[0], n[1], n[2]))
             self.count += 1
         print "Layer {0} loaded with {1} nodes".format(name, self.count)
                
-    def map(self, osm_node_id):
-        c = self.nodes_db.cursor()
-        c.execute('SELECT id FROM nodes WHERE osm_id=?', (osm_node_id,))
-        row = c.fetchone()
-        if row:
-            return int(row[0]) + self.offset
-        else:
-            print osm_node_id
-        
     def edges(self):
         edges_cur = self.conn.cursor()
         edges_cur.execute('SELECT source, target, length, car, car_rev, bike, bike_rev, foot from {0}'.format(self.data['edges']))
         for edge in edges_cur:
             e = mumoro.Edge()
-            e.nb_changes = 0
             e.length = float(edge[2])
             if self.mode == mumoro.Foot:
                 property = int(edge[7])
@@ -119,93 +155,41 @@ class Layer:
             except NotAccessible:
                 pass
 
-    def match(self, lon, lat):
-        epsilon = 0.001
-        query =  "SELECT id FROM nodes WHERE lon >= ? AND lon <= ? AND lat >= ? AND lat <= ? ORDER BY (lon-?)*(lon-?) + (lat-?) * (lat-?) LIMIT 1"
-        cur = self.nodes_db.cursor()
-        cur.execute(query, (float(lon) - epsilon, float(lon) + epsilon, float(lat) - epsilon, float(lat) + epsilon, lon, lon, lat, lat))
-        row = cur.fetchone()
-        if row:
-            return int(row[0]) + self.offset
+    
 
-    def coordinates(self, node):
-        query = "SELECT lon, lat, osm_id FROM nodes WHERE id=?"
-        cur = self.nodes_db.cursor()
-        cur.execute(query, (node - self.offset,))
-        row = cur.fetchone()
-        if row:
-            return (row[0], row[1], row[2])
-        else:
-            print "Unknow node {0} on layer {1}".format(node, self.name)
-
-    def nodes(self):
-        query = "SELECT id, osm_id, lon, lat FROM nodes"
-        cur = self.nodes_db.cursor()
-        cur.execute(query)
-        for r in cur:
-            yield {
-                    'id': int(r[0]),
-                    'original_id': row[1],
-                    'lon': float(r[2]),
-                    'lat': float(r[3])
-                    }
-
-
-
-class GTFSLayer:
-    def __init__(self, name, data, dbname = None):
-        if dbname:
-            self.schedule = transitfeed.Schedule(permanent_db=True, db_name = dbname)
-            self.schedule.Load(data, load_stop_times=False)
-        else:
-            self.schedule = transitfeed.Schedule()
-            self.schedule.Load(data)
-
-        self.count = len(self.schedule.stops)
+class GTFSLayer(BaseLayer):
+    def __init__(self, name, data):
+        self.nodes_db = sqlite3.connect(data, check_same_thread = False)
+        c = self.nodes_db.cursor()
+        c.execute("SELECT count(1) FROM nodes")
+        self.count = int(c.fetchone()[0])
         self.offset = 0
-        self.stop_id_map = {}
         self.name = name
-        stops = self.schedule.GetStopList()
-        for i in range(len(stops)):
-            self.stop_id_map[stops[i].stop_id] = i
         print "Layer {0} loaded with {1} nodes".format(name, self.count)
 
-    def map(self, stop_id):
-        return self.stop_id_map[stop_id] + self.offset
-
-    def coordinates(self, node):
-        stop = self.schedule.GetStopList()[node - self.offset]
-        if stop == None:
-            print "Node not found: {0}, offset: {1}".format(node, self.offset)
-        return (stop.stop_lon, stop.stop_lat, stop.stop_id)
-
-    def match(self, lon, lat):
-        return self.map(self.schedule.GetNearestStops(lat, lon)[0].stop_id)
-
-    def nodes(self):
-        for stop in self.schedule.GetStopList():
+    def edges(self):
+        c = self.nodes_db.cursor()
+        c.execute("SELECT source, target, start_secs, arrival_secs FROM edges")
+        for row in c:
             yield {
-                    'id': self.map(stop.stop_id),
-                    'original_id': stop.stop_id,
-                    'lon': stop.stop_lon,
-                    'lat': stop.stop_lat
+                    'source': row[0] + self.offset,
+                    'target': row[1] + self.offset,
+                    'departure': row[2],
+                    'arrival': row[3]
                     }
 
-    def edges(self):
-        for trip in self.schedule.GetTripList():
-            prev_stop = None
-            prev_start = 0
-            for stop in trip.GetTimeStops():
-                if prev_stop != None:
-                    yield {
-                            'source': self.map(prev_stop),
-                            'target': self.map(stop[2].stop_id),
-                            'departure': prev_start,
-                            'arrival': stop[0]
-                            }
-                prev_stop = stop[2].stop_id
-                prev_start = stop[1]
-
+        # Connects every node corresponding to a same stop:
+        # if a stop is used by 3 routes, the stop will be represented by 3 nodes
+        c.execute("SELECT n1.id, n2.id FROM nodes as n1, nodes as n2 WHERE n1.original_id = n2.original_id AND n1.route <> n2.route")
+        e = mumoro.Edge()
+        e.line_change = 1
+        e.duration = mumoro.Duration(60) # There should be at least a minute between two bus/trains at the same station
+        for row in c:
+            yield {
+                    'source': row[0] + self.offset,
+                    'target': row[1] + self.offset,
+                    'properties': e
+                    }
 
 class MultimodalGraph:
     def __init__(self, layers):
