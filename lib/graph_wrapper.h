@@ -39,7 +39,8 @@ struct Graph
     Graph_t g;
     Graph(int nb_nodes);
     void add_edge(int source, int target, const Edge & e);
-    bool public_transport_edge(int source, int targe, float start, float arrival);
+    bool public_transport_edge(int source, int target, float start, float arrival);
+    bool dijkstra(int source, int target);
 };
 
 const int invalid_node = -1;

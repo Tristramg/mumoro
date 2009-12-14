@@ -23,7 +23,7 @@ class HelloWorld:
 
     def path(self, start=None, dest=None):
         cherrypy.response.headers['Content-Type']= 'application/json'
-        p = mumoro.martins_py(int(start), int(dest), self.g.graph)
+        p = mumoro.martins(int(start), int(dest), self.g.graph, 30000, mumoro.mode_change, mumoro.line_change)
         if len(p) == 0:
             return json.dumps({'error': 'No route found'}) 
         

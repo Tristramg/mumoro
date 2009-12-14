@@ -1,6 +1,7 @@
 import mumoro
 import psycopg2 as pg
 import sqlite3
+import elevation
 
 class NotAccessible(Exception):
     pass
@@ -91,6 +92,7 @@ class Layer(BaseLayer):
             print "I am unable to connect to the database"
         self.nodes_offset = 0
 
+        eld = elevation.ElevationData("North_America")
         self.nodes_db = sqlite3.connect(':memory:', check_same_thread = False)
         self.nodes_db.executescript('''
                 CREATE TABLE nodes(
@@ -98,23 +100,31 @@ class Layer(BaseLayer):
                     id INTEGER,
                     lon REAL,
                     lat REAL,
+                    alt REAL,
                     network TEXT
                 );
                 CREATE INDEX lon_lat_idx ON nodes(lon, lat);
                 CREATE INDEX id_idx ON nodes(id);
+                CREATE INDEX original_idx ON nodes(original_id);
                 ''')
         nodes_cur = self.conn.cursor()
         nodes_cur.execute('SELECT id, st_x(the_geom) as lon, st_y(the_geom) as lat FROM {0}'.format(data['nodes']))
         self.count = 0
         for n in nodes_cur:
-            self.nodes_db.execute('INSERT into nodes (id, original_id, lon, lat, network) VALUES(?, ?, ?, ?, "osm")', (self.count, n[0], n[1], n[2]))
+            alt = eld.altitude(n[2], n[1])
+            self.nodes_db.execute('INSERT into nodes (id, original_id, lon, lat, network, alt) VALUES(?, ?, ?, ?, "osm", ?)', (self.count, n[0], n[1], n[2], alt))
             self.count += 1
         print "Layer {0} loaded with {1} nodes".format(name, self.count)
                
     def edges(self):
+        nodes_cur = self.nodes_db.cursor()
         edges_cur = self.conn.cursor()
         edges_cur.execute('SELECT source, target, length, car, car_rev, bike, bike_rev, foot from {0}'.format(self.data['edges']))
         for edge in edges_cur:
+            nodes_cur.execute('SELECT alt FROM nodes WHERE original_id=?', (edge[0],))
+            source_alt = int(nodes_cur.fetchone()[0])
+            nodes_cur.execute('SELECT alt FROM nodes WHERE original_id=?', (edge[1],))
+            target_alt = int(nodes_cur.fetchone()[0])
             e = mumoro.Edge()
             e.length = float(edge[2])
             if self.mode == mumoro.Foot:
@@ -136,6 +146,8 @@ class Layer(BaseLayer):
             try:
                 dur = duration(e.length, property, self.mode)
                 e.duration = mumoro.Duration(dur)
+                if self.mode == mumoro.Bike:
+                    e.elevation = max(0, target_alt - source_alt)
                 yield {
                     'source': node1,
                     'target': node2,
@@ -147,6 +159,8 @@ class Layer(BaseLayer):
             try:
                 dur = duration(e.length, property_rev, self.mode)
                 e.duration = mumoro.Duration(dur)
+                if self.mode == mumoro.Bike:
+                    e.elevation = max(0, source_alt - target_alt)
                 yield {
                     'source': node2,
                     'target': node1,
@@ -234,9 +248,11 @@ class MultimodalGraph:
             if l.name == name:
                 return l.match(lon, lat)
 
-    def connect_same_nodes(self, layer1, layer2):
-        for n in layer1.nodes():
-            pass
+    def connect_same_nodes(self, layer1, layer2, property):
+        for n1 in layer1.nodes():
+            n2 = layer2.map(n1['original_id'])
+            if n2:
+                self.graph.add_edge(n1, n2, property)
 
     def connect_nearest_nodes(self, layer1, layer2, property, property2 = None):
         if property2 == None:

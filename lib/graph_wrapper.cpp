@@ -1,5 +1,6 @@
 #include "graph_wrapper.h"
 #include <iostream>
+#include <boost/graph/dijkstra_shortest_paths.hpp>
 
 Edge::Edge() : distance(0), elevation(0), mode_change(0), cost(0), line_change(0)
 {
@@ -54,4 +55,60 @@ bool Graph::public_transport_edge(int source, int target, float start, float arr
     g[e].duration.append(start, arrival);
     return !b;
 }
+    struct found_goal
+    {
+    }; // exception for termination
 
+    // visitor that terminates when we find the goal
+
+    class dijkstra_goal_visitor : public boost::default_dijkstra_visitor
+    {   
+        public:
+            
+            dijkstra_goal_visitor(int goal) : m_goal(goal)
+        {
+        }   
+            
+            template <class Graph_t>
+                void examine_vertex(int u, Graph_t& g)
+                {   
+                    if (u == m_goal)
+                        throw found_goal();
+                }
+        private:
+            int m_goal;
+    };
+
+float calc_duration(float in, Duration d)
+{
+    return d(in);
+}
+
+struct Comp
+{
+    bool operator()(float a, float b) const {return a<b;}
+    bool operator()(const Duration &, float) const {return false;}
+};
+
+bool Graph::dijkstra(int source, int target)
+{
+    std::vector<int> p(boost::num_vertices(g));
+    std::vector<float> d(boost::num_vertices(g));
+    try{
+    boost::dijkstra_shortest_paths(g, source,
+            boost::predecessor_map(&p[0])
+            .distance_map(&d[0])
+            .weight_map(get(&Edge::duration, g))
+//            .visitor(dijkstra_goal_visitor(target))
+            .distance_zero(30000)
+            .distance_combine(calc_duration)
+            .distance_compare(Comp())
+            );
+    return false;
+    }
+    catch(found_goal)
+    {
+        return true;
+    }
+
+}

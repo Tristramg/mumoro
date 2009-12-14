@@ -11,7 +11,7 @@ INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_PATH})
 
 include_directories(${Boost_INCLUDE_DIRS})
 
-ADD_DEFINITIONS( -g -Wall -Wno-deprecated)
+ADD_DEFINITIONS( -O3 -Wall -Wno-deprecated)
 
 ADD_LIBRARY(mum_lib martins.cpp tsaggouris.cpp graph_wrapper.cpp) 
 TARGET_LINK_LIBRARIES(mum_lib ${PQXX})

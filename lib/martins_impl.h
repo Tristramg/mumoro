@@ -60,21 +60,82 @@ struct Dominates
 template<size_t N>
 struct Relaxed_dominates
 {
-    bool operator()(const Label<N> & a, const Label<N> & l) const
+};
+
+template<>
+struct Relaxed_dominates<2>
+{
+    float r1;
+    Relaxed_dominates(float r1) : r1(r1) {}
+
+    bool operator()(const Label<2> & a, const Label<2> & l) const
+    {
+        float gain1 = l.cost[0] - a.cost[0];
+        float gain2 = l.cost[1] - a.cost[1];
+
+        if(gain1 >= 0)
+        { 
+            if(gain2 >= 0 || -gain1/gain2 >= r1)
+                return true;
+        }
+        return false;
+    }
+};
+
+template<>
+struct Relaxed_dominates<3>
+{
+    float r1,r2;
+    Relaxed_dominates(float r1, float r2) : r1(r1), r2(r2) {}
+
+    bool operator()(const Label<3> & a, const Label<3> & l) const
     {
         float gain1 = l.cost[0] - a.cost[0];
         float gain2 = l.cost[1] - a.cost[1];
         float gain3 = l.cost[2] - a.cost[2];
 
-        if(gain1 >= 0 && gain2 >= 0 && gain3 >= 0)
-            return true;
-        if(gain1 > -60 && gain2 >= -2 && gain3 >= 0)
-            return true;
-        if(gain3 < 0 && gain1 > 0 && - gain3 / gain1 < 1/25 && gain2)
-            return true;
+        if(gain1 >= 0)
+        { 
+            if(gain2 >= 0 || -gain1/gain2 >= r1)
+            {
+                if(gain3 >= 0 || -gain1/gain3 >= r2)
+                    return true;
+            }
+        }
         return false;
     }
 };
+
+template<>
+struct Relaxed_dominates<4>
+{
+    float r1,r2,r3;
+    Relaxed_dominates(float r1, float r2, float r3) : r1(r1), r2(r2), r3(r3) {}
+
+    bool operator()(const Label<4> & a, const Label<4> & l) const
+    {
+        float gain1 = l.cost[0] - a.cost[0];
+        float gain2 = l.cost[1] - a.cost[1];
+        float gain3 = l.cost[2] - a.cost[2];
+        float gain4 = l.cost[3] - a.cost[3];
+
+        if(gain1 >= 0)
+        { 
+            if(gain2 >= 0 || -gain1/gain2 >= r1)
+            {
+                if(gain3 >= 0 || -gain1/gain3 >= r2)
+                {
+                    if(gain4 >= 0 || -gain1/gain4 >= r3)
+                        return true;
+                }
+            }
+        }
+        return false;
+    }
+};
+
+
+
 
 template<size_t N>
         struct my_queue
