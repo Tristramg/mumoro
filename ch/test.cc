@@ -65,6 +65,7 @@ int main(int, char** argv)
 */
 
     Graph<2>::Type g0, gc;
+    contract< Graph<2> >(g0);
   /*  std::cout << "Chargement du graphe initial..." << std::endl;
     std::ifstream ifile("graph_std_2");
     boost::archive::binary_iarchive iArchive(ifile);
@@ -163,7 +164,7 @@ int main(int, char** argv)
         boost::progress_timer t;
         for(int i=0; i < runs; i++)
         {
-            query_mono<2>(starts[i], dests[i], gc);
+            query_mono<Graph<2> >(starts[i], dests[i], gc);
         }
     }
 }

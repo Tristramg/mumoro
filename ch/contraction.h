@@ -20,24 +20,26 @@ int shortcuts;
 // On utilise l'heuristique Edge-Diffirence qui calcule combien d'arcs seront rajoutés
 // par rapport au nombre d'arcs supprimés
 // On simule donc la suppression
-template<int N>
-int node_priority(typename Graph<N>::node_t node, const typename Graph<N>::Type & graph)
+template<class Graph>
+int node_priority(typename Graph::node_t node, const typename Graph::Type & graph)
 {
+    typedef typename Graph::node_t node_t;
+    typedef typename Graph::edge_t edge_t;
     int added = 0;
     //Pour tous les prédecsseurs de node
-    BOOST_FOREACH(typename Graph<N>::edge_t in_edge, boost::in_edges(node, graph))
+    BOOST_FOREACH(edge_t in_edge, boost::in_edges(node, graph))
     {
-        typename Graph<N>::node_t pred = boost::source(in_edge, graph);
-        if(graph[pred].order == Graph<N>::Node::undefined)
+        node_t pred = boost::source(in_edge, graph);
+        if(graph[pred].order == Graph::Node::undefined)
         {
             //Pour tous les successeurs de node
-            BOOST_FOREACH(typename Graph<N>::edge_t out_edge, boost::out_edges(node, graph))
+            BOOST_FOREACH(edge_t out_edge, boost::out_edges(node, graph))
             {
-                typename Graph<N>::node_t succ = boost::target(out_edge, graph);
-                if(graph[succ].order == Graph<N>::Node::undefined)
+                node_t succ = boost::target(out_edge, graph);
+                if(graph[succ].order == Graph::Node::undefined)
                 {
-                    typename Graph<N>::Edge edge_prop(graph[in_edge]);
-                    for(int i=0; i < N; i++)
+                    typename Graph::Edge edge_prop(graph[in_edge]);
+                    for(int i=0; i < Graph::objectives ; i++)
                     {
                         edge_prop.cost[i] += graph[out_edge].cost[i];
                     }
@@ -54,50 +56,31 @@ int node_priority(typename Graph<N>::node_t node, const typename Graph<N>::Type 
     return added - (boost::out_degree(node, graph) + boost::in_degree(node, graph));
 }
 
-// Fonction auxiliaire pour déterminer si l'arc va d'un nœud plus grand à un plus petit
-template<int N>
-struct decreasing_edge
-{
-    const typename Graph<N>::Type & graph;
-    decreasing_edge(const typename Graph<N>::Type & g) : graph(g) {}
-
-    bool operator()(typename Graph<N>::edge_t edge)
-    {
-        typename Graph<N>::Node source, target;
-        source = graph[boost::source(edge,graph)];
-        target = graph[boost::target(edge,graph)];
-        if(target.order == Graph<N>::Node::undefined)
-            return false;
-        else if(source.order == Graph<N>::Node::undefined)
-            return true;
-        else
-            return source.order > target.order;
-    }
-};
-
 
 // Fonction qui effectivement élimine le nœud en le court-circuitant par des arcs
 // On étant un prédecesseur s et un successeur t, avec s > t
 // on crée l'arc s->t donc le cout est  c(s->u) + c(u->t)
 // s'il n'existe aucun "witness" (autre chemin de moindre coût)
-    template<int N>
-void suppress(typename Graph<N>::node_t node, typename Graph<N>::Type & graph)
+    template<class Graph>
+void suppress(typename Graph::node_t node, typename Graph::Type & graph)
 {
+    typedef typename Graph::node_t node_t;
+    typedef typename Graph::edge_t edge_t;
     //Pour tous les prédecsseurs de node
-    BOOST_FOREACH(typename Graph<N>::edge_t in_edge, boost::in_edges(node, graph))
+    BOOST_FOREACH(edge_t in_edge, boost::in_edges(node, graph))
     {
-        typename Graph<N>::node_t pred = boost::source(in_edge, graph);
-        if(graph[pred].order == Graph<N>::Node::undefined)
+        node_t pred = boost::source(in_edge, graph);
+        if(graph[pred].order == Graph::Node::undefined)
         {
             //Pour tous les successeurs de node
-            BOOST_FOREACH(typename Graph<N>::edge_t out_edge, boost::out_edges(node, graph))
+            BOOST_FOREACH(edge_t out_edge, boost::out_edges(node, graph))
             {
-                typename Graph<N>::node_t succ = boost::target(out_edge, graph);
-                if(graph[succ].order == Graph<N>::Node::undefined && pred != succ)
+                node_t succ = boost::target(out_edge, graph);
+                if(graph[succ].order == Graph::Node::undefined && pred != succ)
                 {
                     //Propriétés du nouvel arc
-                    typename Graph<N>::Edge edge_prop(graph[in_edge]);
-                    for(int i=0; i < N; i++)
+                    typename Graph::Edge edge_prop(graph[in_edge]);
+                    for(int i=0; i < Graph::objectives; i++)
                     {
                         edge_prop.cost[i] += graph[out_edge].cost[i];
                     }
@@ -111,7 +94,7 @@ void suppress(typename Graph<N>::node_t node, typename Graph<N>::Type & graph)
                         // Ce n'est faisable que parce que les arcs sont stoqués sous forme de listS
                         // Sinon ça merde sur les itérateurs dans la boucle
                         bool exists;
-                        typename Graph<N>::edge_t existing_edge;
+                        edge_t existing_edge;
                         boost::tie(existing_edge, exists) = boost::edge(pred, succ, graph);
                         if(exists)
                         {
@@ -150,13 +133,13 @@ void suppress(typename Graph<N>::node_t node, typename Graph<N>::Type & graph)
 
 
 // Functor comparant la priorité d'un nœud
-template<int N>
+template<class Graph>
 struct priority_comp
 {
-    const typename Graph<N>::Type & graph;
-    priority_comp(const typename Graph<N>::Type & g) : graph(g) {}
+    const typename Graph::Type & graph;
+    priority_comp(const typename Graph::Type & g) : graph(g) {}
 
-    bool operator()(const typename Graph<N>::node_t a, const typename Graph<N>::node_t b) const
+    bool operator()(const typename Graph::node_t a, const typename Graph::node_t b) const
     {
         return (graph[a].priority < graph[b].priority);
     }
@@ -166,13 +149,15 @@ struct priority_comp
 //Phase 1 : trier les nœuds par leur priorité
 //Phase 2 : prendre récursivement le plus petit nœud non encore traité et l'éliminer
 //Phase 3 : on supprime tous 
-    template<int N>
-void contract(typename Graph<N>::Type & graph)
+    template<class Graph>
+void contract(typename Graph::Type & graph)
 {
     shortcuts = 0;
+    typedef typename Graph::node_t node_t;
+    typedef typename Graph::edge_t edge_t;
 
-    priority_comp<N> comp(graph);
-    boost::mutable_queue<typename Graph<N>::node_t, std::vector<typename Graph<N>::node_t>, priority_comp<N> > queue(boost::num_vertices(graph), comp, boost::identity_property_map());
+    priority_comp<Graph> comp(graph);
+    boost::mutable_queue<node_t, std::vector<node_t>, priority_comp<Graph> > queue(boost::num_vertices(graph), comp, boost::identity_property_map());
     std::cout << "Nombre d'arcs avant la contraction : " << boost::num_edges(graph) << std::endl;
     //Phase 1
     int positive = 0;
@@ -180,11 +165,11 @@ void contract(typename Graph<N>::Type & graph)
     int zero = 0;
     std::cout << "Simulation de la contraction pour déterminer l'ordre de contraction" << std::endl;
     boost::progress_display show_progress( boost::num_vertices(graph) );
-    BOOST_FOREACH(typename Graph<N>::node_t node, boost::vertices(graph))
+    BOOST_FOREACH(node_t node, boost::vertices(graph))
     {
-        int i = node_priority<N>(node, graph);
+        int i = node_priority<Graph>(node, graph);
         graph[node].priority = i;
-        graph[node].order = Graph<N>::Node::undefined;
+        graph[node].order = Graph::Node::undefined;
         if(i < 0)
             negative++;
         else if(i == 0)
@@ -204,16 +189,16 @@ void contract(typename Graph<N>::Type & graph)
     boost::progress_display show_progress2( boost::num_vertices(graph) );
     while( !queue.empty() )
     {
-        typename Graph<N>::node_t node = queue.top();
-        if(node_priority<N>(node, graph) != graph[node].priority)
+        node_t node = queue.top();
+        if(node_priority<Graph>(node, graph) != graph[node].priority)
         {
             //Bon gros hack car je ne vois pas comment itérer sur les élements de la queue
             //TODO: itérer que sur la queue
-            BOOST_FOREACH(typename Graph<N>::node_t n, boost::vertices(graph))
+            BOOST_FOREACH(node_t n, boost::vertices(graph))
             {
-                if(graph[n].order == Graph<N>::Node::undefined)
+                if(graph[n].order == Graph::Node::undefined)
                 {
-                    graph[n].priority = node_priority<N>(n, graph);
+                    graph[n].priority = node_priority<Graph>(n, graph);
                     queue.update(n);
                 }
             }
@@ -222,19 +207,19 @@ void contract(typename Graph<N>::Type & graph)
         node = queue.top();
         queue.pop();
 
-        if(graph[node].order != Graph<N>::Node::undefined)
+        if(graph[node].order != Graph::Node::undefined)
             std::cout << "WTF ?!" << std::endl;
         graph[node].order = current_order++;
-        suppress<N>(node, graph);
+        suppress<Graph>(node, graph);
         
         //On met à jour la priorité des nœuds sortant (les entrants sont soit déjà traités,
         //soit l'arc a été supprimé car c'est forcément un nœud plus grand)
-        BOOST_FOREACH(typename Graph<N>::edge_t out_edge, boost::out_edges(node, graph))
+        BOOST_FOREACH(edge_t out_edge, boost::out_edges(node, graph))
         {
-            typename Graph<N>::node_t succ = boost::target(out_edge, graph);
-            if(graph[succ].order == Graph<N>::Node::undefined)
+            node_t succ = boost::target(out_edge, graph);
+            if(graph[succ].order == Graph::Node::undefined)
             {
-                graph[succ].priority = node_priority<N>(succ, graph); 
+                graph[succ].priority = node_priority<Graph>(succ, graph); 
                 queue.update(succ);
             }
         }

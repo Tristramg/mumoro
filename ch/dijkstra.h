@@ -4,12 +4,11 @@
 #include "graph.h"
 #include <boost/pending/relaxed_heap.hpp>
 //Foncteur annexe qui retourne vrai si le 1er nœud a une distance plus petite
-template<int N>
 struct Compare
 {
     const std::vector<float> & vec;
     Compare(const std::vector<float> & dist) : vec(dist) {}
-    bool operator()(const typename Graph<N>::node_t a, const typename Graph<N>::node_t b) const
+    bool operator()(int a, int b) const
     {
         return vec[a] < vec[b];
     }
@@ -19,17 +18,19 @@ enum Color {White, Gray, Black};
 
 //Simple fonction pour tester si le calcul du plus court chemin fonctionne
 //On retourne que la distance pour comparer par rapport à du dijkstra
-    template<int N>
-float query_mono(typename Graph<N>::node_t start, typename Graph<N>::node_t dest, const typename Graph<N>::Type & graph)
+    template<class Graph>
+float query_mono(typename Graph::node_t start, typename Graph::node_t dest, const typename Graph::Type & graph)
 {
+    typedef typename Graph::node_t node_t;
+    typedef typename Graph::edge_t edge_t;
 
     //Vecteurs de distance
     std::vector<float> dist1(boost::num_vertices(graph), std::numeric_limits<float>::max());
     std::vector<float> dist2(boost::num_vertices(graph), std::numeric_limits<float>::max());
 
     //Les deux files de priorité
-    boost::relaxed_heap<typename Graph<N>::node_t, Compare<N> > queue1(boost::num_vertices(graph), Compare<N>(dist1));
-    boost::relaxed_heap<typename Graph<N>::node_t, Compare<N> > queue2(boost::num_vertices(graph), Compare<N>(dist2));
+    boost::relaxed_heap<node_t, Compare > queue1(boost::num_vertices(graph), Compare(dist1));
+    boost::relaxed_heap<node_t, Compare > queue2(boost::num_vertices(graph), Compare(dist2));
 
     //La couleur du nœud (blanc : non exploré, gris : touché, noir : on y touche plus)
     std::vector<Color> col1(boost::num_vertices(graph), White);
@@ -51,16 +52,16 @@ float query_mono(typename Graph<N>::node_t start, typename Graph<N>::node_t dest
         if(!queue1.empty())
         {
             //On prend le plus petit nœud gris
-            typename Graph<N>::node_t n1 = queue1.top();
+            node_t n1 = queue1.top();
             queue1.pop();
             col1[n1] = Black;
             min1 = dist1[n1];
             //Pour tous ses successeurs
             if(min1 < best_distance)
             {
-                BOOST_FOREACH(typename Graph<N>::edge_t edge, boost::out_edges(n1, graph))
+                BOOST_FOREACH(edge_t edge, boost::out_edges(n1, graph))
                 {
-                    typename Graph<N>::node_t v = boost::target(edge, graph);
+                    node_t v = boost::target(edge, graph);
                     //On ne prend que les nœuds plus grands
                     if(graph[v].order >= graph[n1].order)
                     {
@@ -94,15 +95,15 @@ float query_mono(typename Graph<N>::node_t start, typename Graph<N>::node_t dest
         if(!queue2.empty())
         {
             //On prend le plus petit nœud gris
-            typename Graph<N>::node_t n2 = queue2.top();
+            node_t n2 = queue2.top();
             min2 = dist2[n2];
             queue2.pop();
             //Pour tous ses successeurs
             if(min2 < best_distance)
             {
-                BOOST_FOREACH(typename Graph<N>::edge_t edge, boost::in_edges(n2, graph))
+                BOOST_FOREACH(edge_t edge, boost::in_edges(n2, graph))
                 {
-                    typename Graph<N>::node_t v = boost::source(edge, graph);
+                    node_t v = boost::source(edge, graph);
                     //On ne prend que les nœuds plus grands
                     if(graph[v].order >= graph[n2].order)
                     {
