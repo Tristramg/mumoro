@@ -2,7 +2,6 @@
 #define DIJKSTRA_H
 
 #include "graph.h"
-#include <boost/graph/dijkstra_shortest_paths.hpp>
 #include <boost/pending/relaxed_heap.hpp>
 //Foncteur annexe qui retourne vrai si le 1er nœud a une distance plus petite
 template<int N>
@@ -20,13 +19,9 @@ enum Color {White, Gray, Black};
 
 //Simple fonction pour tester si le calcul du plus court chemin fonctionne
 //On retourne que la distance pour comparer par rapport à du dijkstra
-template<int N>
+    template<int N>
 float query_mono(typename Graph<N>::node_t start, typename Graph<N>::node_t dest, const typename Graph<N>::Type & graph)
 {
-        std::vector<int> p(boost::num_vertices(graph));
-        std::vector<float> d(boost::num_vertices(graph));
-        boost::dijkstra_shortest_paths(graph, start, boost::predecessor_map(&p[0]).distance_map(&d[0]).weight_map(get(&Graph<2>::Edge::cost0, graph)));
-
 
     //Vecteurs de distance
     std::vector<float> dist1(boost::num_vertices(graph), std::numeric_limits<float>::max());
@@ -43,53 +38,54 @@ float query_mono(typename Graph<N>::node_t start, typename Graph<N>::node_t dest
     dist1[start] = 0;
     col1[start] = Gray;
     queue1.push(start);
-    
+
     dist2[dest] = 0;
     col2[dest] = Gray;
     queue2.push(dest);
 
     float best_distance = std::numeric_limits<float>::max();
+    float min1 = 0;
+    float min2 = 0;
     while(!queue1.empty() || !queue2.empty())
     {
         if(!queue1.empty())
         {
             //On prend le plus petit nœud gris
             typename Graph<N>::node_t n1 = queue1.top();
-            if(dist1[n1] > d[n1] + 0.01)
-            {
-     //           std::cout << "We have pb at node " << n1 << " " << dist1[n1] << " vs " << d[n1] << std::endl;
-            }
             queue1.pop();
             col1[n1] = Black;
+            min1 = dist1[n1];
             //Pour tous ses successeurs
-            BOOST_FOREACH(typename Graph<N>::edge_t edge, boost::out_edges(n1, graph))
+            if(min1 < best_distance)
             {
-                typename Graph<N>::node_t v = boost::target(edge, graph);
-                //On ne prend que les nœuds plus grands
-                if(graph[v].order >= graph[n1].order)
+                BOOST_FOREACH(typename Graph<N>::edge_t edge, boost::out_edges(n1, graph))
                 {
-                    BOOST_ASSERT(graph[edge].cost0 > 0);
-                    //Si on a trouvé plus court vers le successeurs
-                    if(dist1[n1] + graph[edge].cost0 < dist1[v])
+                    typename Graph<N>::node_t v = boost::target(edge, graph);
+                    //On ne prend que les nœuds plus grands
+                    if(graph[v].order >= graph[n1].order)
                     {
-                        dist1[v] = dist1[n1] + graph[edge].cost0;
-                        //Si on avait jamais visité ce nœud, on le rajoute à la queue
-                        if(col1[v] == White)
+                        //Si on a trouvé plus court vers le successeurs
+                        if(dist1[n1] + graph[edge].cost0 < dist1[v])
                         {
-                            col1[v] = Gray;
-                            queue1.push(v);
-                        }
-                        else if(col1[v] == Gray)
-                        {
-                            queue1.update(v);
+                            dist1[v] = dist1[n1] + graph[edge].cost0;
+                            //Si on avait jamais visité ce nœud, on le rajoute à la queue
+                            if(col1[v] == White)
+                            {
+                                col1[v] = Gray;
+                                queue1.push(v);
+                            }
+                            else if(col1[v] == Gray)
+                            {
+                                queue1.update(v);
+                            }
                         }
                     }
-                }
-                //On fait un check des fois que le nœud ait déjà été atteint
-                // dans l'autre sens
-                if(col2[v] != White && dist1[v] + dist2[v] < best_distance)
-                {
-                    best_distance = dist1[v] + dist2[v];
+                    //On fait un check des fois que le nœud ait déjà été atteint
+                    // dans l'autre sens
+                    if(col2[v] != White && dist1[v] + dist2[v] < best_distance)
+                    {
+                        best_distance = dist1[v] + dist2[v];
+                    }
                 }
             }
         }
@@ -99,37 +95,41 @@ float query_mono(typename Graph<N>::node_t start, typename Graph<N>::node_t dest
         {
             //On prend le plus petit nœud gris
             typename Graph<N>::node_t n2 = queue2.top();
+            min2 = dist2[n2];
             queue2.pop();
             //Pour tous ses successeurs
-            BOOST_FOREACH(typename Graph<N>::edge_t edge, boost::in_edges(n2, graph))
+            if(min2 < best_distance)
             {
-                typename Graph<N>::node_t v = boost::source(edge, graph);
-                //On ne prend que les nœuds plus grands
-                if(graph[v].order >= graph[n2].order)
+                BOOST_FOREACH(typename Graph<N>::edge_t edge, boost::in_edges(n2, graph))
                 {
-                    //Si on a trouvé plus court vers le successeurs
-                    if(dist2[n2] + graph[edge].cost0 < dist2[v])
+                    typename Graph<N>::node_t v = boost::source(edge, graph);
+                    //On ne prend que les nœuds plus grands
+                    if(graph[v].order >= graph[n2].order)
                     {
-                        dist2[v] = dist2[n2] + graph[edge].cost0;
-                        //Si on avait jamais visité ce nœud, on le rajoute à la queue
-                        if(col2[v] == White)
+                        //Si on a trouvé plus court vers le successeurs
+                        if(dist2[n2] + graph[edge].cost0 < dist2[v])
                         {
-                            col2[v] = Gray;
-                            queue2.push(v);
-                        }
-                        else if(col2[v] == Gray)
-                        {
-                            queue2.update(v);
+                            dist2[v] = dist2[n2] + graph[edge].cost0;
+                            //Si on avait jamais visité ce nœud, on le rajoute à la queue
+                            if(col2[v] == White)
+                            {
+                                col2[v] = Gray;
+                                queue2.push(v);
+                            }
+                            else if(col2[v] == Gray)
+                            {
+                                queue2.update(v);
+                            }
                         }
                     }
+                    //On fait un check des fois que le nœud ait déjà été atteint
+                    if(col1[v] != White && dist1[v] + dist2[v] < best_distance)
+                    {
+                        best_distance = dist1[v] + dist2[v];
+                    }
                 }
-                //On fait un check des fois que le nœud ait déjà été atteint
-                if(col1[v] != White && dist1[v] + dist2[v] < best_distance)
-                {
-                    best_distance = dist1[v] + dist2[v];
-                }
+                col2[n2] = Black;
             }
-            col2[n2] = Black;
         }
     }
 
