@@ -5,6 +5,10 @@
 
 #include "graph.h"
 
+#include <boost/multi_index_container.hpp>
+#include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/member.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/foreach.hpp>
 
@@ -75,5 +79,86 @@ std::list< Path<N> > query(typename Graph<N>::node_t source, typename Graph<N>::
     std::list< Path<N> > paths;
     return paths;
 }
+
+    struct my_queue
+    {
+
+        typedef boost::multi_index_container<
+            SimpleLabel,
+            indexed_by<
+                ordered_non_unique<member<SimpleLabel, boost::array<float, N>, &SimpleLabel::cost> >,
+            hashed_non_unique<member<SimpleLabel, node_t, &SimpleLabel::node > >
+                >
+                > Type;
+
+        typedef typename nth_index<Type, 0>::type& by_cost;
+        typedef typename nth_index<Type, 1>::type& by_nodes;
+        typedef typename nth_index<Type, 1>::type::iterator nodes_it;
+    };
+
+        bool is_dominated_by_any(const typename my_queue::Type & Q, const SimpleLabel & l)
+        {
+            BOOST_FOREACH(SimpleLabel a,  Q.get<1>().equal_range(l.node) )
+            {
+                if( dominates(a.cost, l.cost) || a.cost == l.cost)
+                    return true;
+            }
+            return false;
+        }
+
+    //Algo de martins simplifié pour trouver des "Witness", c'est à dire un chemin qui domine
+    // le potentiel raccourci
+    // Comme on ne s'intéresse au chemin, mais juste à l'existence, on ne s'embarasse pas à garder le prédecesseur
+        bool witness_martins(node_t start_node, node_t dest_node, array<float,N> cost)
+        {
+            typename my_queue::Type Q;
+
+            SimpleLabel start;
+            start.node = start_node;
+            for(int i=0; i<N; i++)
+                start.cost[i] = 0;
+
+            Q.insert(start);
+            const typename my_queue::by_cost cost_q_it = Q.get<0>();
+            const typename my_queue::by_nodes node_q = Q.get<1>();
+
+            while( !Q.empty() )
+            {
+                SimpleLabel l = *(cost_q_it.begin());
+                Q.erase(cost_q_it.begin());
+
+                BOOST_FOREACH(edge_t e, out_edges(l.node, graph))
+                {
+                    SimpleLabel l2;
+                    l2.node = boost::target(e, graph);
+
+                    for(int i=0; i < N; i++)
+                        l2.cost[i] = l.cost[i] + graph[e].cost[i];
+
+                    if(l2.node == dest_node && dominates(l2.cost, cost))
+                        return true;
+
+                    if(!is_dominated_by_any(Q, l2) && !dominates(cost, l2.cost))
+                    {
+                        typename my_queue::nodes_it it, end;
+                        tie(it, end) = node_q.equal_range(l2.node);
+                        while(it != end)
+                        {
+                            if(dominates(l2.cost, it->cost))
+                                it = Q.get<1>().erase(it);
+                            else
+                            {
+                                it++;
+                            }
+                        }
+                        Q.insert(l2);
+                    }
+                }
+            }
+
+            return false;
+        }
+
+
 
 #endif
