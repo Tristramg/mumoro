@@ -4,7 +4,7 @@
 void bench(Graph<2> & g, Graph<2> & gc)
 {
 
-    int runs = 1000;
+    int runs = 100;
     std::vector<int> starts(runs);
     std::vector<int> dests(runs);
     for(int i=0; i < runs; i++)
@@ -12,14 +12,14 @@ void bench(Graph<2> & g, Graph<2> & gc)
         starts[i] = rand() % boost::num_vertices(g.graph);
         dests[i] = rand() % boost::num_vertices(g.graph);
     }
-   /* { 
+    { 
         boost::progress_timer t;
         for(int i=0; i < runs; i++)
         {
             dijkstra_shortest_paths(g.graph, starts[i], weight_map(get(&Graph<2>::Edge::cost0, g.graph)));
         }
     }
- */
+
      {
         boost::progress_timer t;
         for(int i=0; i < runs; i++)
