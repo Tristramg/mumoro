@@ -3,7 +3,7 @@
 
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 
-void test(Graph<2> & g, Graph<2> & gc)
+void test(Graph & g, Graph & gc)
 {
     int runs = 10;
     for(int i = 0; i < runs; i++)
@@ -11,9 +11,9 @@ void test(Graph<2> & g, Graph<2> & gc)
         int start = rand() % boost::num_vertices(g.graph);
         int dest = rand() % boost::num_vertices(g.graph);
         std::vector<float> d(boost::num_vertices(g.graph));
-        dijkstra_shortest_paths(g.graph, start, distance_map(&d[0]).weight_map(get(&Graph<2>::Edge::cost0, g.graph)));
+        dijkstra_shortest_paths(g.graph, start, distance_map(&d[0]).weight_map(get(&Graph::Edge::cost0, g.graph)));
 
-        float cost = query_mono< Graph<2> >(start, dest, gc.graph); 
+        float cost = query_mono(start, dest, gc.graph); 
         if(cost > d[dest] + 0.1 || cost < d[dest] - 0.1)
             std::cout << "fuck from " << start << " to " << dest << " cost: " << cost << " vs " << d[dest] << std::endl;
         else 
