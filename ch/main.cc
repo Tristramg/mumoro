@@ -1,7 +1,7 @@
 #include "graph.h"
 #include "query.h"
 
-#include <pqxx/pqxx>
+//#include <pqxx/pqxx>
 #include <map>
 #include <iostream>
 
@@ -76,7 +76,7 @@ int main(int, char** argv)
     {
         g.graph[edge].cost0 = g.graph[edge].cost[0];
     }
-    martins(1100, g);
+    martins(1100, 12, g);
     /*martins(111, g);
     martins(112, g);
     martins(112, g);

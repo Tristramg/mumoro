@@ -22,7 +22,6 @@
 
 
 using namespace boost;
-using namespace boost::multi_index;
 
 // La structure est templatée en fonction du nombre d'objectifs
 struct Graph
@@ -31,7 +30,7 @@ struct Graph
     static const int N = 2;
     typedef array<float, objectives> cost_t;
 
-    bool static dominates(cost_t a, cost_t b)
+    bool static dominates(const cost_t & a, const cost_t & b)
     {
         for(int i=0; i < N; i++)
         {

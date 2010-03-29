@@ -1,4 +1,7 @@
 #include "query.h"
+#include <functional>
+using namespace boost::multi_index;
+
 // Décrit une étiquette (label) utilisée pendant l'exploration
 // Cela représente un état de l'exploration et un chemin possible
 struct Label
@@ -6,6 +9,21 @@ struct Label
     Graph::cost_t cost; // coût du chemin
     Graph::node_t node; // nœud destination du chemin
     boost::shared_ptr<Label> predecessor;
+};
+
+bool dominates(const Label & a, const Label & b)
+{
+    return Graph::dominates(a.cost, b.cost);
+}
+
+struct Label_dom
+{
+    Label l;
+    Label_dom(const Label & _l) : l(_l) {}
+    bool operator()(const Label & b)
+    {
+        return dominates(l, b);
+    }
 };
 
 typedef boost::shared_ptr<Label> LabelPtr;
@@ -70,14 +88,13 @@ std::list<Path> query(Graph::node_t source, Graph::node_t target, const Graph::T
     return paths;
 }
 
-template<class Container>
+    template<class Container>
 bool is_dominated_by_any(const Container & c, const Label & l)
 {
     BOOST_FOREACH(Label a,  c )
     {
-        if( Graph::dominates(a.cost, l.cost) || a.cost == l.cost)
+        if( dominates(a, l) || a.cost == l.cost)
         {
-    //        std::cout << "Domination: " << a.node << "<" << l.node << " [" << a.cost[0] << "," << a.cost[1] << "] < [" << l.cost[0] << "," << l.cost[1] << "]" << std::endl;
             return true;
         }
     }
@@ -85,7 +102,7 @@ bool is_dominated_by_any(const Container & c, const Label & l)
 }
 
 // Algo de martins sur le graphe normal
-bool martins(Graph::node_t start_node, const Graph & g)
+bool martins(Graph::node_t start_node, Graph::node_t dest_node, const Graph & g)
 {
     my_queue::Type Q;
     std::vector< std::deque<Label> > P(num_vertices(g.graph));
@@ -105,7 +122,7 @@ bool martins(Graph::node_t start_node, const Graph & g)
         Label l = *(cost_q_it.begin());
         visited++;
         P[l.node].push_back(l);
-//        std::cout << "Label! node=" << l.node << " [" << l.cost[0] << "," << l.cost[1] << "]" << std::endl;
+        //        std::cout << "Label! node=" << l.node << " [" << l.cost[0] << "," << l.cost[1] << "]" << std::endl;
         Q.erase(cost_q_it.begin());
         BOOST_FOREACH(Graph::edge_t e, out_edges(l.node, g.graph))
         {
@@ -114,7 +131,7 @@ bool martins(Graph::node_t start_node, const Graph & g)
             for(int i=0; i < Graph::objectives; i++)
                 l2.cost[i] = l.cost[i] + g[e].cost[i];
 
-            if(!is_dominated_by_any(node_q.equal_range(l2.node), l2) && !is_dominated_by_any(P[l2.node],l2))
+            if(!is_dominated_by_any(node_q.equal_range(l2.node), l2) && !is_dominated_by_any(P[l2.node],l2) && !is_dominated_by_any(P[dest_node], l2))
             {
                 my_queue::nodes_it it, end;
                 tie(it, end) = node_q.equal_range(l2.node);
@@ -128,19 +145,162 @@ bool martins(Graph::node_t start_node, const Graph & g)
                     }
                 }
                 Q.insert(l2);
-              //  std::cout << "    ins node=" << l2.node << " [" << l2.cost[0] << "," << l2.cost[1] << "]" << std::endl;
             }
         }
     }
-    float labels = 0;
-    BOOST_FOREACH(Graph::node_t n, boost::vertices(g.graph))
-    {
-        labels += P[n].size();
-    }
 
-    std::cout << "Labels visited: " << visited << ", solutions found: " << labels << std::endl;
+    std::cout << "Labels visited: " << visited << ", solutions found: " << P[dest_node].size() << std::endl;
     return false;
 }
 
+// Algo de martins dans un graphe CH
+// On maintient une liste de couts réalisables trouvés
+// À la création d'un nouveau label, on vérifie qu'il n'est pas dominé par aucun label des couts réalisables
+// À la visite d'un nœud dans un sens, si dans l'autre sens il a déjà été visité
+// - pour chaque couple de labels (sens1/sens2), créer un nouveau label
+// - s'il n'est dominé par aucun label dans la liste réalisable, le rajouter
+bool ch_martins(Graph::node_t start_node, Graph::node_t dest_node, const Graph & g)
+{  
+    typedef Graph::node_t node_t;
+    typedef Graph::edge_t edge_t;
 
+    // Compte le nombre de labels visités
+    int visited = 0;
+
+    // Liste des chemins trouvés
+    std::list<Label> found;
+
+    //Les deux files de priorité
+    my_queue::Type Q1, Q2;
+    const  my_queue::by_cost cost_q1 = Q1.get<0>();
+    const  my_queue::by_cost cost_q2 = Q2.get<0>();
+    const  my_queue::by_nodes node_q1 = Q1.get<1>();
+    const  my_queue::by_nodes node_q2 = Q2.get<1>();
+
+    // Les deux listes de labels permanents
+    std::vector< std::deque<Label> > P1(num_vertices(g.graph));
+    std::vector< std::deque<Label> > P2(num_vertices(g.graph));
+
+    Label start, dest;
+    start.node = start_node;
+    dest.node = dest_node;
+    for(int i=0; i < Graph::objectives; i++)
+    {
+        start.cost[i] = 0;
+        dest.cost[i] = 0;
+    }
+
+    Q1.insert(start);
+    Q2.insert(dest);
+
+    while(!Q1.empty() && !Q2.empty())
+    {
+        if(!Q1.empty())
+        {
+            Label l = *(cost_q1.begin());
+            visited++;
+            P1[l.node].push_back(l);
+            Q1.erase(cost_q1.begin());
+
+            //On regarde si on a réussi à construire un chemin non dominé
+            BOOST_FOREACH(Label l2, P2[l.node])
+            {
+                Label new_label;
+		for(int i=0; i < Graph::objectives; i++)
+			new_label.cost[i] = l2.cost[i] + l.cost[i];
+		
+		if(!is_dominated_by_any(found, new_label))
+		{
+			found.remove_if(Label_dom(l));
+			found.push_back(new_label);
+		}
+
+            }
+
+
+            BOOST_FOREACH(Graph::edge_t e, out_edges(l.node, g.graph))
+            {
+                Label l2;
+                l2.node = boost::target(e, g.graph);
+
+                if(g[l2.node].order >= g[l.node].order)
+                {
+                    for(int i=0; i < Graph::objectives; i++)
+                        l2.cost[i] = l.cost[i] + g[e].cost[i];
+
+                    if(!is_dominated_by_any(node_q1.equal_range(l2.node), l2) && !is_dominated_by_any(P1[l2.node],l2) && !is_dominated_by_any(found, l2))
+                    {
+                        my_queue::nodes_it it, end;
+                        tie(it, end) = node_q1.equal_range(l2.node);
+                        while(it != end)
+                        {
+                            if(Graph::dominates(l2.cost, it->cost) || l2.cost == it->cost)
+                                it = node_q1.erase(it);
+                            else
+                            {
+                                it++;
+                            }
+                        }
+                        Q1.insert(l2);
+                    }
+                }
+            }
+        }
+
+        if(!Q2.empty())
+        {
+            Label l = *(cost_q2.begin());
+            visited++;
+            P2[l.node].push_back(l);
+            Q2.erase(cost_q2.begin());
+
+            //On regarde si on a réussi à construire un chemin non dominé
+            BOOST_FOREACH(Label l2, P1[l.node])
+            {
+                Label new_label;
+		for(int i=0; i < Graph::objectives; i++)
+			new_label.cost[i] = l2.cost[i] + l.cost[i];
+		
+		if(!is_dominated_by_any(found, new_label))
+		{
+			found.remove_if(Label_dom(l));
+			found.push_back(new_label);
+		}
+
+            }
+
+
+            BOOST_FOREACH(Graph::edge_t e, out_edges(l.node, g.graph))
+            {
+                Label l2;
+                l2.node = boost::target(e, g.graph);
+
+                if(g[l2.node].order >= g[l.node].order)
+                {
+                    for(int i=0; i < Graph::objectives; i++)
+                        l2.cost[i] = l.cost[i] + g[e].cost[i];
+
+                    if(!is_dominated_by_any(node_q2.equal_range(l2.node), l2) && !is_dominated_by_any(P2[l2.node],l2) && !is_dominated_by_any(found, l2))
+                    {
+                        my_queue::nodes_it it, end;
+                        tie(it, end) = node_q2.equal_range(l2.node);
+                        while(it != end)
+                        {
+                            if(Graph::dominates(l2.cost, it->cost) || l2.cost == it->cost)
+                                it = node_q2.erase(it);
+                            else
+                            {
+                                it++;
+                            }
+                        }
+                        Q2.insert(l2);
+                    }
+                }
+            }
+        }
+    }
+
+    std::cout << "Labels visited: " << visited << ", solutions found: " << found.size() << std::endl;
+    return false;
+}
 
