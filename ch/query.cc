@@ -182,8 +182,8 @@ bool ch_martins(Graph::node_t start_node, Graph::node_t dest_node, const Graph &
     const  my_queue::by_nodes node_q2 = Q2.get<1>();
 
     // Les deux listes de labels permanents
-    std::vector< std::deque<Label> > P1(num_vertices(g.graph));
-    std::vector< std::deque<Label> > P2(num_vertices(g.graph));
+    std::vector< std::vector<Label> > P1(num_vertices(g.graph));
+    std::vector< std::vector<Label> > P2(num_vertices(g.graph));
 
     Label start, dest;
     start.node = start_node;
@@ -203,9 +203,9 @@ bool ch_martins(Graph::node_t start_node, Graph::node_t dest_node, const Graph &
         {
             Label l = *(cost_q1.begin());
             visited++;
-            P1[l.node].push_back(l);
             Q1.erase(cost_q1.begin());
 
+            P1[l.node].push_back(l);
             //On regarde si on a réussi à construire un chemin non dominé
             BOOST_FOREACH(Label l2, P2[l.node])
             {
@@ -222,32 +222,29 @@ bool ch_martins(Graph::node_t start_node, Graph::node_t dest_node, const Graph &
             }
 
 
-            BOOST_FOREACH(Graph::edge_t e, out_edges(l.node, g.graph))
+            BOOST_FOREACH(Graph::edge_t e, out_edges(l.node, g.foward))
             {
                 Label l2;
-                l2.node = boost::target(e, g.graph);
-                BOOST_ASSERT(g[l2.node].order != Graph::Node::undefined);
+                l2.node = boost::target(e, g.foward);
+                BOOST_ASSERT(g.foward[l2.node].order != Graph::Node::undefined);
 
-                if(g[l2.node].order >= g[l.node].order)
+                for(int i=0; i < Graph::objectives; i++)
+                    l2.cost[i] = l.cost[i] + g.foward[e].cost[i];
+
+                if(!is_dominated_by_any(node_q1.equal_range(l2.node), l2) && !is_dominated_by_any(P1[l2.node],l2) && !is_dominated_by_any(found, l2))
                 {
-                    for(int i=0; i < Graph::objectives; i++)
-                        l2.cost[i] = l.cost[i] + g[e].cost[i];
-
-                    if(!is_dominated_by_any(node_q1.equal_range(l2.node), l2) && !is_dominated_by_any(P1[l2.node],l2) && !is_dominated_by_any(found, l2))
+                    my_queue::nodes_it it, end;
+                    tie(it, end) = node_q1.equal_range(l2.node);
+                    while(it != end)
                     {
-                        my_queue::nodes_it it, end;
-                        tie(it, end) = node_q1.equal_range(l2.node);
-                        while(it != end)
+                        if(Graph::dominates(l2.cost, it->cost) || l2.cost == it->cost)
+                            it = node_q1.erase(it);
+                        else
                         {
-                            if(Graph::dominates(l2.cost, it->cost) || l2.cost == it->cost)
-                                it = node_q1.erase(it);
-                            else
-                            {
-                                it++;
-                            }
+                            it++;
                         }
-                        Q1.insert(l2);
                     }
+                    Q1.insert(l2);
                 }
             }
         }
@@ -275,43 +272,39 @@ bool ch_martins(Graph::node_t start_node, Graph::node_t dest_node, const Graph &
             }
 
 
-            BOOST_FOREACH(Graph::edge_t e, in_edges(l.node, g.graph))
+            BOOST_FOREACH(Graph::edge_t e, in_edges(l.node, g.backward))
             {
                 Label l2;
-                l2.node = boost::source(e, g.graph);
-                BOOST_ASSERT(g[l2.node].order != Graph::Node::undefined);
+                l2.node = boost::source(e, g.backward);
 
-                if(g[l2.node].order >= g[l.node].order)
+                for(int i=0; i < Graph::objectives; i++)
+                    l2.cost[i] = l.cost[i] + g.backward[e].cost[i];
+
+                if(!is_dominated_by_any(node_q2.equal_range(l2.node), l2) && !is_dominated_by_any(P2[l2.node],l2) && !is_dominated_by_any(found, l2))
                 {
-                    for(int i=0; i < Graph::objectives; i++)
-                        l2.cost[i] = l.cost[i] + g[e].cost[i];
-
-                    if(!is_dominated_by_any(node_q2.equal_range(l2.node), l2) && !is_dominated_by_any(P2[l2.node],l2) && !is_dominated_by_any(found, l2))
+                    my_queue::nodes_it it, end;
+                    tie(it, end) = node_q2.equal_range(l2.node);
+                    while(it != end)
                     {
-                        my_queue::nodes_it it, end;
-                        tie(it, end) = node_q2.equal_range(l2.node);
-                        while(it != end)
+                        if(Graph::dominates(l2.cost, it->cost) || l2.cost == it->cost)
+                            it = node_q2.erase(it);
+                        else
                         {
-                            if(Graph::dominates(l2.cost, it->cost) || l2.cost == it->cost)
-                                it = node_q2.erase(it);
-                            else
-                            {
-                                it++;
-                            }
+                            it++;
                         }
-                        Q2.insert(l2);
                     }
+                    Q2.insert(l2);
                 }
             }
         }
     }
 
     std::cout << "Labels visited: " << visited << ", solutions found: " << found.size() << std::endl;
- /*   BOOST_FOREACH(Label l, found)
-    {
-        std::cout << "[" << l.cost[0] << ";" << l.cost[1] << "]" << std::endl;
-    }
-   */ return false;
+    /*   BOOST_FOREACH(Label l, found)
+         {
+         std::cout << "[" << l.cost[0] << ";" << l.cost[1] << "]" << std::endl;
+         }
+         */ return false;
 }
 // Algo de martins simplifié qui dit juste s'il existe un chemin dominant le coût passé en paramètre
 bool martins_witness(Graph::node_t start_node, Graph::node_t dest_node, Graph::cost_t cost, const Graph::Type & g)

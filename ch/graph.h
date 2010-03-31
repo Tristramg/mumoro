@@ -1,6 +1,8 @@
 // Définit les structures de données pour un graphe
 // permettant un calcul d'itinéraire multiobjectif
 //
+#define BOOST_GRAPH_USE_NEW_CSR_INTERFACE 
+#include <boost/graph/compressed_sparse_row_graph.hpp>
 
 #include <boost/pending/mutable_queue.hpp>
 #include <boost/graph/adjacency_list.hpp>
@@ -70,6 +72,7 @@ struct Graph
             }
     };
 
+
     //NOTE: comme on modifie à tours de bras les arcs, il est important que les arcs soient
     //stockés dans une liste (problème de perfs et d'invalidation d'itérateurs)
     // (c'est le premier paramètre du template)
@@ -77,9 +80,37 @@ struct Graph
     typedef boost::graph_traits<Type>::edge_descriptor edge_t;
     typedef boost::graph_traits<Type>::vertex_descriptor node_t;
 
-    //typedef compressed_sparse_row_graph<boost::directedS, Node, Edge>  CType;
+    struct inc_order
+    {
+        const Type & g;
+        inc_order(const Type & _g) : g(_g) {}
+        bool operator()(edge_t e) const
+        {
+            return g[boost::source(e,g)].order < g[boost::target(e,g)].order;
+        }
+    };
+
+    struct dec_order
+    {
+        const Type & g;
+        dec_order(const Type & _g) : g(_g) {}
+        bool operator()(edge_t e) const
+        {
+            return g[boost::source(e,g)].order > g[boost::target(e,g)].order;
+        }
+
+    };
+
 
     Type graph;
+    Type foward;
+    Type backward;
+
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        ar & graph & foward & backward;
+    }
 
     Graph()
     {}
@@ -89,10 +120,25 @@ struct Graph
         std::cout << "Loading graph from file " << filename << std::endl;
         std::ifstream ifile(filename.c_str());
         boost::archive::binary_iarchive iArchive(ifile);
-        iArchive >> graph;   
+        iArchive >> *this; //graph;   
         std::cout << "   " << boost::num_vertices(graph) << " nodes" << std::endl;
         std::cout << "   " << boost::num_edges(graph) << " edges" << std::endl;
+        std::cout << "   " << boost::num_edges(foward) << " edges in the forward graph" << std::endl;
+        std::cout << "   " << boost::num_edges(backward) << " edges in the backward graph" << std::endl;
     }
+
+    void split()
+    {
+        foward = graph;
+        remove_edge_if(dec_order(foward), foward);
+        std::cout << "Foward graph, removed " << boost::num_edges(graph) - boost::num_edges(foward) << " edges" << std::endl;
+
+        std::cout << boost::num_vertices(foward) << " " << num_edges(foward) << std::endl;
+
+        backward = graph;
+        remove_edge_if(inc_order(backward), backward);
+        std::cout << "Backward graph, removed " << boost::num_edges(graph) - boost::num_edges(backward) << " edges" << std::endl;
+     }
 
     node_t add_node()
     {
@@ -130,7 +176,7 @@ struct Graph
     {
         std::ofstream ofile(filename.c_str());
         boost::archive::binary_oarchive oArchive(ofile);
-        oArchive << graph;
+        oArchive << *this;
     }
 
     int num_vertices() const

@@ -229,6 +229,8 @@ void Graph::contract()
 
     std::cout << "Nombre de racourcis ajoutés : " << shortcuts << std::endl;
     std::cout << "Nombre d'arcs après la contraction : " << boost::num_edges(graph) << std::endl;
+
+    split();
 }
 
 
