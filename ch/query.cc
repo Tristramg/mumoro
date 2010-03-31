@@ -22,7 +22,7 @@ struct Label_dom
     Label_dom(const Label & _l) : l(_l) {}
     bool operator()(const Label & b)
     {
-        return dominates(l, b);
+        return dominates(l, b) || l.cost == b.cost;
     }
 };
 
@@ -150,10 +150,10 @@ bool martins(Graph::node_t start_node, Graph::node_t dest_node, const Graph & g)
     }
 
     std::cout << "Labels visited: " << visited << ", solutions found: " << P[dest_node].size() << std::endl;
-    BOOST_FOREACH(Label l, P[dest_node])
+ /*   BOOST_FOREACH(Label l, P[dest_node])
     {
         std::cout << "[" << l.cost[0] << ";" << l.cost[1] << "]" << std::endl;
-    }
+    }*/
     return false;
 }
 
@@ -215,7 +215,7 @@ bool ch_martins(Graph::node_t start_node, Graph::node_t dest_node, const Graph &
 
                 if(!is_dominated_by_any(found, new_label))
                 {
-//                    found.remove_if(Label_dom(l));
+                    found.remove_if(Label_dom(new_label));
                     found.push_back(new_label);
                 }
 
@@ -226,6 +226,7 @@ bool ch_martins(Graph::node_t start_node, Graph::node_t dest_node, const Graph &
             {
                 Label l2;
                 l2.node = boost::target(e, g.graph);
+                BOOST_ASSERT(g[l2.node].order != Graph::Node::undefined);
 
                 if(g[l2.node].order >= g[l.node].order)
                 {
@@ -267,7 +268,7 @@ bool ch_martins(Graph::node_t start_node, Graph::node_t dest_node, const Graph &
 
                 if(!is_dominated_by_any(found, new_label))
                 {
-//                    found.remove_if(Label_dom(l));
+                    found.remove_if(Label_dom(new_label));
                     found.push_back(new_label);
                 }
 
@@ -278,6 +279,7 @@ bool ch_martins(Graph::node_t start_node, Graph::node_t dest_node, const Graph &
             {
                 Label l2;
                 l2.node = boost::source(e, g.graph);
+                BOOST_ASSERT(g[l2.node].order != Graph::Node::undefined);
 
                 if(g[l2.node].order >= g[l.node].order)
                 {
@@ -305,11 +307,11 @@ bool ch_martins(Graph::node_t start_node, Graph::node_t dest_node, const Graph &
     }
 
     std::cout << "Labels visited: " << visited << ", solutions found: " << found.size() << std::endl;
-    BOOST_FOREACH(Label l, found)
+ /*   BOOST_FOREACH(Label l, found)
     {
         std::cout << "[" << l.cost[0] << ";" << l.cost[1] << "]" << std::endl;
     }
-    return false;
+   */ return false;
 }
 // Algo de martins simplifié qui dit juste s'il existe un chemin dominant le coût passé en paramètre
 bool martins_witness(Graph::node_t start_node, Graph::node_t dest_node, Graph::cost_t cost, const Graph::Type & g)

@@ -1,4 +1,5 @@
 #include "dijkstra.h"
+#include "query.h"
 
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 
@@ -60,4 +61,32 @@ void bench(Graph & g, Graph & gc)
             //query_mono(starts[i], dests[i], gc.graph);
         }
     } 
+}
+
+void martins_bench(Graph & g, Graph & gc)
+{
+    int runs = 100;
+    std::vector<int> starts(runs);
+    std::vector<int> dests(runs);
+    for(int i=0; i < runs; i++)
+    {
+        starts[i] = rand() % boost::num_vertices(g.graph);
+        dests[i] = rand() % boost::num_vertices(g.graph);
+    }
+    { 
+        boost::progress_timer t;
+        for(int i=0; i < runs; i++)
+        {
+            martins(starts[i], dests[i], g);
+        }
+    }
+
+    {
+        boost::progress_timer t;
+        for(int i=0; i < runs; i++)
+        {
+            ch_martins(starts[i], dests[i], gc);
+        }
+    }
+ 
 }

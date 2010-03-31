@@ -196,11 +196,10 @@ void Graph::contract()
         BOOST_ASSERT(graph[node].order == Node::undefined);
 
         // On arrête de rajouter des arcs à partir d'un certain moment
-        if(graph[node].priority <= 1000)
+        if(graph[node].priority <= 10000)
         {
             graph[node].order = current_order++;
             shortcuts += suppress(node);
-
             //On met à jour la priorité des nœuds sortant (les entrants sont soit déjà traités,
             //soit l'arc a été supprimé car c'est forcément un nœud plus grand)
             BOOST_FOREACH(edge_t out_edge, boost::out_edges(node, graph))
@@ -212,11 +211,18 @@ void Graph::contract()
                     queue.update(succ);
                 }
             }
+
         }
         else
         {
             graph[node].order = current_order;
+            while( !queue.empty() )
+            {
+                graph[queue.top()].order = current_order;
+                queue.pop();
+            }
         }
+        BOOST_ASSERT(graph[node].order != Node::undefined);
 
         ++show_progress2;
     }

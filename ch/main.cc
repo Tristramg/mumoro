@@ -7,6 +7,7 @@
 
 
 void bench(Graph & g, Graph & gc);
+void martins_bench(Graph & g, Graph & gc);
 void test(Graph & g, Graph & gc);
 float secu(int cat, int length)
 {
@@ -74,7 +75,10 @@ int main(int, char** argv)
 //   619894 edges
     
     Graph g("paris_original");
-    Graph gc("paris_ch");
+  Graph gc("paris_ch");
+//    Graph gc(g);
+//    gc.contract();
+//    gc.save("paris_ch");
     martins(10000, 12, g);
     ch_martins(10000, 12, gc);
     /*martins(111, g);
@@ -89,6 +93,7 @@ int main(int, char** argv)
     martins(1610, g);*/
     //test(g,gc); 
 //    bench(g, gc);
+    martins_bench(g, gc);
 
 
 }
