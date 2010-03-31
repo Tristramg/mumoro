@@ -150,6 +150,10 @@ bool martins(Graph::node_t start_node, Graph::node_t dest_node, const Graph & g)
     }
 
     std::cout << "Labels visited: " << visited << ", solutions found: " << P[dest_node].size() << std::endl;
+    BOOST_FOREACH(Label l, P[dest_node])
+    {
+        std::cout << "[" << l.cost[0] << ";" << l.cost[1] << "]" << std::endl;
+    }
     return false;
 }
 
@@ -206,14 +210,14 @@ bool ch_martins(Graph::node_t start_node, Graph::node_t dest_node, const Graph &
             BOOST_FOREACH(Label l2, P2[l.node])
             {
                 Label new_label;
-		for(int i=0; i < Graph::objectives; i++)
-			new_label.cost[i] = l2.cost[i] + l.cost[i];
-		
-		if(!is_dominated_by_any(found, new_label))
-		{
-			found.remove_if(Label_dom(l));
-			found.push_back(new_label);
-		}
+                for(int i=0; i < Graph::objectives; i++)
+                    new_label.cost[i] = l2.cost[i] + l.cost[i];
+
+                if(!is_dominated_by_any(found, new_label))
+                {
+//                    found.remove_if(Label_dom(l));
+                    found.push_back(new_label);
+                }
 
             }
 
@@ -258,22 +262,22 @@ bool ch_martins(Graph::node_t start_node, Graph::node_t dest_node, const Graph &
             BOOST_FOREACH(Label l2, P1[l.node])
             {
                 Label new_label;
-		for(int i=0; i < Graph::objectives; i++)
-			new_label.cost[i] = l2.cost[i] + l.cost[i];
-		
-		if(!is_dominated_by_any(found, new_label))
-		{
-			found.remove_if(Label_dom(l));
-			found.push_back(new_label);
-		}
+                for(int i=0; i < Graph::objectives; i++)
+                    new_label.cost[i] = l2.cost[i] + l.cost[i];
+
+                if(!is_dominated_by_any(found, new_label))
+                {
+//                    found.remove_if(Label_dom(l));
+                    found.push_back(new_label);
+                }
 
             }
 
 
-            BOOST_FOREACH(Graph::edge_t e, out_edges(l.node, g.graph))
+            BOOST_FOREACH(Graph::edge_t e, in_edges(l.node, g.graph))
             {
                 Label l2;
-                l2.node = boost::target(e, g.graph);
+                l2.node = boost::source(e, g.graph);
 
                 if(g[l2.node].order >= g[l.node].order)
                 {
@@ -301,6 +305,57 @@ bool ch_martins(Graph::node_t start_node, Graph::node_t dest_node, const Graph &
     }
 
     std::cout << "Labels visited: " << visited << ", solutions found: " << found.size() << std::endl;
+    BOOST_FOREACH(Label l, found)
+    {
+        std::cout << "[" << l.cost[0] << ";" << l.cost[1] << "]" << std::endl;
+    }
     return false;
 }
+// Algo de martins simplifié qui dit juste s'il existe un chemin dominant le coût passé en paramètre
+bool martins_witness(Graph::node_t start_node, Graph::node_t dest_node, Graph::cost_t cost, const Graph::Type & g)
+{
+    my_queue::Type Q;
+    Label start;
+    start.node = start_node;
+    for(int i=0; i < Graph::objectives; i++)
+        start.cost[i] = 0;
+
+    Q.insert(start);
+    const  my_queue::by_cost cost_q_it = Q.get<0>();
+    const  my_queue::by_nodes node_q = Q.get<1>();
+
+    while( !Q.empty() )
+    {
+        Label l = *(cost_q_it.begin());
+        Q.erase(cost_q_it.begin());
+        if(l.node == dest_node && Graph::dominates(l.cost, cost))
+            return true;
+        BOOST_FOREACH(Graph::edge_t e, out_edges(l.node, g))
+        {
+            Label l2;
+            l2.node = boost::target(e, g);
+            for(int i=0; i < Graph::objectives; i++)
+                l2.cost[i] = l.cost[i] + g[e].cost[i];
+
+            if(!is_dominated_by_any(node_q.equal_range(l2.node), l2) && !Graph::dominates(cost, l2.cost) && cost != l2.cost)
+            {
+                my_queue::nodes_it it, end;
+                tie(it, end) = node_q.equal_range(l2.node);
+                while(it != end)
+                {
+                    if(Graph::dominates(l2.cost, it->cost) || l2.cost == it->cost)
+                        it = Q.get<1>().erase(it);
+                    else
+                    {
+                        it++;
+                    }
+                }
+                Q.insert(l2);
+            }
+        }
+    }
+
+    return false;
+}
+
 

@@ -2,8 +2,6 @@
 // permettant un calcul d'itinéraire multiobjectif
 //
 
-#include <boost/graph/compressed_sparse_row_graph.hpp>
-
 #include <boost/pending/mutable_queue.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/array.hpp>
@@ -79,7 +77,7 @@ struct Graph
     typedef boost::graph_traits<Type>::edge_descriptor edge_t;
     typedef boost::graph_traits<Type>::vertex_descriptor node_t;
 
-    typedef compressed_sparse_row_graph<boost::directedS, Node, Edge>  CType;
+    //typedef compressed_sparse_row_graph<boost::directedS, Node, Edge>  CType;
 
     Type graph;
 

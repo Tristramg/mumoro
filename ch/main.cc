@@ -1,7 +1,7 @@
 #include "graph.h"
 #include "query.h"
 
-//#include <pqxx/pqxx>
+#include <pqxx/pqxx>
 #include <map>
 #include <iostream>
 
@@ -30,8 +30,8 @@ int main(int, char** argv)
     pqxx::connection Conn("dbname=mumoro");
 
     pqxx::work T(Conn, "Obtention du graphe");
-    //pqxx::result R = T.exec("SELECT source, destination, longueur, categorie1 FROM edge_paris_export");
-    pqxx::result R = T.exec("SELECT source, target, length, bike FROM sf_edges");
+    pqxx::result R = T.exec("SELECT source, destination, longueur, categorie1 FROM edge_paris_export");
+    //pqxx::result R = T.exec("SELECT source, target, length, bike FROM sf_edges");
     
     boost::progress_display show_progress( R.size() );
 
@@ -53,30 +53,30 @@ int main(int, char** argv)
         edge_prop.cost[0] = longueur;
         edge_prop.cost[1] = secu(categorie, longueur);
         g.add_edge(map[source], map[destination], edge_prop);
-        g.add_edge(map[destination], map[source], edge_prop);
+//        g.add_edge(map[destination], map[source], edge_prop);
         ++show_progress;
     }
-    g[0].id = 2;*/
- //   g.save("sf_original");
-   // g.contract();
+    g.save("paris_original");
+    Graph gc(g);
+    gc.contract();
+    gc.save("paris_ch");
     
     //   51937 nodes
 //   619894 edges
 
- //   g.save("sf_2");
-
+*/
     
-    Graph g("sf_original");
-    Graph gc("sf");
+/*    Graph g("sf_original");
+    Graph gc(g);//("sf");
+    gc.contract();
+    gc.save("sf2");*/
+    //    51937 nodes
+//   619894 edges
     
-    BOOST_FOREACH(Graph::edge_t edge, boost::edges(gc.graph))
-    {
-        g.graph[edge].cost0 = gc.graph[edge].cost[0];
-    }BOOST_FOREACH(Graph::edge_t edge, boost::edges(g.graph))
-    {
-        g.graph[edge].cost0 = g.graph[edge].cost[0];
-    }
-    martins(1100, 12, g);
+    Graph g("paris_original");
+    Graph gc("paris_ch");
+    martins(10000, 12, g);
+    ch_martins(10000, 12, gc);
     /*martins(111, g);
     martins(112, g);
     martins(112, g);
@@ -87,7 +87,7 @@ int main(int, char** argv)
     martins(1410, g);
     martins(1510, g);
     martins(1610, g);*/
-//    test(g,gc); 
+    //test(g,gc); 
 //    bench(g, gc);
 
 

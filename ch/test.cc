@@ -5,7 +5,8 @@
 
 void test(Graph & g, Graph & gc)
 {
-    int runs = 10;
+    int runs = 100;
+      srand ( time(NULL) );
     for(int i = 0; i < runs; i++)
     {
         int start = rand() % boost::num_vertices(g.graph);

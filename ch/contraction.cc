@@ -1,5 +1,5 @@
 #include "graph.h"
-
+#include "query.h"
 // Functor comparant la priorité d'un nœud
 // TODO : y'a vraiment besoin de passer le graph en réf ?
 struct priority_comp
@@ -35,12 +35,12 @@ int Graph::node_priority(Graph::node_t node)
                 node_t succ = boost::target(out_edge, graph);
                 if(graph[succ].order == Graph::Node::undefined)
                 {
-                    Edge edge_prop(graph[in_edge]);
+                  /*  Edge edge_prop(graph[in_edge]);
                     for(int i=0; i < Graph::objectives ; i++)
                     {
                         edge_prop.cost[i] += graph[out_edge].cost[i];
                     }
-
+*/
                     //Il n'existe pas de plus court chemin entre pred et succ
                     //                    if (!witness_martins<N>(pred, succ, graph, edge_prop.cost))
                     {
@@ -79,10 +79,13 @@ int Graph::suppress(node_t node)
                     // Bon... bizarrement, ça ne change rien... un simple test d'existance
                     // d'un arc domminé pourrait ptet suffir... Ça contredit un peu le mémoire
                     // de Geisberger
-                    //     if (!witness_martins(pred, succ, edge_prop.cost))
+                    Edge edge_prop(graph[in_edge]);
+                    for(int i=0; i < N; i++)
+                        {
+                            edge_prop.cost[i] += graph[out_edge].cost[i];
+                        }
+            //        if (!martins_witness(pred, succ, edge_prop.cost, graph))
                     {
-                        // On note le nœud court-circuité pour dérouler le chemin à la fin de la requète
-
                         // Note sur les itérateurs :
                         // Ce n'est faisable que parce que les arcs sont stoqués sous forme de listS
                         // Sinon ça merde sur les itérateurs dans la boucle
@@ -96,14 +99,15 @@ int Graph::suppress(node_t node)
                         boost::tie(existing_edge, exists) = boost::edge(pred, succ, graph);
                         if(exists)
                         {
+                            cost_t ecost = graph[existing_edge].cost;
                             //Si le coût est dominé par l'existant, on ne fait rien
-                            //if(dominates(graph[existing_edge].cost,  edge_prop.cost))
-                            if(graph[existing_edge].cost[0] < edge_prop.cost[0])
+                            if(dominates(ecost,  edge_prop.cost) || ecost == edge_prop.cost)
+                            //if(graph[existing_edge].cost[0] < edge_prop.cost[0])
                             {
                             }
                             //Si le nouveau cout domine, on modifie la valeur
-                            //                                else if(dominates(edge_prop.cost, graph[existing_edge].cost))
-                            else if(true)
+                            else if(dominates(edge_prop.cost, ecost))
+                            //else if(true)
                             {
                                 graph[existing_edge].cost = edge_prop.cost;
                             }
@@ -191,19 +195,27 @@ void Graph::contract()
         queue.pop();
         BOOST_ASSERT(graph[node].order == Node::undefined);
 
-        graph[node].order = current_order++;
-        shortcuts += suppress(node);
-
-        //On met à jour la priorité des nœuds sortant (les entrants sont soit déjà traités,
-        //soit l'arc a été supprimé car c'est forcément un nœud plus grand)
-        BOOST_FOREACH(edge_t out_edge, boost::out_edges(node, graph))
+        // On arrête de rajouter des arcs à partir d'un certain moment
+        if(graph[node].priority <= 1000)
         {
-            node_t succ = boost::target(out_edge, graph);
-            if(graph[succ].order == Node::undefined)
+            graph[node].order = current_order++;
+            shortcuts += suppress(node);
+
+            //On met à jour la priorité des nœuds sortant (les entrants sont soit déjà traités,
+            //soit l'arc a été supprimé car c'est forcément un nœud plus grand)
+            BOOST_FOREACH(edge_t out_edge, boost::out_edges(node, graph))
             {
-                graph[succ].priority = node_priority(succ); 
-                queue.update(succ);
+                node_t succ = boost::target(out_edge, graph);
+                if(graph[succ].order == Node::undefined)
+                {
+                    graph[succ].priority = node_priority(succ); 
+                    queue.update(succ);
+                }
             }
+        }
+        else
+        {
+            graph[node].order = current_order;
         }
 
         ++show_progress2;
