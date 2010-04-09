@@ -1,0 +1,113 @@
+a, a:visited,a:hover,a:focus,a:active{
+	text-decoration: underline;
+	color: #ffffff;
+}
+
+a img {
+	border: none;
+	}
+
+body {
+	width: 100%;
+	background-color: #594747;
+	font-family: "Verdana", Arial, Helvetica, sans-serif;
+	font-size: 14;	
+	color: #ffffff;	
+}
+
+nodes {
+	color: #ffffff;
+	font-size: 14
+}
+
+greatTitle
+{
+   font-size: 24;
+}
+
+mediumTitle
+{
+   font-size: 18;
+   
+}
+
+tinyText
+{
+   color: #ffffff;
+   font-size: 10;
+}
+
+formError
+{
+   color: #ffffff;
+   font-size: 10;
+}
+
+bikeTitle
+{
+	font-size: 12;	
+	color: #000000;	
+}
+
+bikeTextRed
+{
+	font-size: 12;	
+	color: #ff2f2f;	
+}
+
+bikeTextOrange
+{
+	font-size: 12;	
+	color: #fd6e2f;	
+}
+
+bikeSmallText
+{
+	font-size: 8;	
+	color: #000000;	
+}
+
+table.tablesorter {
+                font-size: 12px;
+                background-color: #4D4D4D;
+                border: 1px solid #000;
+            }
+            table.tablesorter th {
+                text-align: left;
+                padding: 5px;
+                background-color: #6E6E6E;
+            }
+            table.tablesorter td {
+                color: #FFF;
+                padding: 5px;
+            }
+            table.tablesorter .even {
+                background-color: #3D3D3D;
+            }
+            table.tablesorter .odd {
+                background-color: #6E6E6E;
+            }
+            table.tablesorter .hl{
+                background-color: #60A060;
+            }
+
+            table.tablesorter .header {
+                background-image: url(img/bg.png);
+                background-repeat: no-repeat;
+                border-left: 1px solid #FFF;
+                border-right: 1px solid #000;
+                border-top: 1px solid #FFF;
+                padding-left: 30px;
+                padding-top: 8px;
+                height: auto;
+            }
+            table.tablesorter .headerSortUp {
+                background-image: url(img/asc.png);
+                background-repeat: no-repeat;
+            }
+            table.tablesorter .headerSortDown {
+                background-image: url(img/desc.png);
+                background-repeat: no-repeat;
+            }
+
+
