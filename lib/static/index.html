@@ -1,0 +1,40 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />        
+	<link rel="stylesheet" media="screen" type="text/css" title="Design" href="design.css" />
+	<script src="http://openlayers.org/api/OpenLayers.js"></script>
+        <script src="http://www.openstreetmap.org/openlayers/OpenStreetMap.js"></script>
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3/jquery.min.js"></script>
+        <script src="js/jquery.tablesorter.js"></script>
+        <script src="scripts/mumoro.js"></script>
+	<script src="scripts/interface.mumoro.js"></script>
+	<link rel="icon" type="image/png" href="img/arrow.png" />
+	<title>Mumoro demonstration</title>
+    </head>
+  <body onload="init()">
+      <greatTitle><tab>Mumoro demonstration on the city of Rennes</greatTitle><br>
+      <mediumTitle><tab>Demonstration of our multimodal and multiobjective routing algorithms</mediumTitle><br><br>
+      <form method="get" onSubmit="return validateAddresses(this)" name="formAddresses" action="scripts/interface.mumoro.js" >
+	      <tr>
+	      <label for="lblstart">Start location : <tinyText>Example: 23 rue de la Chalotais 35000 Rennes France</tinyText></label><br><tab>
+	      <input type="text" name="startAdr" id="startAdr" tabindex="10" size=50 /><br />
+	      <tab>
+	      <label for="lblend">Destination  : </label><br><tab>
+	      <input type="text" name="endAdr" id="endAdr" tabindex="20" size=50 /><tab>
+	      <input type="submit" value="Calculate route" /><formError>Test</formError><br><br>
+      </form>
+      <div id="map" style="width:80%; height:80%; float:left"></div>
+      <div id="info" style="width:20%; float:right">
+          <ul>
+              <li><nodes>Start node: <span id="start_node">unknown</nodes></li>
+                  <li><nodes>Destination node: <span id="dest_node">unknown</nodes></li>
+                  </ul>
+                  <mediumTitle><tab>Path costs:</mediumTitle>
+                  <p id="path_costs"></p>
+              </div>
+	</body>
+</html>
+
+
+
+
