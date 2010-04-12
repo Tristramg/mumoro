@@ -16,12 +16,14 @@
       <mediumTitle><tab>Demonstration of our multimodal and multiobjective routing algorithms</mediumTitle><br><br>
       <form method="get" onSubmit="return validateAddresses(this)" name="formAddresses" action="scripts/interface.mumoro.js" >
 	      <tr>
-	      <label for="lblstart">Start location : <tinyText>Example: 23 rue de la Chalotais 35000 Rennes France</tinyText></label><br><tab>
-	      <input type="text" name="startAdr" id="startAdr" tabindex="10" size=50 /><br />
+	      <label for="lblstart">Start location : <tinyText>Example: 23 rue de la Chalotais 35000 Rennes France</tinyText></label>
+	      <br><tab>
+	      <input type="text" name="startAdr" id="startAdr" tabindex="10" size=49 />
+	      <br>
 	      <tab>
 	      <label for="lblend">Destination  : </label><br><tab>
-	      <input type="text" name="endAdr" id="endAdr" tabindex="20" size=50 /><tab>
-	      <input type="submit" value="Calculate route" /><formError>Test</formError><br><br>
+	      <input type="text" name="endAdr" id="endAdr" tabindex="20" size=49 /><tab>
+	      <input type="submit" value="Calculate route" /><formError></formError><br><br>
       </form>
       <div id="map" style="width:80%; height:80%; float:left"></div>
       <div id="info" style="width:20%; float:right">
