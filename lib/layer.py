@@ -92,7 +92,7 @@ class Layer(BaseLayer):
             print "I am unable to connect to the database"
         self.nodes_offset = 0
 
-        eld = elevation.ElevationData("North_America")
+        eld = elevation.ElevationData("Eurasia")
         self.nodes_db = sqlite3.connect(':memory:', check_same_thread = False)
         self.nodes_db.executescript('''
                 CREATE TABLE nodes(
@@ -108,7 +108,8 @@ class Layer(BaseLayer):
                 CREATE INDEX original_idx ON nodes(original_id);
                 ''')
         nodes_cur = self.conn.cursor()
-        nodes_cur.execute('SELECT id, st_x(the_geom) as lon, st_y(the_geom) as lat FROM {0}'.format(data['nodes']))
+        #nodes_cur.execute('SELECT id, st_x(the_geom) as lon, st_y(the_geom) as lat FROM {0}'.format(data['nodes']))
+        nodes_cur.execute('SELECT id, lon, lat FROM {0}'.format(data['nodes']))
         self.count = 0
         for n in nodes_cur:
             alt = eld.altitude(n[2], n[1])
