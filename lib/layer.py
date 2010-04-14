@@ -257,7 +257,7 @@ class MultimodalGraph:
                 self.graph.add_edge(n1, n2, property)
 
 
-    def connect_nodes_from_list(self, layer1, layer2, list, property, property2 = None)
+    def connect_nodes_from_list(self, layer1, layer2, list, property, property2 = None):
         if property2 == None:
             property2 = property
         for coord in list:
