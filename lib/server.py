@@ -7,6 +7,7 @@ import layer
 class HelloWorld:
     def __init__(self):
         foot = layer.Layer('foot', mumoro.Foot, {'nodes': 'sf_nodes', 'edges': 'sf_edges'})
+        bike = layer.Layer('bike', mumoro.Bike, {'nodes': 'sf_nodes', 'edges': 'sf_edges'})
 #        bart = layer.GTFSLayer('bart', 'google_transit.zip', dbname='bart.db') 
 #        muni = layer.GTFSLayer('muni', 'san-francisco-municipal-transportation-agency_20091125_0358.zip', dbname='muni.db') 
 
