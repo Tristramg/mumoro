@@ -3,6 +3,8 @@ import cherrypy
 import simplejson as json
 import os
 import layer
+import bikestations
+import time
 
 class HelloWorld:
     def __init__(self):
@@ -11,16 +13,21 @@ class HelloWorld:
 #        bart = layer.GTFSLayer('bart', 'google_transit.zip', dbname='bart.db') 
 #        muni = layer.GTFSLayer('muni', 'san-francisco-municipal-transportation-agency_20091125_0358.zip', dbname='muni.db') 
 
-      #  pt = layer.GTFSLayer('muni', 'pt')
-      #  e = mumoro.Edge()
-      #  e.mode_change = 1
-      #  e.duration = mumoro.Duration(60);
-      #  e2 = mumoro.Edge()
-      #  e2.mode_change = 0
-      #  e2.duration = mumoro.Duration(30);
+        #pt = layer.GTFSLayer('muni', 'pt')
+        self.stations = bikestations.VeloStar()
+        timestamp = time.time()
 
-        self.g = layer.MultimodalGraph([foot])
-       # self.g.connect_nearest_nodes(pt, foot, e, e2)
+        e = mumoro.Edge()
+        e.mode_change = 1
+        e.duration = mumoro.Duration(60);
+        e2 = mumoro.Edge()
+        e2.mode_change = 0
+        e2.duration = mumoro.Duration(30);
+
+        self.g = layer.MultimodalGraph([foot, bike])
+        self.g.connect_nodes_from_list(foot, bike, self.stations.stations, e, e2)
+        #self.g.connect_nearest_nodes(pt, foot, e, e2)
+
 
     def path(self, start=None, dest=None):
         cherrypy.response.headers['Content-Type']= 'application/json'
@@ -89,20 +96,30 @@ class HelloWorld:
         return json.dumps(ret)
     
     def match(self, lon, lat):
+        cherrypy.response.headers['Content-Type']= 'application/json'
         id = self.g.match('foot', lon, lat)
         if id:
-            return "{{'node': {0}}}".format(id)
+            ret = {'node': id}
+            return json.dumps(ret)
         else:
             return '{"error": "No node found"}'
+
+    def bikes(self):
+        if time.time() > self.timestamp + 60 * 5:
+            print "Updating bikestations"
+            self.stations = bikestations.VeloStar()
+        return updatebikes.xmlToString()
+
     match.exposed = True
     path.exposed = True
+    bikes.exposed = True
 
 PATH = os.path.abspath(os.path.dirname(__file__))
 cherrypy.tree.mount(HelloWorld(), '/', config={
         '/': {
                 'tools.staticdir.on': True,
-                'tools.staticdir.dir': PATH + '/static',
-                'tools.staticdir.index': 'index.html',
+		'tools.staticdir.dir': PATH + '/static/',
+		'tools.staticdir.index': 'index.html',
             },
     })
 
