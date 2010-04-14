@@ -14,6 +14,7 @@ Requirements
 * Boost: no C++ dev should live without it (used for its Dijkstra's algorithm)
 * CMake: compling tool (replacing autotools and so on)
 * SQLite: lightweight and fast SQL database
+* Python: for the web interface
 
 Optional requirements
 * Marble: we use its widget for the standalone GUI
