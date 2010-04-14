@@ -13,6 +13,7 @@ class HelloWorld:
         #bart = layer.GTFSLayer('bart', 'google_transit.zip', dbname='bart.db') 
         #muni = layer.GTFSLayer('muni', 'san-francisco-municipal-transportation-agency_20091125_0358.zip', dbname='muni.db') 
 
+
         #pt = layer.GTFSLayer('muni', 'pt')
         #e = mumoro.Edge()
         #e.mode_change = 1
@@ -23,6 +24,7 @@ class HelloWorld:
 
         self.g = layer.MultimodalGraph([foot])
         #self.g.connect_nearest_nodes(pt, foot, e, e2)
+
 
     def path(self, start=None, dest=None):
         cherrypy.response.headers['Content-Type']= 'application/json'
@@ -123,8 +125,8 @@ PATH = os.path.abspath(os.path.dirname(__file__))
 cherrypy.tree.mount(HelloWorld(), '/', config={
         '/': {
                 'tools.staticdir.on': True,
-                'tools.staticdir.dir': PATH + '/static/',
-                'tools.staticdir.index': 'index.html',
+		'tools.staticdir.dir': PATH + '/static/',
+		'tools.staticdir.index': 'index.html',
             },
     })
 

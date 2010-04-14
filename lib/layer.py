@@ -92,10 +92,9 @@ class Layer(BaseLayer):
         except:
             print "I am unable to connect to the database"
         self.nodes_offset = 0
- 
-        eld = elevation.ElevationData("Eurasia")
+	eld = elevation.ElevationData("Eurasia")
 	self.nodes_db = sqlite3.connect(':memory:', check_same_thread = False)
-        self.nodes_db.executescript('''
+	self.nodes_db.executescript('''
 CREATE TABLE nodes(
 original_id INTEGER PRIMARY KEY,
 id INTEGER,
@@ -109,7 +108,8 @@ CREATE INDEX id_idx ON nodes(id);
 CREATE INDEX original_idx ON nodes(original_id);
 ''')
         nodes_cur = self.conn.cursor()
-        nodes_cur.execute('SELECT id, st_x(the_geom) as lon, st_y(the_geom) as lat FROM {0}'.format(data['nodes']))
+        #nodes_cur.execute('SELECT id, st_x(the_geom) as lon, st_y(the_geom) as lat FROM {0}'.format(data['nodes']))
+        nodes_cur.execute('SELECT id, lon, lat FROM {0}'.format(data['nodes']))
         self.count = 0
         for n in nodes_cur:
             alt = eld.altitude(n[2], n[1])
@@ -255,7 +255,21 @@ class MultimodalGraph:
             n2 = layer2.map(n1['original_id'])
             if n2:
                 self.graph.add_edge(n1, n2, property)
- 
+
+
+    def connect_nodes_from_list(self, layer1, layer2, list, property, property2 = None)
+        if property2 == None:
+            property2 = property
+        for coord in list:
+            n1 = layer1.match(list['lon'], list['lat'])
+            n2 = layer2.match(list['lon'], list['lat'])
+            if n1 and n2:
+                self.graph.add_edge(n1, n2, property)
+                self.graph.add_edge(n2, n1, property)
+            else:
+                print "Uho... no connection possible"
+
+
     def connect_nearest_nodes(self, layer1, layer2, property, property2 = None):
         if property2 == None:
             property2 = property

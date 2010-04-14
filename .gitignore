@@ -6,3 +6,5 @@ tools/osm2mumoro
 lib/libshortestpath.a
 ui/gui/moc_object.cxx
 ui/gui/mumoro
+*.o
+*.pyc
