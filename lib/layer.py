@@ -88,7 +88,7 @@ class Layer(BaseLayer):
         self.data = data
         self.name = name
         try:
-            self.conn = pg.connect("dbname='mumoroRE' user='root' password='takis' host='localhost'");
+            self.conn = pg.connect("dbname='mumoro'");
         except:
             print "I am unable to connect to the database"
         self.nodes_offset = 0
@@ -261,11 +261,12 @@ class MultimodalGraph:
         if property2 == None:
             property2 = property
         for coord in list:
-            n1 = layer1.match(list['lon'], list['lat'])
-            n2 = layer2.match(list['lon'], list['lat'])
+            n1 = layer1.match(coord['lon'], coord['lat'])
+            n2 = layer2.match(coord['lon'], coord['lat'])
             if n1 and n2:
                 self.graph.add_edge(n1, n2, property)
-                self.graph.add_edge(n2, n1, property)
+                self.graph.add_edge(n2, n1, property2)
+                print "edge added"
             else:
                 print "Uho... no connection possible"
 

@@ -3,26 +3,29 @@ import cherrypy
 import simplejson as json
 import os
 import layer
-import updatebikesstations
+import bikestations
 import time
 
 class HelloWorld:
-    timeStamp = 0
     def __init__(self):
-        foot = layer.Layer('foot', mumoro.Foot, {'nodes': 'nodes', 'edges': 'edges'})
-        #bart = layer.GTFSLayer('bart', 'google_transit.zip', dbname='bart.db') 
-        #muni = layer.GTFSLayer('muni', 'san-francisco-municipal-transportation-agency_20091125_0358.zip', dbname='muni.db') 
-
+        foot = layer.Layer('foot', mumoro.Foot, {'nodes': 'sf_nodes', 'edges': 'sf_edges'})
+        bike = layer.Layer('bike', mumoro.Bike, {'nodes': 'sf_nodes', 'edges': 'sf_edges'})
+#        bart = layer.GTFSLayer('bart', 'google_transit.zip', dbname='bart.db') 
+#        muni = layer.GTFSLayer('muni', 'san-francisco-municipal-transportation-agency_20091125_0358.zip', dbname='muni.db') 
 
         #pt = layer.GTFSLayer('muni', 'pt')
-        #e = mumoro.Edge()
-        #e.mode_change = 1
-        #e.duration = mumoro.Duration(60);
-        #e2 = mumoro.Edge()
-        #e2.mode_change = 0
-        #e2.duration = mumoro.Duration(30);
+        self.stations = bikestations.VeloStar()
+        timestamp = time.time()
 
-        self.g = layer.MultimodalGraph([foot])
+        e = mumoro.Edge()
+        e.mode_change = 1
+        e.duration = mumoro.Duration(60);
+        e2 = mumoro.Edge()
+        e2.mode_change = 0
+        e2.duration = mumoro.Duration(30);
+
+        self.g = layer.MultimodalGraph([foot, bike])
+        self.g.connect_nodes_from_list(foot, bike, self.stations.stations, e, e2)
         #self.g.connect_nearest_nodes(pt, foot, e, e2)
 
 
@@ -102,21 +105,11 @@ class HelloWorld:
             return '{"error": "No node found"}'
 
     def bikes(self):
-        updatebikes = updatebikesstations.UpdateBikesStations()
-	nowMin = time.gmtime(time.time())[4]
-        if ( self.timeStamp <= nowMin or self.timeStamp == 0 ):
-            if ( nowMin - self.timeStamp > 5 or self.timeStamp == 0 ):
-                updatebikes.updateXmlBikes()
-                self.timeStamp = nowMin
-            else:
-                print "No need to update file"
-        else:
-            if ( 59 - self.timeStamp + nowMin > 5 ):
-                updatebikes.updateXmlBikes()
-                self.timeStamp = nowMin
-            else:
-                print "No need to update file"
+        if time.time() > self.timestamp + 60 * 5:
+            print "Updating bikestations"
+            self.stations = bikestations.VeloStar()
         return updatebikes.xmlToString()
+
     match.exposed = True
     path.exposed = True
     bikes.exposed = True
