@@ -7,30 +7,29 @@
 		<script src="scripts/jquery-1.4.2.min.js"></script>
 		<script src="scripts/jquery.tablesorter.js"></script>
 		<script src="scripts/mumoro.js"></script>
-		<script src="scripts/interface.mumoro.js"></script>
 		<link rel="icon" type="image/png" href="img/arrow.png" />
 		<title>Mumoro demonstration</title>
 	</head>
 	<body onload="init();">
 		<greatTitle><tab>Mumoro demonstration on the city of Rennes</greatTitle><br>
 		<mediumTitle><tab>Demonstration of our multimodal and multiobjective routing algorithms</mediumTitle><br><br>
-		<form method="get" onSubmit="return validateAddresses(this)" name="formAddresses" action="scripts/interface.mumoro.js" >
+		<form method="get" onSubmit="return validateAddresses(this)" name="formAddresses" action="scripts/mumoro.js" >
 			<tr>
-			<label for="lblstart">Start location : <tinyText>Example: 23 rue de la Chalotais 35000 Rennes France</tinyText></label><br><tab>
+			<label for="lblstart">Start location : </label>
+			<error><span id="formError_start"></error>
+			<tinyText>Example: 23 rue de la Chalotais 35000 Rennes France</tinyText><br><tab>			
 			<input type="text" name="startAdr" id="startAdr" tabindex="10" size=75 />
 			<input type="button" value="Reverse" onClick="return reverseLocations(this)" /><br><tab>
-			<label for="lblend">Destination  : </label><br><tab>
+			<label for="lblend">Destination  : </label>
+			<error><span id="formError_dest"></error><br><tab>
 			<input type="text" name="endAdr" id="endAdr" tabindex="20" size=75 /><tab>
 			<input type="submit" value="Calculate route" /><span id="formError"></span><br><br>
 		</form>
-		<div id="map" style="width:80%; height:80%; float:left"></div>
-		<div id="info" style="width:20%; float:right">
-			<ul>
-				<li><nodes>Start node: <span id="start_node">Unknown</nodes></li>
-				<li><nodes>Destination node: <span id="dest_node">Unknown</nodes></li>
-			</ul>
-				<mediumTitle><tab>Path costs:</mediumTitle>
-				<p id="path_costs"></p>
+		<div id="info" style="width:39%; float:right">
+			<p id="path_costs"></p>
+			<p id="routing_description"></p>
 		</div>
+		<div id="map" style="width:60%; height:60%; float:left"></div>
+		
 	</body>
 </html>
