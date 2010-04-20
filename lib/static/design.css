@@ -11,7 +11,7 @@ body {
 	width: 100%;
 	background-color: #594747;
 	font-family: "Verdana", Arial, Helvetica, sans-serif;
-	font-size: 14;	
+	font-size: 10;	
 	color: #ffffff;	
 }
 
@@ -31,6 +31,11 @@ mediumTitle {
 tinyText {
 	color: #ffffff;
 	font-size: 10;
+}
+
+smallText {
+	color: #ffffff;
+	font-size: 13;
 }
 
 .cir {
@@ -136,4 +141,20 @@ table.tablesorter .headerSortDown {
 	background-repeat: no-repeat;
 }
 
+#footer {	
+	float: none;
+	margin-left: 11%;
+	width: 1002px;	
+	min-height: 5%;
+	margin-bottom: 15px;
+	padding-top: 15px;
+}
+
+.circle {
+   list-style-type: circle;
+}
+
+italicText {
+   font-style: italic;
+}
 
