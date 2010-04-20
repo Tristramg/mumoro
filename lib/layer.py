@@ -2,7 +2,7 @@ import mumoro
 import psycopg2 as pg
 import sqlite3
 import elevation
-
+import config
  
 class NotAccessible(Exception):
     pass
@@ -87,8 +87,9 @@ class Layer(BaseLayer):
         self.mode = mode
         self.data = data
         self.name = name
-        try:
-            self.conn = pg.connect("dbname='mumoro'");
+	c = config.Config()        
+	try:
+            self.conn = pg.connect("dbname=" + c.dbname + " user=" + c.dbuser + " password=" + c.dbpassword + " host=" + c.host);
         except:
             print "I am unable to connect to the database"
         self.nodes_offset = 0
@@ -266,7 +267,6 @@ class MultimodalGraph:
             if n1 and n2:
                 self.graph.add_edge(n1, n2, property)
                 self.graph.add_edge(n2, n1, property2)
-                print "edge added"
             else:
                 print "Uho... no connection possible"
 

@@ -5,17 +5,19 @@ import os
 import layer
 import bikestations
 import time
+import config
 
 class HelloWorld:
     def __init__(self):
-        foot = layer.Layer('foot', mumoro.Foot, {'nodes': 'sf_nodes', 'edges': 'sf_edges'})
-        bike = layer.Layer('bike', mumoro.Bike, {'nodes': 'sf_nodes', 'edges': 'sf_edges'})
+	c = config.Config()        
+	foot = layer.Layer('foot', mumoro.Foot, {'nodes': c.tableNodes, 'edges': c.tableEdges})
+        bike = layer.Layer('bike', mumoro.Bike, {'nodes': 'nodes', 'edges': 'edges'})
 #        bart = layer.GTFSLayer('bart', 'google_transit.zip', dbname='bart.db') 
 #        muni = layer.GTFSLayer('muni', 'san-francisco-municipal-transportation-agency_20091125_0358.zip', dbname='muni.db') 
 
         #pt = layer.GTFSLayer('muni', 'pt')
         self.stations = bikestations.VeloStar()
-        timestamp = time.time()
+        self.timestamp = time.time()
 
         e = mumoro.Edge()
         e.mode_change = 1
@@ -108,7 +110,7 @@ class HelloWorld:
         if time.time() > self.timestamp + 60 * 5:
             print "Updating bikestations"
             self.stations = bikestations.VeloStar()
-        return updatebikes.xmlToString()
+        return self.stations.to_string()
 
     match.exposed = True
     path.exposed = True
