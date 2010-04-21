@@ -11,7 +11,7 @@ class HelloWorld:
     def __init__(self):
 	c = config.Config()        
 	foot = layer.Layer('foot', mumoro.Foot, {'nodes': c.tableNodes, 'edges': c.tableEdges})
-        bike = layer.Layer('bike', mumoro.Bike, {'nodes': 'nodes', 'edges': 'edges'})
+        bike = layer.Layer('bike', mumoro.Bike, {'nodes': c.tableNodes, 'edges': c.tableEdges})
 #        bart = layer.GTFSLayer('bart', 'google_transit.zip', dbname='bart.db') 
 #        muni = layer.GTFSLayer('muni', 'san-francisco-municipal-transportation-agency_20091125_0358.zip', dbname='muni.db') 
 
