@@ -12,7 +12,8 @@
 	</head>
 	<body onload="init();">
 		<greatTitle><tab>Mumoro demonstration on the city of Rennes</greatTitle><br>
-		<mediumTitle><tab>Demonstration of our multimodal and multiobjective routing algorithms</mediumTitle><br><br>
+		<mediumTitle><tab>Demonstration of our multimodal and multiobjective routing algorithms  </mediumTitle><smallText>
+		<a href="./info.html">Read more here</a></smallText><br><br>
 		<form method="get" onSubmit="return validateAddresses(this)" name="formAddresses" action="scripts/mumoro.js" >
 			<tr>
 			<label for="lblstart">Start location : </label>
@@ -30,6 +31,23 @@
 			<p id="routing_description"></p>
 		</div>
 		<div id="map" style="width:60%; height:60%; float:left"></div>
-		
+		<div id="footer">
+			<hr>
+			<smallText><center>
+				Streets data provided by 
+				<a href="http://www.openstreetmap.org/">
+				<italicText>Open Street Maps</italicText></a>
+				<img src="img/by-sa.png" width=75 height=14>
+				<br>
+				Bikes data provided by 
+				<a href="http://data.keolis-rennes.com">
+				<italicText>Data Keolis Rennes</italicText></a>
+				<img src="img/by-nc-sa.png" width=75 height=14>
+				<br>
+				Routing algorithms licensed by GPL License
+				<br><br>		
+				<img src="img/region.png" width=76 height=76>	
+			</center></smallText>
+		</div>
 	</body>
 </html>

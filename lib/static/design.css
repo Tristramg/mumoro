@@ -148,13 +148,15 @@ table.tablesorter .headerSortDown {
 	min-height: 5%;
 	margin-bottom: 15px;
 	padding-top: 15px;
+	clear:both; 
 }
 
 .circle {
-   list-style-type: circle;
+	list-style-type: circle;
 }
 
 italicText {
-   font-style: italic;
+	font-style: italic;
 }
+
 
