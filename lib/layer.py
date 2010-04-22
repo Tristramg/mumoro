@@ -20,17 +20,17 @@ def duration(length, property, mode):
             return length * 3.6 / 15
     elif mode == mumoro.Car:
         if property == 1:
-            return length * 3.6 / 20
+            return length * 3.6 / 15
         elif property == 2:
-            return length * 3.6 / 30
+            return length * 3.6 / 20
         elif property == 3:
-            return length * 3.6 / 50
+            return length * 3.6 / 30
         elif property == 4:
-            return length * 3.6 / 90
+            return length * 3.6 / 70
         elif property == 5:
-            return length * 3.6 / 100
+            return length * 3.6 / 80
         elif property == 6:
-            return length * 3.6 / 120
+            return length * 3.6 / 100
         else:
             raise NotAccessible()
     else:

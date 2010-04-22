@@ -12,6 +12,7 @@ class HelloWorld:
 	c = config.Config()        
 	foot = layer.Layer('foot', mumoro.Foot, {'nodes': c.tableNodes, 'edges': c.tableEdges})
         bike = layer.Layer('bike', mumoro.Bike, {'nodes': c.tableNodes, 'edges': c.tableEdges})
+        car = layer.Layer('car', mumoro.Car, {'nodes': c.tableNodes, 'edges': c.tableEdges})
 #        bart = layer.GTFSLayer('bart', 'google_transit.zip', dbname='bart.db') 
 #        muni = layer.GTFSLayer('muni', 'san-francisco-municipal-transportation-agency_20091125_0358.zip', dbname='muni.db') 
 
@@ -26,14 +27,27 @@ class HelloWorld:
         e2.mode_change = 0
         e2.duration = mumoro.Duration(30);
 
-        self.g = layer.MultimodalGraph([foot, bike])
+        self.g = layer.MultimodalGraph([foot, bike, car])
         self.g.connect_nodes_from_list(foot, bike, self.stations.stations, e, e2)
         #self.g.connect_nearest_nodes(pt, foot, e, e2)
 
 
-    def path(self, start=None, dest=None):
+    def path(self, slon, slat, dlon, dlat):
+        start = self.g.match('foot', float(slon), float(slat))
+        print start
+        car_start = self.g.match('car', float(slon), float(slat))
+        print car_start
+        dest = self.g.match('foot', float(dlon), float(dlat))
+        print dest
+        car_dest = self.g.match('car', float(dlon), float(dlat))
+        print car_dest
         cherrypy.response.headers['Content-Type']= 'application/json'
         p = mumoro.martins(int(start), int(dest), self.g.graph, 30000, mumoro.mode_change, mumoro.line_change)
+        p_car = mumoro.martins(int(car_start), int(car_dest), self.g.graph, 30000)
+        if len(p_car) == 1:
+            p_car[0].cost.append(0)
+            p_car[0].cost.append(0)
+            p = p + p_car
         if len(p) == 0:
             return json.dumps({'error': 'No route found'}) 
         
