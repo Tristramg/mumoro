@@ -1,7 +1,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />        
-		<link rel="stylesheet" media="screen" type="text/css" title="Design" href="design.css" />
+		<link rel="stylesheet" media="screen" type="text/css" title="Design" href="design.css" /> 
 		<script src="http://openlayers.org/api/OpenLayers.js" type="text/javascript"></script>
 		<script src="http://www.openstreetmap.org/openlayers/OpenStreetMap.js" type="text/javascript"></script>
 		<script src="scripts/jquery-1.4.2.min.js" type="text/javascript"></script>
@@ -9,21 +9,29 @@
 		<script src="scripts/mumoro.js" type="text/javascript"></script>
 		<link rel="icon" type="image/png" href="img/arrow.png" />
 		<title>Mumoro demonstration</title>
+
 	</head>
 	<body onload="init();">
-		<h1>Mumoro demonstration on the city of Rennes</h1><br>
-		<h2>Demonstration of our multimodal and multiobjective routing algorithms</h2><smallText>
-		<a href="./info.html">Read more here</a></smallText><br><br>
-		<form method="get" onSubmit="return validateAddresses(this)" name="formAddresses">
+		<h1>Mumoro demonstration on the city of Rennes</h1>
+		<h2>Demonstration of our multimodal and multiobjective routing algorithms</h2>
+			<a href="./info.html">
+				<span class="smallText">Read more here</span>
+			</a>
+			<form method="get" onsubmit="return validateAddresses(this)" action="index.html">
 			<label for="lblstart">Start location : </label>
-			<error><span id="formError_start"></error>
-			<tinyText>Example: 23 rue de la Chalotais 35000 Rennes France</tinyText><br>			
-			<input type="text" name="startAdr" id="startAdr" tabindex="10" size=75 />
-			<input type="button" value="Reverse" onClick="return reverseLocations(this)"/><br>
+			<span id="formError_start"></span>
+			<span class="tinyText">Example: 23 rue de la Chalotais 35000 Rennes France</span>
+			<br/>			
+			<input type="text" name="startAdr" id="startAdr" tabindex="10" size="75" />
+			<input type="button" value="Reverse" onclick="return reverseLocations(this)"/>
+			<br/>
 			<label for="lblend">Destination  : </label>
-			<error><span id="formError_dest"></error><br>
-			<input type="text" name="endAdr" id="endAdr" tabindex="20" size=75 />
-			<input type="submit" value="Calculate route" /><span id="formError"></span><br><br>
+			<span id="formError_dest"></span>
+			<br/>
+			<input type="text" name="endAdr" id="endAdr" tabindex="20" size="75" />
+			<input type="submit" value="Calculate route" />
+			<br/>
+			<br/>
 		</form>
 		<div id="info" style="width:39%; float:right">
 			<p id="path_costs"></p>
@@ -31,22 +39,27 @@
 		</div>
 		<div id="map" style="width:60%; height:60%; float:left"></div>
 		<div id="footer">
-			<hr>
-			<smallText><center>
-				Streets data provided by 
-				<a href="http://www.openstreetmap.org/">
-				<italicText>Open Street Maps</italicText></a>
-				<img src="img/by-sa.png" width=75 height=14>
-				<br>
-				Bikes data provided by 
-				<a href="http://data.keolis-rennes.com">
-				<italicText>Data Keolis Rennes</italicText></a>
-				<img src="img/by-nc-sa.png" width=75 height=14>
-				<br>
-				Routing algorithms licensed by GPL License
-				<br><br>		
-				<img src="img/region.png" width=76 height=76>	
-			</center></smallText>
+			<hr/>
+			<center>
+				<span class="smallText">
+					Streets data provided by 
+					<a href="http://www.openstreetmap.org/">
+						<span class="italicText">Open Street Maps</span>
+					</a>
+					<img src="img/by-sa.png" width="75" height="14" alt="CC-BY-SA"/>
+					<br/>
+					Bikes data provided by 
+					<a href="http://data.keolis-rennes.com">
+						<span class="italicText">Data Keolis Rennes</span>
+					</a>
+					<img src="img/by-nc-sa.png" width="75" height="14" alt="CC-BY-SA-NC"/>
+					<br/>
+					Routing algorithms licensed by GPL License
+					<br/>
+					<br/>		
+					<img src="img/region.png" width="76" height="76" alt="Région Midi-Pyrénées"/>
+				</span>
+			</center>
 		</div>
 	</body>
 </html>
