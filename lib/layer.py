@@ -47,7 +47,7 @@ class BaseLayer:
             print "Unable to find id {0}".format(original_id)
  
     def match(self, lon, lat):
-        epsilon = 0.001
+        epsilon = 0.002
         query = "SELECT id FROM nodes WHERE lon >= ? AND lon <= ? AND lat >= ? AND lat <= ? ORDER BY (lon-?)*(lon-?) + (lat-?) * (lat-?) LIMIT 1"
         cur = self.nodes_db.cursor()
         cur.execute(query, (float(lon) - epsilon, float(lon) + epsilon, float(lat) - epsilon, float(lat) + epsilon, lon, lon, lat, lat))
