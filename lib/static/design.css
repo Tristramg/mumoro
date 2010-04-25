@@ -11,40 +11,30 @@ a img {
 body {
 	background-color: #594747;
 	font-family: "Verdana", Arial, Helvetica, sans-serif;
-	font-size: 10;	
 	color: #ffffff;	
-	font-size: 13;
-}
-
-nodes {
-	color: #ffffff;
-	font-size: 14
+	font-size: 12pt;
 }
 
 h1 {
-	font-size: 24;
+	font-size: x-large;
 }
 
 h2 {
-	font-size: 18;
+	font-size: large;
 }
 
 .tinyText {
-	font-size: 10;
+	font-size: x-small;
 }
 
 .errorRed {
 	color: #ff2f2f;	
-	font-size: 10;
+	font-size: x-small;
 }
 
 .errorOrange {
 	color: #fd6e2f;
-	font-size: 10;
-}
-
-.tableDes {
-	font-size: 11;
+	font-size: x-small;
 }
 
 table {
@@ -56,28 +46,8 @@ td, th
    border: 1px solid white;
 }
 
-bikeTitle {
-	font-size: 12;	
-	color: #000000;	
-}
-
-bikeTextRed {
-	font-size: 12;	
-	color: #ff2f2f;	
-}
-
-bikeTextOrange {
-	font-size: 12;	
-	color: #fd6e2f;	
-}
-
-bikeSmallText {
-	font-size: 8;	
-	color: #000000;	
-}
-
 table.tablesorter {
-	font-size: 10;
+	font-size: x-small;
 	background-color: #4D4D4D;
 	border: 1px solid #000;
 }
@@ -136,7 +106,6 @@ table.tablesorter .headerSortDown {
 	padding-top: 15px;
 	clear:both; 
   text-align: center; 
-	font-size: 13;
 }
 
 ul {
