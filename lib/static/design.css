@@ -63,6 +63,11 @@ table.tablesorter td {
 	padding: 5px;
 }
 
+table.tablesorter tr:hover {
+    background-color: #90D090;
+    cursor: pointer;
+}
+
 table.tablesorter .even {
 	background-color: #3D3D3D;
 }
