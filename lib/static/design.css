@@ -1,6 +1,7 @@
 a, a:visited,a:hover,a:focus,a:active {
 	text-decoration: underline;
 	color: #ffffff;
+	font-style: italic;
 }
 
 a img {
@@ -8,11 +9,11 @@ a img {
 	}
 
 body {
-	width: 100%;
 	background-color: #594747;
 	font-family: "Verdana", Arial, Helvetica, sans-serif;
 	font-size: 10;	
 	color: #ffffff;	
+	font-size: 13;
 }
 
 nodes {
@@ -32,14 +33,6 @@ h2 {
 	font-size: 10;
 }
 
-.smallText {
-	font-size: 13;
-}
-
-.italicText {
-	font-style: italic;
-}
-
 .errorRed {
 	color: #ff2f2f;	
 	font-size: 10;
@@ -52,10 +45,6 @@ h2 {
 
 .tableDes {
 	font-size: 11;
-}
-
-.cir {
-   list-style-type: circle;
 }
 
 table {
@@ -146,10 +135,23 @@ table.tablesorter .headerSortDown {
 	margin-bottom: 15px;
 	padding-top: 15px;
 	clear:both; 
+  text-align: center; 
+	font-size: 13;
 }
 
-.circle {
+ul {
 	list-style-type: circle;
 }
 
+div#map
+{
+   width: 59%;
+  height: 400px; 
+  float: left;
+}
 
+div#info
+{
+    width: 39%;
+    float: right;
+}
