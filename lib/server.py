@@ -7,6 +7,7 @@ import layer
 import bikestations
 import time
 import config
+import shorturl
 
 class HelloWorld:
     def __init__(self):
@@ -127,13 +128,14 @@ class HelloWorld:
             self.stations = bikestations.VeloStar()
         return self.stations.to_string()
 
-    def hurl(self):
-        print request.params['username']
-
+    def h(self,id):
+        hashCheck = shorturl.shortURL()
+        hashCheck.getDataFromHash(id)
 
     match.exposed = True
     path.exposed = True
     bikes.exposed = True
+    h.exposed = True;
 
 PATH = os.path.abspath(os.path.dirname(__file__))
 cherrypy.tree.mount(HelloWorld(), '/', config={
