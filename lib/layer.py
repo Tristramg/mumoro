@@ -89,7 +89,7 @@ class Layer(BaseLayer):
         self.name = name
 	c = config.Config()        
 	try:
-            self.conn = pg.connect("dbname=" + c.dbname + " user=" + c.dbuser + " password=" + c.dbpassword + " host=" + c.host);
+            self.conn = pg.connect("dbname=" + c.dbname + " user=" + c.dbuser  + " password=" + c.dbpassword + " host=" + c.host);
         except:
             print "I am unable to connect to the database"
         self.nodes_offset = 0

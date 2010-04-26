@@ -1,5 +1,6 @@
 import mumoro
 import cherrypy
+from cherrypy import request
 import simplejson as json
 import os
 import layer
@@ -19,7 +20,7 @@ class HelloWorld:
         #pt = layer.GTFSLayer('muni', 'pt')
         self.stations = bikestations.VeloStar()
         self.timestamp = time.time()
-
+        #print request.params['username']
         e = mumoro.Edge()
         e.mode_change = 1
         e.duration = mumoro.Duration(60);
@@ -125,6 +126,10 @@ class HelloWorld:
             print "Updating bikestations"
             self.stations = bikestations.VeloStar()
         return self.stations.to_string()
+
+    def hurl(self):
+        print request.params['username']
+
 
     match.exposed = True
     path.exposed = True

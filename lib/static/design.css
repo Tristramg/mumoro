@@ -37,6 +37,10 @@ h2 {
 	font-size: x-small;
 }
 
+.description {
+	font-size: x-small;
+}
+
 table {
    border-collapse: collapse;
 }
