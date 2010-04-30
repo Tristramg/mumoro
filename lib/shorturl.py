@@ -13,8 +13,12 @@ class shortURL:
     def addRouteToDatabase(self,lonMap,latMap,zoom,lonStart,latStart,lonDest,latDest,addressStart,addressDest):
         c = config.Config()
         try:
-            tmp = ("dbname=%s user=%s password=%s host=%s") % ( c.dbname, c.dbuser, c.dbpassword, c.host )
-            self.conn = pg.connect( tmp );
+            if( c.host != "" ):
+                tmp = ("dbname=%s user=%s password=%s host=%s") % ( c.dbname, c.dbuser, c.dbpassword, c.host )
+                self.conn = pg.connect( tmp )
+            else:
+                tmp = ("dbname=%s user=%s password=%s") % ( c.dbname, c.dbuser, c.dbpassword )
+                self.conn = pg.connect( tmp )
         except:
             print "I am unable to connect to the database"
         h = hashlib.md5()
@@ -42,8 +46,12 @@ class shortURL:
 	res = False        
 	c = config.Config()
         try:
-            tmp = ("dbname=%s user=%s password=%s host=%s") % ( c.dbname, c.dbuser, c.dbpassword, c.host )
-            self.conn = pg.connect( tmp );
+            if( c.host != "" ):
+                tmp = ("dbname=%s user=%s password=%s host=%s") % ( c.dbname, c.dbuser, c.dbpassword, c.host )
+                self.conn = pg.connect( tmp )
+            else:
+                tmp = ("dbname=%s user=%s password=%s") % ( c.dbname, c.dbuser, c.dbpassword )
+                self.conn = pg.connect( tmp )
         except:
             print "I am unable to connect to the database"
         cur = self.conn.cursor()
@@ -66,8 +74,12 @@ class shortURL:
         else:
             c = config.Config()
             try:
-                tmp = ("dbname=%s user=%s password=%s host=%s") % ( c.dbname, c.dbuser, c.dbpassword, c.host )
-                self.conn = pg.connect( tmp );
+                if( c.host != "" ):
+                    tmp = ("dbname=%s user=%s password=%s host=%s") % ( c.dbname, c.dbuser, c.dbpassword, c.host )
+                    self.conn = pg.connect( tmp )
+                else:
+                    tmp = ("dbname=%s user=%s password=%s") % ( c.dbname, c.dbuser, c.dbpassword )
+                    self.conn = pg.connect( tmp )
             except:
                 print "I am unable to connect to the database"
             cur = self.conn.cursor()
