@@ -13,11 +13,11 @@ class StatsBikes:
 	c = config.Config()	
 	s = bikestations.VeloStar()
         try:
-            if( c.host != "" ):
+            if( c.host != "" and c.dbpassword != ""):
                 tmp = ("dbname=%s user=%s password=%s host=%s") % ( c.dbname, c.dbuser, c.dbpassword, c.host )
                 self.conn = pg.connect( tmp )
             else:
-                tmp = ("dbname=%s user=%s password=%s") % ( c.dbname, c.dbuser, c.dbpassword )
+                tmp = ("dbname=%s user=%s") % ( c.dbname, c.dbuser )
                 self.conn = pg.connect( tmp )
         except:
             print "I am unable to connect to the database"
