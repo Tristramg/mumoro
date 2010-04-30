@@ -1,6 +1,10 @@
+# -*- coding: utf-8 -*-
+
 import mumoro
 import cherrypy
-from cherrypy import request
+import operator
+import pickle
+import sys
 import simplejson as json
 import os
 import layer
@@ -9,9 +13,18 @@ import time
 import config
 import shorturl
 
+from cherrypy import request
+from genshi.template import TemplateLoader
+
+loader = TemplateLoader(
+    os.path.join(os.path.dirname(__file__), 'templates'),
+    auto_reload=True
+)
+
 class HelloWorld:
-    def __init__(self):
-	c = config.Config()        
+    def __init__(self,data):
+	c = config.Config()
+	self.data = data       
 	foot = layer.Layer('foot', mumoro.Foot, {'nodes': c.tableNodes, 'edges': c.tableEdges})
         bike = layer.Layer('bike', mumoro.Bike, {'nodes': c.tableNodes, 'edges': c.tableEdges})
         car = layer.Layer('car', mumoro.Car, {'nodes': c.tableNodes, 'edges': c.tableEdges})
@@ -111,7 +124,7 @@ class HelloWorld:
             features.append(feature)
             p_str['features'] = features
             ret['paths'].append(p_str)
-        return json.dumps(ret)
+	return json.dumps(ret)
     
     def match(self, lon, lat):
         cherrypy.response.headers['Content-Type']= 'application/json'
@@ -128,23 +141,55 @@ class HelloWorld:
             self.stations = bikestations.VeloStar()
         return self.stations.to_string()
 
+    def addhash(self,mlon,mlat,zoom,slon,slat,dlon,dlat,saddress,daddress):
+        hashAdd = shorturl.shortURL()
+	hmd5 =hashAdd.addRouteToDatabase(mlon,mlat,zoom,slon,slat,dlon,dlat,saddress,daddress)
+        if( len(hmd5) > 0 ):
+            ret = {
+                'h': hmd5
+            }
+            return json.dumps(ret)
+        else:
+            return '{"error": "Add to DB failed"}'
+
     def h(self,id):
         hashCheck = shorturl.shortURL()
-        hashCheck.getDataFromHash(id)
+        res = hashCheck.getDataFromHash(id)
+        if( len(res) > 0 ):
+            return self.index(True,res)
+        else:
+            return self.index(False,res)
+
+    @cherrypy.expose
+    def index(self,fromHash=False,hashData=[]):
+        tmpl = loader.load('index.html')
+        if( not fromHash ):
+            return tmpl.generate(fromHash='false',lonMap=-1.68038,latMap=48.11094,zoom=15,lonStart=0.0,latStart=0.0,lonDest=0.0,latDest=0.0,addressStart='',addressDest='').render('html', doctype='html')
+        else:
+            return tmpl.generate(fromHash='true',lonMap=hashData[2],latMap=hashData[3],zoom=hashData[1],lonStart=hashData[4],latStart=hashData[5],lonDest=hashData[6],latDest=hashData[7],addressStart=hashData[8].decode('utf-8'),addressDest=hashData[9].decode('utf-8')).render('html', doctype='html')
 
     match.exposed = True
     path.exposed = True
     bikes.exposed = True
-    h.exposed = True;
+    h.exposed = True
+    index.exposed = True
+    addhash.exposed = True
 
-PATH = os.path.abspath(os.path.dirname(__file__))
-cherrypy.tree.mount(HelloWorld(), '/', config={
+def main(filename):
+    data = {} # We'll replace this later
+    cherrypy.config.update({
+        'tools.encode.on': True, 'tools.encode.encoding': 'utf-8',
+        'tools.decode.on': True,
+        'tools.trailing_slash.on': True,
+        'tools.staticdir.root': os.path.abspath(os.path.dirname(__file__)),
+    })
+    cherrypy.tree.mount(HelloWorld(data), '/', config={
         '/': {
                 'tools.staticdir.on': True,
-		'tools.staticdir.dir': PATH + '/static/',
-		'tools.staticdir.index': 'index.html',
-            },
+		'tools.staticdir.dir': 'static'
+           },
     })
-
-cherrypy.quickstart()
+    cherrypy.quickstart()
+if __name__ == '__main__':
+    main(sys.argv[1])
 

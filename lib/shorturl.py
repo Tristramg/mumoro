@@ -1,8 +1,9 @@
+# -*- coding: utf-8 -*-
+
 import hashlib
 import string
 import config
 import psycopg2 as pg
-import simplejson as json
 
 class shortURL:
     conn = None
@@ -17,8 +18,8 @@ class shortURL:
         except:
             print "I am unable to connect to the database"
         h = hashlib.md5()
-        h.update(addressStart)
-        h.update(addressStart)
+        h.update(addressStart.encode("utf-8"))
+        h.update(addressDest.encode("utf-8"))
         h.update(str(lonStart))
         h.update(str(latStart))
         h.update(str(lonDest))
@@ -35,6 +36,7 @@ class shortURL:
             print ex
         self.conn.commit()
         self.conn.close()
+        return h.hexdigest()[0:16]
 
     def hashExists(self,value):
 	res = False        
@@ -60,14 +62,14 @@ class shortURL:
 
     def getDataFromHash(self,value):
         if( not self.hashExists(value) ):
-            print ("Route %s NOT found!") % (value)
+            return []
         else:
             c = config.Config()
             try:
                 tmp = ("dbname=%s user=%s password=%s host=%s") % ( c.dbname, c.dbuser, c.dbpassword, c.host )
                 self.conn = pg.connect( tmp );
             except:
-                print "I am unable to connect to the database reee"
+                print "I am unable to connect to the database"
             cur = self.conn.cursor()
             query = ("SELECT * FROM %s WHERE id='%s'") % ( c.tableURL, value) 
 	    try:        
@@ -76,19 +78,6 @@ class shortURL:
                 print "I am unable to read data from the database"
                 print ex
             tmp = cur.fetchone()
-            res = {
-                    'zoom': tmp[1],
-                    'lonMap': tmp[2],
-                    'latMap' : tmp[3],
-                    'lonStart': tmp[4],
-                    'latStart': tmp[5],
-                    'lonDest' : tmp[6],
-                    'latDest' : tmp[7],
-                    'addressStart': tmp[8],
-                    'addressDest': tmp[9]
-            }
-            #print res
             self.conn.close()
-            return "test"
-            #return json.dumps(res)
+            return tmp
 

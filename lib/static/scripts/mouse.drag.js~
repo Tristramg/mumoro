@@ -1,0 +1,18 @@
+	var mouseIsDown = false;
+
+function startMouse(event) {
+	//alert("down");
+	mouseIsDown = true;
+}
+
+function stopMouse(event) {
+	//alert("up");
+	mouseIsDown = false;
+}
+
+function moveMouse(event){
+	var x = event.clientX;
+  	var y = event.clientY;
+	if( mouseIsDown == true )  	
+		document.getElementById('lblMouse').value = x + ', ' + y;
+}

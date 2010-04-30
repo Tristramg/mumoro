@@ -404,10 +404,9 @@ function geocoding(str,mark)
 					markArrows(cord,mark);
 					if(nodes['start'] && nodes['dest'])
 					{
-						var tmp = new OpenLayers.LonLat(map.center.lon, map.center.lat).transform(map.getProjectionObject(),new OpenLayers.Projection("EPSG:4326"));						
 						$.getJSON("addhash", {
-								mlon: tmp.lon,
-								mlat: tmp.lat,
+								mlon: map.center.lon,
+								mlat: map.center.lat,
 								zoom: map.zoom,								
 								slon: nodes['start'].lon, 
 								slat: nodes['start'].lat,
@@ -567,10 +566,9 @@ function reverseGeocoding(lonlat,mark)
 					}
 					if(nodes['start'] && nodes['dest'])
 					{
-						var tmp = new OpenLayers.LonLat(map.center.lon, map.center.lat).transform(map.getProjectionObject(),new OpenLayers.Projection("EPSG:4326"));						
 						$.getJSON("addhash", {
-								mlon: tmp.lon,
-								mlat: tmp.lat,
+								mlon: map.center.lon,
+								mlat: map.center.lat,
 								zoom: map.zoom,									
 								slon: nodes['start'].lon, 
 								slat: nodes['start'].lat,
