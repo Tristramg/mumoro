@@ -25,5 +25,4 @@ class Config:
         	self.tableEdges = config.get("DBSettings","DBTableEdges");
                 self.tableURL = config.get("DBSettings","DBTableURL");
                 self.tableBikeStats = config.get("DBSettings","DBTableBikeStats");
-		if( self.dbname == "" or self.dbuser == "" or self.host == "" or self.tableNodes == "" or self.tableEdges == "" or self.tableURL == "" ):
-			print "Error reading configuration file. Check values in config.cfg"
+		
