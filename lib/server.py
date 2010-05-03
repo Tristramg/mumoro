@@ -176,12 +176,15 @@ class HelloWorld:
     addhash.exposed = True
 
 def main(filename):
+    c = config.Config()
     data = {} # We'll replace this later
     cherrypy.config.update({
-        'tools.encode.on': True, 'tools.encode.encoding': 'utf-8',
+        'tools.encode.on': True,
+        'tools.encode.encoding': 'utf-8',
         'tools.decode.on': True,
         'tools.trailing_slash.on': True,
         'tools.staticdir.root': os.path.abspath(os.path.dirname(__file__)),
+        'server.socket_port': c.cpPort,
     })
     cherrypy.tree.mount(HelloWorld(data), '/', config={
         '/': {

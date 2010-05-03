@@ -1,6 +1,7 @@
 import ConfigParser
 import string
 import os.path
+import locale
 
 class Config:
     host = ""
@@ -11,6 +12,7 @@ class Config:
     tableEdges = ""
     tableURL = ""
     tableBikeStats = ""
+    cpPort = 0
     def __init__(self):
 	if not os.path.exists("config.cfg"):        
 		print "No configuration file found !"
@@ -25,4 +27,5 @@ class Config:
         	self.tableEdges = config.get("DBSettings","DBTableEdges");
                 self.tableURL = config.get("DBSettings","DBTableURL");
                 self.tableBikeStats = config.get("DBSettings","DBTableBikeStats");
+                self.cpPort = locale.atoi( config.get("DBSettings","CherrypyPort") );
 		
