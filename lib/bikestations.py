@@ -12,7 +12,7 @@ def get_float(node):
     return float(get_text(node))
 
 class VeloStar:
-
+    stations = []
     def __init__(self):
         bikesDatabaseURL = 'http://data.keolis-rennes.com/xml/'
         bikesMumoroREAPIKey = 'UAYPAP0MHD482NR'
@@ -20,7 +20,6 @@ class VeloStar:
         xml = urllib.urlopen(url)
         
         doc = parse(xml)
-        self.stations = []
     
             #self.__currentNode__ = self.doc.documentElement
         for station in doc.documentElement.getElementsByTagName("station"):
@@ -41,40 +40,39 @@ class VeloStar:
                     print 'At least one tag misses: num, name, state, lat, lon, availableSlots, availableBikes, districtName'
 
     def to_string(self):
-        title = '<bikeTitle>'
-        textRed = '<bikeTextRed>'
-        textOrange = '<bikeTextOrange>'
-        smallText = '<bikeSmallText>'
+        title = '<div id=\'bikes\'><span class=\'smallTitle\'>'
+        textRed = '<span class=\'bikeRed\'>'
+        textOrange = '<span class=\'bikeOrange\'>'
+        tinyText = '<span class=\'tinyText\'>'
 
         res = 'lat\tlon\ttitle\tdescription\ticon\ticonSize\ticonOffset\n'
     
         for s in self.stations:
             res += '%f\t%f\t' % (s['lat'], s['lon'])
-            res += (title + s['name'] + '<br>(' + s['num'] + ')</bikeTitle><br>\t')
+            res += (title + s['name'] + '<br>(' + s['num'] + ')</span><br>\t')
             if (s['state'] == 0):
-                res += ( textRed + 'Station supports only bike deposits</bikeTextRed><br>')
+                res += ( textRed + 'Station supports only bike deposits</span><br>')
             elif (s['availableBikes'] == 0):
-                res += ( textRed + 'No available bikes</bikeTextRed><br>')
+                res += ( textRed + 'No available bikes</span><br>')
             elif (s['availableBikes'] < 3):
-                res += ( textOrange + 'Available bikes : %i </bikeTextOrange><br>' % s['availableBikes'])
+                res += ( textOrange + '%i Available bikes</span><br>' % s['availableBikes'])
             else:
-                res += ( title + 'Available bikes : %i </bikeTitle><br>' % s['availableBikes'])
+                res += ( title + '%i Available bikes</span><br>' % s['availableBikes'])
 
             if (s['availableSlots'] == 0):
-                res += ( textRed + 'No available deposit slots</bikeTextRed><br>')
+                res += ( textRed + 'No available deposit slots</span><br>')
             elif (s['availableSlots'] < 3):
-                res += ( textOrange + 'Available slots : %i </bikeTextOrange><br>' % s['availableSlots'])
+                res += ( textOrange + '%i Available slots</span><br>' % s['availableSlots'])
             else:
-                res += ( title + 'Available slots : %i  </bikeTitle><br>' % s['availableSlots'] )
-            res += ('<br><br>' + smallText + 'Click again to close</bikeSmallText>\t')
+                res += ( title + '%i Available slots</span><br>' % s['availableSlots'] )
+            res += ('<br><br>' + tinyText + 'Click again to close</span></div>\t')
 
             if (s['availableSlots'] == 0 or s['availableBikes'] == 0 or ['state'] == 0):
-                res += ('img/bike.station.red.png\t18,18\t0,0\n')
+                res += ('img/bike.station.red.png\t18,25\t-8,-25\n')
             elif (s['availableSlots'] < 3 or s['availableBikes'] < 3):
-                res += ('img/bike.station.orange.png\t18,18\t0,0\n')
+                res += ('img/bike.station.orange.png\t18,25\t-8,-25\n')
             elif (s['availableSlots'] > 3 and s['availableBikes'] > 3):
-                res += ('img/bike.station.green.png\t18,18\t0,0\n')
-         
+                res += ('img/bike.station.green.png\t18,25\t-8,-25\n')
         return res
 
 

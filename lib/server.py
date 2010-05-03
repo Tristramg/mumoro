@@ -168,12 +168,17 @@ class HelloWorld:
         else:
             return tmpl.generate(fromHash='true',lonMap=hashData[2],latMap=hashData[3],zoom=hashData[1],lonStart=hashData[4],latStart=hashData[5],lonDest=hashData[6],latDest=hashData[7],addressStart=hashData[8].decode('utf-8'),addressDest=hashData[9].decode('utf-8')).render('html', doctype='html')
 
+    def info(self):
+        tmpl = loader.load('info.html')
+        return tmpl.generate().render('html', doctype='html')
+
     match.exposed = True
     path.exposed = True
     bikes.exposed = True
     h.exposed = True
     index.exposed = True
     addhash.exposed = True
+    info.exposed = True
 
 def main(filename):
     c = config.Config()
