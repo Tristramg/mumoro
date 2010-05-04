@@ -27,6 +27,10 @@ h2 {
 	font-size: x-small;
 }
 
+.smallTitle {
+	font-size: small;
+}
+
 .errorRed {
 	color: #ff2f2f;	
 	font-size: x-small;
@@ -37,9 +41,16 @@ h2 {
 	font-size: x-small;
 }
 
-.description {
-	font-size: x-small;
+.bikeRed {
+	color: #ff2f2f;
+	font-size: small
 }
+
+.bikeOrange {
+	color: #fd6e2f;
+	font-size: small
+}
+
 
 table {
    border-collapse: collapse;
@@ -132,4 +143,9 @@ div#info
 {
     width: 39%;
     float: right;
+}
+
+div#bikes
+{
+   color: #423535;
 }
