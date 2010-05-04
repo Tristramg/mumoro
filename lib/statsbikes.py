@@ -1,7 +1,6 @@
 import bikestations
 import psycopg2 as pg
 import time
-import config
 
 class StatsBikes:
     conn = None
@@ -13,7 +12,7 @@ class StatsBikes:
 	c = config.Config()	
 	s = bikestations.VeloStar()
         try:
-            tmp = ("dbname=%s user=%s") % ( c.dbname, c.dbuser )
+            tmp = "dbname=guidage user=guidage"
             self.conn = pg.connect( tmp )
         except:
             print "I am unable to connect to the database"
@@ -25,7 +24,7 @@ class StatsBikes:
 	cur = self.conn.cursor()
         day = time.gmtime(time.time())[6]
         chrone = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
-        query = "INSERT INTO " + c.tableBikeStats +" (\"idDay\", \"idStation\", \"avSlots\", \"avBikes\", \"chrone\") VALUES (%s, %s, %s, %s, %s)"
+        query = "INSERT INTO bike_stats (\"idDay\", \"idStation\", \"avSlots\", \"avBikes\", \"chrone\") VALUES (%s, %s, %s, %s, %s)"
 	try:        
 	    cur.execute( query , [ day, s['num'], s['availableSlots'], s['availableBikes'], chrone ] )
 	except Exception as ex:
