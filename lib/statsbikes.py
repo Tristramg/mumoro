@@ -19,7 +19,6 @@ class StatsBikes:
             self.addStationData(i)
         self.conn.close()
     def addStationData(self,s):
-	c = config.Config()        
 	cur = self.conn.cursor()
         day = time.gmtime(time.time())[6]
         chrone = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
