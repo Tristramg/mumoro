@@ -21,6 +21,7 @@
 			var lonDest=$lonDest;
 			var latDest=$latDest;
 			var fromHash=$fromHash;
+			var hurl='$hashUrl';
 			var map; //complex object of type OpenLayers.Map
 			var routeLayer;
 			var proj4326 = new OpenLayers.Projection("EPSG:4326"); // longitude/latitude in decimal degrees
@@ -30,6 +31,8 @@
 			    'dest': null
 			};
 			var disableClickEvent = false;
+			var iconStandard, iconDepart, iconArrivee;
+			var controlDrag = null;
 			var markerSize = new OpenLayers.Size(25,35);
 			var markerOffset = new OpenLayers.Pixel(-markerSize.w, -markerSize.h);
 			var icons = {
@@ -37,6 +40,7 @@
 			    'dest': new OpenLayers.Icon('img/arrow-finish.png',markerSize,markerOffset)
 			};
 			var markers = new OpenLayers.Layer.Markers( "Markers" );
+			//var markers = new OpenLayers.Layer.Vector("Markers");			
 			var node_markers = {
 			     'start': null,
 			     'dest': null
