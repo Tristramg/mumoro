@@ -9,7 +9,6 @@ class StatsBikes:
     def createTable(self):
 	pass
     def addData(self):
-	c = config.Config()	
 	s = bikestations.VeloStar()
         try:
             tmp = "dbname=guidage user=guidage"
