@@ -12,6 +12,8 @@ import bikestations
 import time
 import config
 import shorturl
+import urllib
+import httplib
 
 from cherrypy import request
 from genshi.template import TemplateLoader
@@ -34,7 +36,6 @@ class HelloWorld:
         #pt = layer.GTFSLayer('muni', 'pt')
         self.stations = bikestations.VeloStar()
         self.timestamp = time.time()
-        #print request.params['username']
         e = mumoro.Edge()
         e.mode_change = 1
         e.duration = mumoro.Duration(60);
@@ -142,6 +143,7 @@ class HelloWorld:
         return self.stations.to_string()
 
     def addhash(self,mlon,mlat,zoom,slon,slat,dlon,dlat,saddress,daddress):
+        cherrypy.response.headers['Content-Type']= 'application/json'
         hashAdd = shorturl.shortURL()
 	hmd5 =hashAdd.addRouteToDatabase(mlon,mlat,zoom,slon,slat,dlon,dlat,saddress,daddress)
         if( len(hmd5) > 0 ):
@@ -172,7 +174,36 @@ class HelloWorld:
     def info(self):
         tmpl = loader.load('info.html')
         return tmpl.generate().render('html', doctype='html')
-
+    def geo(self,q):
+        cherrypy.response.headers['Content-Type']= 'application/json'
+        url = "nominatim.openstreetmap.org:80"
+        params = urllib.urlencode({
+          "q": q,
+          "format":"json",
+          "polygon": 0,
+          "addressdetails" : 1,
+          "email" : "odysseas.gabrielides@gmail.com"
+        })
+        conn = httplib.HTTPConnection(url)
+        conn.request("GET", "/search?" + params)
+        response = conn.getresponse()
+        return response.read()
+    def revgeo(self,lon,lat):
+        cherrypy.response.headers['Content-Type']= 'application/json'
+        url = "nominatim.openstreetmap.org:80"
+        params = urllib.urlencode({
+          "lon": lon,
+          "lat": lat,
+          "format":"json",
+          "zoom": 18,
+          "addressdetails" : 1,
+          "email" : "odysseas.gabrielides@gmail.com"
+        })
+        conn = httplib.HTTPConnection(url)
+        conn.request("GET", "/reverse?" + params)
+        response = conn.getresponse()
+        return response.read()
+        
     match.exposed = True
     path.exposed = True
     bikes.exposed = True
@@ -180,6 +211,8 @@ class HelloWorld:
     index.exposed = True
     addhash.exposed = True
     info.exposed = True
+    geo.exposed = True
+    revgeo.exposed = True
 
 def main(filename):
     c = config.Config()
