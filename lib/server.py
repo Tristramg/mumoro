@@ -139,7 +139,7 @@ class HelloWorld:
     def bikes(self):
         if time.time() > self.timestamp + 60 * 5:
             print "Updating bikestations"
-            self.stations = bikestations.VeloStar()
+            self.stations = bikestations.VeloStar(True)
         return self.stations.to_string()
 
     def addhash(self,mlon,mlat,zoom,slon,slat,dlon,dlat,saddress,daddress):
