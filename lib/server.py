@@ -34,7 +34,7 @@ class HelloWorld:
 #        muni = layer.GTFSLayer('muni', 'san-francisco-municipal-transportation-agency_20091125_0358.zip', dbname='muni.db') 
 
         #pt = layer.GTFSLayer('muni', 'pt')
-        self.stations = bikestations.VeloStar()
+        self.stations = bikestations.VeloStar(True)
         self.timestamp = time.time()
         e = mumoro.Edge()
         e.mode_change = 1

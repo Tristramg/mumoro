@@ -1,5 +1,7 @@
 import os.path
 import urllib
+import config
+import psycopg2 as pg
 from xml.dom.minidom import parse
 
 def get_text(node):
@@ -13,15 +15,19 @@ def get_float(node):
 
 class VeloStar:
     stations = []
-    def __init__(self):
+    conn = None
+    def __init__(self,fromDB):
+        if( fromDB ):
+            self.from_db()
+        else:
+            self.from_xml()
+    
+    def from_xml(self):
         bikesDatabaseURL = 'http://data.keolis-rennes.com/xml/'
         bikesMumoroREAPIKey = 'UAYPAP0MHD482NR'
         url = bikesDatabaseURL + "?version=1.0&key=" + bikesMumoroREAPIKey + "&cmd=getstation&param[request]=all"
         xml = urllib.urlopen(url)
-        
         doc = parse(xml)
-    
-            #self.__currentNode__ = self.doc.documentElement
         for station in doc.documentElement.getElementsByTagName("station"):
             if station.nodeType == station.ELEMENT_NODE:
                 try:
@@ -38,7 +44,48 @@ class VeloStar:
                     self.stations.append(s)
                 except:
                     print 'At least one tag misses: num, name, state, lat, lon, availableSlots, availableBikes, districtName'
-
+    def from_db(self):
+        c = config.Config()
+        try:
+            if( c.host != "" and c.dbpassword != ""):
+                tmp = ("dbname=%s user=%s password=%s host=%s") % ( c.dbname, c.dbuser, c.dbpassword, c.host )
+                self.conn = pg.connect( tmp )
+            else:
+                tmp = ("dbname=%s user=%s") % ( c.dbname, c.dbuser )
+                self.conn = pg.connect( tmp )
+        except:
+            print "I am unable to connect to the database"
+        cur = self.conn.cursor()
+        query = "create or REPLACE VIEW recent_station AS select \"idStation\",max(chrone) as chrone from bike_stats Group by \"idStation\";"
+	try:        
+	    cur.execute( query )
+	except Exception as ex:
+            print "I am unable to create or replace the view into the database"
+            print ex
+        self.conn.commit()
+        query = ("SELECT bike_stats.\"idStation\",bike_stats.\"avSlots\",bike_stats.\"avBikes\",%s.\"name\",%s.\"district_name\", %s.\"lon\",%s.\"lat\" FROM bike_stats, recent_station, %s WHERE bike_stats.\"idStation\" = recent_station.\"idStation\" AND bike_stats.chrone = recent_station.chrone AND bike_stats.\"idStation\" = %s.\"id_station\";") % ( c.tableBikeStations, c.tableBikeStations,c.tableBikeStations,c.tableBikeStations,c.tableBikeStations,c.tableBikeStations ) 
+	try:        
+	    cur.execute( query )
+	except Exception as ex:
+            print "I am unable to retrieve data from the database"
+            print ex
+        res = cur.fetchall()
+        self.conn.close()
+        for tmp in res:
+            try:
+                s = {
+                 'num': str(tmp[0]),
+                 'name': tmp[3],
+                 'state': "1",
+                 'lat': tmp[6],
+                 'lon': tmp[5],
+                 'availableSlots': tmp[1],
+                 'availableBikes': tmp[2],
+                 'districtName': tmp[4]
+                }
+                self.stations.append(s)
+            except:
+                print 'At least one tag misses: num, name, lat, lon, availableSlots, availableBikes, districtName'
     def to_string(self):
         title = '<div id=\'bikes\'><span class=\'smallTitle\'>'
         textRed = '<span class=\'bikeRed\'>'
@@ -78,5 +125,5 @@ class VeloStar:
 
 if __name__ == "__main__":
 
-    v = VeloStar()
+    v = VeloStar(True)
     print v.to_string()

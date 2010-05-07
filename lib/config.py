@@ -11,6 +11,7 @@ class Config:
     tableNodes = ""
     tableEdges = ""
     tableURL = ""
+    tableBikeStations = ""
     urlHash = ""
     cpPort = 0
     def __init__(self):
@@ -26,6 +27,7 @@ class Config:
         	self.tableNodes = config.get("DBSettings","DBTableNodes");
         	self.tableEdges = config.get("DBSettings","DBTableEdges");
                 self.tableURL = config.get("DBSettings","DBTableURL");
+                self.tableBikeStations = config.get("DBSettings","DBTableBikeStationsInfo");
                 self.urlHash = config.get("DBSettings","URLHash");
                 self.cpPort = locale.atoi( config.get("DBSettings","CherrypyPort") );
 		
