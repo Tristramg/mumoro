@@ -8,7 +8,7 @@ class StationsBikesInfo:
     def createTable(self):
 	pass
     def addData(self):
-	s = bikestations.VeloStar()
+	s = bikestations.VeloStar(False)
         try:
             tmp = "dbname=guidage user=guidage"
             self.conn = pg.connect( tmp )
