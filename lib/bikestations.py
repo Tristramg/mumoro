@@ -118,7 +118,7 @@ class VeloStar:
                 res += ('img/bike.station.red.png\t18,25\t-8,-25\n')
             elif (s['availableSlots'] < 3 or s['availableBikes'] < 3):
                 res += ('img/bike.station.orange.png\t18,25\t-8,-25\n')
-            elif (s['availableSlots'] > 3 and s['availableBikes'] > 3):
+            else:
                 res += ('img/bike.station.green.png\t18,25\t-8,-25\n')
         return res
 
