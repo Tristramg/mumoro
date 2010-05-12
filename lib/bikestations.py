@@ -55,6 +55,7 @@ class VeloStar:
                 self.conn = pg.connect( tmp )
         except:
             print "I am unable to connect to the database"
+        cur = self.conn.cursor()
         query = ("SELECT \"id_station\",\"av_slots\",\"av_bikes\",\"name\",\"district_name\", \"lon\",\"lat\" FROM %s;") % ( c.tableBikeStations ) 
 	try:        
 	    cur.execute( query )
