@@ -55,15 +55,7 @@ class VeloStar:
                 self.conn = pg.connect( tmp )
         except:
             print "I am unable to connect to the database"
-        cur = self.conn.cursor()
-        query = "create or REPLACE VIEW recent_station AS select \"idStation\",max(chrone) as chrone from bike_stats Group by \"idStation\";"
-	try:        
-	    cur.execute( query )
-	except Exception as ex:
-            print "I am unable to create or replace the view into the database"
-            print ex
-        self.conn.commit()
-        query = ("SELECT bike_stats.\"idStation\",bike_stats.\"avSlots\",bike_stats.\"avBikes\",%s.\"name\",%s.\"district_name\", %s.\"lon\",%s.\"lat\" FROM bike_stats, recent_station, %s WHERE bike_stats.\"idStation\" = recent_station.\"idStation\" AND bike_stats.chrone = recent_station.chrone AND bike_stats.\"idStation\" = %s.\"id_station\";") % ( c.tableBikeStations, c.tableBikeStations,c.tableBikeStations,c.tableBikeStations,c.tableBikeStations,c.tableBikeStations ) 
+        query = ("SELECT \"id_station\",\"av_slots\",\"av_bikes\",\"name\",\"district_name\", \"lon\",\"lat\" FROM %s;") % ( c.tableBikeStations ) 
 	try:        
 	    cur.execute( query )
 	except Exception as ex:
