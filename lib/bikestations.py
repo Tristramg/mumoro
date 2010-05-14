@@ -75,6 +75,7 @@ class VeloStar:
                  'availableSlots': tmp[1],
                  'availableBikes': tmp[2],
                  'districtName': tmp[4]
+                 'chrone': tmp[7]
                 }
                 self.stations.append(s)
             except:
@@ -105,8 +106,8 @@ class VeloStar:
                 res += ( textOrange + '%i Available slots</span><br>' % s['availableSlots'])
             else:
                 res += ( title + '%i Available slots</span><br>' % s['availableSlots'] )
-            res += ('<br><br>' + tinyText + 'Click again to close</span></div>\t')
-
+            res += ('<br>' + tinyText + 'Latest update on :' + s['chrone'] + '</span>')
+            res += ('<br>' + tinyText + 'Click again to close</span></div>\t')
             if (s['availableSlots'] == 0 or s['availableBikes'] == 0 or ['state'] == 0):
                 res += ('img/bike.station.red.png\t18,25\t-8,-25\n')
             elif (s['availableSlots'] < 3 or s['availableBikes'] < 3):
