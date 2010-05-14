@@ -90,11 +90,11 @@ class VeloStar:
         tinyText = '<span class=\'tinyText\'>'
 
         res = 'lat\tlon\ttitle\tdescription\ticon\ticonSize\ticonOffset\n'
-        if( type(s['chrone']) == type(datetime.datetime) ):
-            return "Yes"
-        else:
-            return "No"
         for s in self.stations:
+            if( type(s['chrone']) == type(datetime.datetime) ):
+                return "Yes"
+            else:
+                return "No"
             res += '%f\t%f\t' % (s['lat'], s['lon'])
             res += (title + s['name'] + '<br>(' + s['num'] + ')</span><br>\t')
             if (s['state'] == 0):
