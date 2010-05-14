@@ -74,7 +74,7 @@ class VeloStar:
                  'lon': tmp[5],
                  'availableSlots': tmp[1],
                  'availableBikes': tmp[2],
-                 'districtName': tmp[4]
+                 'districtName': tmp[4],
                  'chrone': tmp[7]
                 }
                 self.stations.append(s)
