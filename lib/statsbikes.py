@@ -36,9 +36,9 @@ class StatsBikes:
 	except Exception as ex:
             print "I am unable to insert bike stations stats data into the database"
             print ex
-        query = "INSERT INTO bike_stations (\"id_station\", \"av_bikes\", \"av_slots\", \"name\", \"district_name\", \"lon\", \"lat\") VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        query = "INSERT INTO bike_stations (\"id_station\", \"av_bikes\", \"av_slots\", \"name\", \"district_name\", \"lon\", \"lat\", \"chrone\") VALUES (%s, %s, %s, %s, %s, %s, %s)"
 	try:        
-	    cur.execute( query , [ s['num'], s['availableBikes'], s['availableSlots'], s['name'], s['districtName'], s['lon'], s['lat'] ] )
+	    cur.execute( query , [ s['num'], s['availableBikes'], s['availableSlots'], s['name'], s['districtName'], s['lon'], s['lat'], chrone ] )
 	except Exception as ex:
             print "I am unable to insert bike stations stats data into the database"
             print ex
