@@ -106,7 +106,7 @@ class VeloStar:
                 res += ( textOrange + '%i Available slots</span><br>' % s['availableSlots'])
             else:
                 res += ( title + '%i Available slots</span><br>' % s['availableSlots'] )
-            res += ('<br>' + tinyText + 'Latest update on :' + s['chrone'] + '</span>')
+            res += ('<br>' + tinyText + 'Latest update on :' + str(s['chrone']) + '</span>')
             res += ('<br>' + tinyText + 'Click again to close</span></div>\t')
             if (s['availableSlots'] == 0 or s['availableBikes'] == 0 or ['state'] == 0):
                 res += ('img/bike.station.red.png\t18,25\t-8,-25\n')
