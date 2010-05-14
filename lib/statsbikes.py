@@ -28,7 +28,7 @@ class StatsBikes:
         self.conn.close()
     def addStationData(self,s):
 	cur = self.conn.cursor()
-        day = time.gmtime(time.time())[6]
+        day = time.localtime(time.time())[6]
         chrone = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
         query = "INSERT INTO bike_stats (\"idDay\", \"idStation\", \"avSlots\", \"avBikes\", \"chrone\") VALUES (%s, %s, %s, %s, %s)"
 	try:        
