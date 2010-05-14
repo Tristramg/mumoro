@@ -56,7 +56,7 @@ class VeloStar:
         except:
             print "I am unable to connect to the database"
         cur = self.conn.cursor()
-        query = ("SELECT \"id_station\",\"av_slots\",\"av_bikes\",\"name\",\"district_name\", \"lon\",\"lat\,\"chrone\" FROM %s;") % ( c.tableBikeStations ) 
+        query = ("SELECT \"id_station\",\"av_slots\",\"av_bikes\",\"name\",\"district_name\", \"lon\",\"lat\",\"chrone\" FROM %s;") % ( c.tableBikeStations ) 
 	try:        
 	    cur.execute( query )
 	except Exception as ex:
