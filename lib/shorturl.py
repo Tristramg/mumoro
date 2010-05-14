@@ -4,6 +4,7 @@ import hashlib
 import string
 import config
 import psycopg2 as pg
+import time
 
 class shortURL:
     conn = None
@@ -31,10 +32,11 @@ class shortURL:
         h.update(str(lonMap))
         h.update(str(latMap))
         h.update(str(zoom))
+        chrone = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         cur = self.conn.cursor()
-        query = "INSERT INTO " + c.tableURL + "(\"id\", \"zoom\", \"lonMap\", \"latMap\", \"lonStart\", \"latStart\", \"lonDest\", \"latDest\", \"addressStart\", \"addressDest\") VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        query = "INSERT INTO " + c.tableURL + "(\"id\", \"zoom\", \"lonMap\", \"latMap\", \"lonStart\", \"latStart\", \"lonDest\", \"latDest\", \"addressStart\", \"addressDest\", \"chrone\") VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
 	try:        
-	    cur.execute( query , [ h.hexdigest()[0:16], zoom, lonMap, latMap, lonStart, latStart, lonDest, latDest, addressStart, addressDest ] )
+	    cur.execute( query , [ h.hexdigest()[0:16], zoom, lonMap, latMap, lonStart, latStart, lonDest, latDest, addressStart, addressDest, chrone ] )
 	except Exception as ex:
             print "I am unable to insert data into the database"
             print ex
