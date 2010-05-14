@@ -4,6 +4,7 @@ import config
 import psycopg2 as pg
 from xml.dom.minidom import parse
 import time
+import types
 def get_text(node):
     return node.childNodes[0].nodeValue
 
@@ -105,7 +106,9 @@ class VeloStar:
                 res += ( textOrange + '%i Available slots</span><br>' % s['availableSlots'])
             else:
                 res += ( title + '%i Available slots</span><br>' % s['availableSlots'] )
-            res += ('<br>' + tinyText + 'Latest update on : %s' % time.strftime("%Y-%m-%d %H:%M:%S %Z", s['chrone']) )
+            print s['chrone']
+            print type( s['chrone'] )
+            res += ('<br>' + tinyText + 'Latest update on : ' +s['chrone'] )
             res += ('</span>')
             res += ('<br>' + tinyText + 'Click again to close</span></div>\t')
             if (s['availableSlots'] == 0 or s['availableBikes'] == 0 or ['state'] == 0):
