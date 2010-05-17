@@ -223,7 +223,7 @@ def main():
         'tools.staticdir.root': os.path.abspath(os.path.dirname(__file__)),
         'server.socket_port': c.cpPort,
     })
-    cherrypy.tree.mount(HelloWorld(data), '/', config={
+    cherrypy.tree.mount(Mumoro(data), '/', config={
         '/': {
                 'tools.staticdir.on': True,
 		'tools.staticdir.dir': 'static'
