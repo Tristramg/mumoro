@@ -23,7 +23,7 @@ loader = TemplateLoader(
     auto_reload=True
 )
 
-class HelloWorld:
+class Mumoro:
     def __init__(self,data):
 	c = config.Config()
 	self.data = data       
