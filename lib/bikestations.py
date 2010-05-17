@@ -4,6 +4,7 @@ import config
 import psycopg2 as pg
 from xml.dom.minidom import parse
 import datetime
+import time
 
 def get_text(node):
     return node.childNodes[0].nodeValue
@@ -40,7 +41,8 @@ class VeloStar:
                      'lon': get_float(station.getElementsByTagName("longitude")[0]),
                      'availableSlots': get_int(station.getElementsByTagName("slotsavailable")[0]),
                      'availableBikes': get_int(station.getElementsByTagName("bikesavailable")[0]),
-                     'districtName': get_text(station.getElementsByTagName("district")[0])
+                     'districtName': get_text(station.getElementsByTagName("district")[0]),
+		     'chrone': time.strftime("%H:%M", time.localtime())
                      }
                     self.stations.append(s)
                 except:
@@ -76,7 +78,7 @@ class VeloStar:
                  'availableSlots': tmp[1],
                  'availableBikes': tmp[2],
                  'districtName': tmp[4],
-                 'chrone': tmp[7]
+                 'chrone': tmp[7].strftime("%H:%M")
                 }
                 self.stations.append(s)
             except:
@@ -98,14 +100,13 @@ class VeloStar:
                 res += ( textOrange + '%i Available bikes</span><br>' % s['availableBikes'])
             else:
                 res += ( title + '%i Available bikes</span><br>' % s['availableBikes'])
-
             if (s['availableSlots'] == 0):
                 res += ( textRed + 'No available deposit slots</span><br>')
             elif (s['availableSlots'] < 3):
                 res += ( textOrange + '%i Available slots</span><br>' % s['availableSlots'])
             else:
                 res += ( title + '%i Available slots</span><br>' % s['availableSlots'] )
-            res += ('<br>' + tinyText + 'Latest update at ' + s['chrone'].strftime("%H:%M") + '</span>')
+            res += ('<br>' + tinyText + 'Latest update at ' + s['chrone'] + '</span>')
             res += ('<br>' + tinyText + 'Click again to close</span></div>\t')
             if (s['availableSlots'] == 0 or s['availableBikes'] == 0 or ['state'] == 0):
                 res += ('img/bike.station.red.png\t18,25\t-8,-25\n')
