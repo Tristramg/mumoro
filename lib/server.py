@@ -45,7 +45,8 @@ class HelloWorld:
 
         self.g = layer.MultimodalGraph([foot, bike, car])
         self.g.connect_nodes_from_list(foot, bike, self.stations.stations, e, e2)
-        #self.g.connect_nearest_nodes(pt, foot, e, e2)
+        e.mode_change = 0
+        self.g.connect_same_nodes(car, foot, e)
 
 
     def path(self, slon, slat, dlon, dlat):
