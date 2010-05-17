@@ -55,12 +55,9 @@ class HelloWorld:
         car_start = self.g.match('car', float(slon), float(slat))
         print car_start
         dest = self.g.match('foot', float(dlon), float(dlat))
-        print dest
-        car_dest = self.g.match('car', float(dlon), float(dlat))
-        print car_dest
         cherrypy.response.headers['Content-Type']= 'application/json'
         p = mumoro.martins(int(start), int(dest), self.g.graph, 30000, mumoro.mode_change, mumoro.line_change)
-        p_car = mumoro.martins(int(car_start), int(car_dest), self.g.graph, 30000)
+        p_car = mumoro.martins(int(car_start), int(dest), self.g.graph, 30000)
         if len(p_car) == 1:
             p_car[0].cost.append(0)
             p_car[0].cost.append(0)
