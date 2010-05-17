@@ -258,7 +258,7 @@ class MultimodalGraph:
         for n1 in layer1.nodes():
             n2 = layer2.map(n1['original_id'])
             if n2:
-                self.graph.add_edge(n1, n2, property)
+                self.graph.add_edge(n1['id'], n2, property)
 
 
     def connect_nodes_from_list(self, layer1, layer2, list, property, property2 = None):
