@@ -212,7 +212,7 @@ class HelloWorld:
     geo.exposed = True
     revgeo.exposed = True
 
-def main(filename):
+def main():
     c = config.Config()
     data = {} # We'll replace this later
     cherrypy.config.update({
@@ -231,5 +231,5 @@ def main(filename):
     })
     cherrypy.quickstart()
 if __name__ == '__main__':
-    main(sys.argv[1])
+    main()
 
