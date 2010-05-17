@@ -148,7 +148,7 @@ div#bikes{
    color: #423535;
 }
 
-div#contextMenu{
+.contextMenu{
    z-index: 2;
 }
 
