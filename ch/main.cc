@@ -8,6 +8,7 @@
 
 void bench(Graph & g, Graph & gc);
 void martins_bench(Graph & g, Graph & gc);
+void tsaggouris_bench(Graph & g);
 void test(Graph & g, Graph & gc);
 float secu(int cat, int length)
 {
@@ -25,7 +26,7 @@ float secu(int cat, int length)
 
 int main(int, char** argv)
 {
-/*    Graph g;
+ /*   Graph g;
     std::map<int, int> map;
     pqxx::connection Conn("dbname=mumoro");
 
@@ -55,12 +56,12 @@ int main(int, char** argv)
         g.add_edge(map[source], map[destination], edge_prop);
 //        g.add_edge(map[destination], map[source], edge_prop);
         ++show_progress;
-    }*/
-/*    g.save("paris_original");
+    }
+    g.save("paris_original");
     Graph gc(g);
     gc.contract();
-    gc.save("paris_ch");
-  */  
+    gc.save("paris_ch");*/
+    
     //   51937 nodes
 //   619894 edges
 
@@ -74,7 +75,7 @@ int main(int, char** argv)
 //   619894 edges
     
    Graph g("paris_original");
-  Graph gc("paris_ch");
+  //Graph gc("paris_ch");
 /*  gc.split();
   gc.save("paris_ch");*/
 //    Graph gc(g);
@@ -85,7 +86,7 @@ int main(int, char** argv)
 
     //test(g,gc); 
 //    bench(g, gc);
-    martins_bench(g, gc);
+    tsaggouris_bench(g);
 
 
 }

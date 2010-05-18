@@ -157,6 +157,65 @@ bool martins(Graph::node_t start_node, Graph::node_t dest_node, const Graph & g)
     return false;
 }
 
+// Algo de martins sur le graphe normal, vers tous les nœuds
+bool martins_all(Graph::node_t start_node, const Graph & g)
+{
+    my_queue::Type Q;
+    std::vector< std::deque<Label> > P(num_vertices(g.graph));
+
+    Label start;
+    start.node = start_node;
+    for(int i=0; i < Graph::objectives; i++)
+        start.cost[i] = 0;
+
+    Q.insert(start);
+    const  my_queue::by_cost cost_q_it = Q.get<0>();
+    const  my_queue::by_nodes node_q = Q.get<1>();
+
+    int visited = 0;
+    while( !Q.empty() )
+    {
+        Label l = *(cost_q_it.begin());
+        visited++;
+        P[l.node].push_back(l);
+        //        std::cout << "Label! node=" << l.node << " [" << l.cost[0] << "," << l.cost[1] << "]" << std::endl;
+        Q.erase(cost_q_it.begin());
+        BOOST_FOREACH(Graph::edge_t e, out_edges(l.node, g.graph))
+        {
+            Label l2;
+            l2.node = boost::target(e, g.graph);
+            for(int i=0; i < Graph::objectives; i++)
+                l2.cost[i] = l.cost[i] + g[e].cost[i];
+
+            if(!is_dominated_by_any(node_q.equal_range(l2.node), l2) && !is_dominated_by_any(P[l2.node],l2) )
+            {
+                my_queue::nodes_it it, end;
+                tie(it, end) = node_q.equal_range(l2.node);
+                while(it != end)
+                {
+                    if(Graph::dominates(l2.cost, it->cost) || l2.cost == it->cost)
+                        it = Q.get<1>().erase(it);
+                    else
+                    {
+                        it++;
+                    }
+                }
+                Q.insert(l2);
+            }
+        }
+    }
+
+    size_t total = 0;
+    for(int n = 0; n<boost::num_vertices(g.graph); n++)
+    {
+        total += P[n].size();
+    }
+
+    std::cout << "Number of elements found " << total << std::endl;
+    return false;
+}
+
+
 // Algo de martins dans un graphe CH
 // On maintient une liste de couts réalisables trouvés
 // À la création d'un nouveau label, on vérifie qu'il n'est pas dominé par aucun label des couts réalisables
@@ -197,7 +256,7 @@ bool ch_martins(Graph::node_t start_node, Graph::node_t dest_node, const Graph &
     Q1.insert(start);
     Q2.insert(dest);
 
-    while(!Q1.empty() && !Q2.empty())
+    while(!Q1.empty() || !Q2.empty())
     {
         if(!Q1.empty())
         {

@@ -79,6 +79,7 @@ struct Graph
     typedef boost::adjacency_list<boost::listS, boost::vecS, boost::bidirectionalS, Node, Edge > Type;
     typedef boost::graph_traits<Type>::edge_descriptor edge_t;
     typedef boost::graph_traits<Type>::vertex_descriptor node_t;
+    typedef boost::graph_traits<Type>::edge_iterator edge_iterator;
 
     struct inc_order
     {

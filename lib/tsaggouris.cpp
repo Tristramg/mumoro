@@ -43,7 +43,6 @@ void ssmosp(Graph & g, int start)
 
     for(size_t i = 1; i < nodes; i++)
     {
-        std::cout << "New round ! (" << i << "/" << nodes - 1 << ")" << std::endl;
         Graph_t::edge_iterator e, e_end;
         tie(e, e_end) = edges(g.g);
         for(; e != e_end; e++)
