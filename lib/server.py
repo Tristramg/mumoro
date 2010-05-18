@@ -23,7 +23,7 @@ loader = TemplateLoader(
     auto_reload=True
 )
 
-class HelloWorld:
+class Mumoro:
     def __init__(self,data):
 	c = config.Config()
 	self.data = data       
@@ -55,12 +55,9 @@ class HelloWorld:
         car_start = self.g.match('car', float(slon), float(slat))
         print car_start
         dest = self.g.match('foot', float(dlon), float(dlat))
-        print dest
-        car_dest = self.g.match('car', float(dlon), float(dlat))
-        print car_dest
         cherrypy.response.headers['Content-Type']= 'application/json'
         p = mumoro.martins(int(start), int(dest), self.g.graph, 30000, mumoro.mode_change, mumoro.line_change)
-        p_car = mumoro.martins(int(car_start), int(car_dest), self.g.graph, 30000)
+        p_car = mumoro.martins(int(car_start), int(dest), self.g.graph, 30000)
         if len(p_car) == 1:
             p_car[0].cost.append(0)
             p_car[0].cost.append(0)
@@ -215,7 +212,7 @@ class HelloWorld:
     geo.exposed = True
     revgeo.exposed = True
 
-def main(filename):
+def main():
     c = config.Config()
     data = {} # We'll replace this later
     cherrypy.config.update({
@@ -226,7 +223,7 @@ def main(filename):
         'tools.staticdir.root': os.path.abspath(os.path.dirname(__file__)),
         'server.socket_port': c.cpPort,
     })
-    cherrypy.tree.mount(HelloWorld(data), '/', config={
+    cherrypy.tree.mount(Mumoro(data), '/', config={
         '/': {
                 'tools.staticdir.on': True,
 		'tools.staticdir.dir': 'static'
@@ -234,5 +231,5 @@ def main(filename):
     })
     cherrypy.quickstart()
 if __name__ == '__main__':
-    main(sys.argv[1])
+    main()
 

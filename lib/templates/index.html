@@ -24,8 +24,8 @@
 			var lat=$latMap;
 			var lon=$lonMap;
 			var zoom=$zoom;
-			var initialStartText='$addressStart';
-			var initialDestText='$addressDest';
+			var initialStartText="$addressStart";
+			var initialDestText="$addressDest";
 			var lonStart=$lonStart;
 			var latStart=$latStart;
 			var lonDest=$lonDest;
@@ -103,26 +103,28 @@
 			<a href="/info">Read more here</a>
 		</p>
 		<form method="get" action="javascript:validateAddresses(this);">
-		<div id="address_form">
-			<label for="startAdr">Start location:</label>
-			<span id="formError_start"></span>
-			<span class="tinyText">Example: 23 rue de la Chalotais 35000 Rennes France</span>
-			<br/>			
-			<input type="text" name="startAdr" id="startAdr" tabindex="10" size="75" />
-			<input type="button" value="Reverse" onclick="return reverseLocations(this)"/>
-			<br/>
-			<label for="endAdr">Destination:</label>
-			<span id="formError_dest"></span>
-			<br/>
-			<input type="text" name="endAdr" id="endAdr" tabindex="20" size="75" />
-			<input type="submit" value="Calculate route" />
-		</div>
+			<div id="address_form">
+				<label for="startAdr">Start location:</label>
+				<span id="formError_start"></span>
+				<span class="tinyText">Example: 23 rue de la Chalotais 35000 Rennes France</span>
+				<br/>			
+				<input type="text" name="startAdr" id="startAdr" tabindex="10" size="75" />
+				<input type="button" value="Reverse" onclick="return reverseLocations(this)"/>
+				<br/>
+				<label for="endAdr">Destination:</label>
+				<span id="formError_dest"></span>
+				<br/>
+				<input type="text" name="endAdr" id="endAdr" tabindex="20" size="75" />
+				<input type="submit" value="Calculate route" />
+			</div>
 		</form>
 		<div id="info">
 			<p id="path_costs"></p>
 			<p id="routing_description"></p>
 			<p id="hash_url"></p>
 		</div>
+		<p>
+		</p>
 		<div id="map"></div>
 		<div id="footer">
 			<hr/>

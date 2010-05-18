@@ -132,20 +132,23 @@ ul {
 	list-style-type: circle;
 }
 
-div#map
-{
-   width: 59%;
-  height: 400px; 
-  float: left;
+div#map{
+	width: 59%;
+	height: 400px; 
+	float: left;
+	z-index: 1;
 }
 
-div#info
-{
-    width: 39%;
-    float: right;
+div#info{
+	width: 39%;
+	float: right;
 }
 
-div#bikes
-{
+div#bikes{
    color: #423535;
 }
+
+.contextMenu{
+   z-index: 2;
+}
+

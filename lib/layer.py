@@ -269,7 +269,6 @@ class MultimodalGraph:
             n2 = layer2.map(n1['original_id'])
             if n2:
                 self.graph.add_edge(n1['id'], n2, property)
-
     def connect_same_nodes_random(self, layer1, layer2, property, freq):
         count = 0
         for n1 in layer1.nodes():
