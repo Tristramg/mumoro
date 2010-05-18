@@ -136,7 +136,6 @@ div#map{
 	width: 59%;
 	height: 400px; 
 	float: left;
-	z-index: 1;
 }
 
 div#info{
@@ -148,7 +147,87 @@ div#bikes{
    color: #423535;
 }
 
-.contextMenu{
-   z-index: 2;
+#myList {
+	margin: 1em;
+	float: left;
 }
+			
+#myList UL {
+	padding: 0px;
+	margin: 0em 1em;
+}
+			
+#myList LI {
+	width: 100px;
+	border: solid 1px #2AA7DE;
+	background: #6CC8EF;
+	padding: 5px 5px;
+	margin: 2px 0px;
+	list-style: none;
+}
+			
+#options {
+	clear: left;
+}
+			
+#options INPUT {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	width: 150px;
+}
+
+/* Generic context menu styles */
+.contextMenu {
+	position: absolute;
+	width: 120px;
+	z-index: 99999;
+	border: solid 1px #CCC;
+	background: #EEE;
+	padding: 0px;
+	margin: 0px;
+	display: none;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 11px;
+}
+
+.contextMenu LI {
+	list-style: none;
+	padding: 0px;
+	margin: 0px;
+}
+
+.contextMenu A {
+	color: #333;
+	text-decoration: none;
+	display: block;
+	line-height: 20px;
+	height: 20px;
+	background-position: 6px center;
+	background-repeat: no-repeat;
+	outline: none;
+	padding: 1px 5px;
+	padding-left: 28px;
+}
+
+.contextMenu LI.hover A {
+	color: #FFF;
+	background-color: #3399FF;
+}
+
+.contextMenu LI.disabled A {
+	color: #AAA;
+	cursor: default;
+}
+
+.contextMenu LI.hover.disabled A {
+	background-color: transparent;
+}
+
+.contextMenu LI.separator {
+	border-top: solid 1px #CCC;
+}
+
+.contextMenu LI.start A { background-image: url(img/context-arrow-green.png); }
+.contextMenu LI.dest A { background-image: url(img/context-arrow-finish.png); }
+
 

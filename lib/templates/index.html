@@ -19,6 +19,7 @@
 		<script src="http://openlayers.org/api/OpenLayers.js" type="text/javascript"></script>
 		<script src="http://www.openstreetmap.org/openlayers/OpenStreetMap.js" type="text/javascript"></script>
 		<script src="scripts/jquery-1.4.2.min.js" type="text/javascript"></script>
+		<script src="scripts/jquery.contextMenu.js" type="text/javascript"></script>
 		<script src="scripts/jquery.tablesorter.js" type="text/javascript"></script>
 		<script type="text/javascript">
 			var lat=$latMap;
@@ -59,8 +60,6 @@
 			var geojson_reader = new OpenLayers.Format.GeoJSON(in_options);
 			var features;
 			var paths;
-			var iscontext;
-			var contextMenu;
 			var cacheStart;
 			var cacheDest;
 			OpenLayers.Control.Click = OpenLayers.Class(OpenLayers.Control, {                
@@ -126,6 +125,10 @@
 		<p>
 		</p>
 		<div id="map"></div>
+		<ul id="myMenu" class="contextMenu">
+			<li class="start"><a href="#start">Set Start</a></li>
+			<li class="dest"><a href="#dest">Set Destination</a></li>
+		</ul>
 		<div id="footer">
 			<hr/>
 			Streets data provided by 
