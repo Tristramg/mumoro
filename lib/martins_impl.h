@@ -7,14 +7,15 @@
 #include <string>
 #include <fstream>
 #include <deque>
+#include <boost/spirit/include/classic_core.hpp>
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/ordered_index.hpp>
 #include "boost/multi_index/hashed_index.hpp"
 #include <boost/multi_index/member.hpp>
 #include <boost/array.hpp>
-#include <boost/foreach.hpp>
 
 using namespace boost::multi_index;
+using namespace boost::spirit::classic;
 using namespace boost;
 using namespace std;
 
@@ -165,7 +166,7 @@ ostream & operator<<(ostream & os, Label<N> l)
     os << "}";
     return os;
 }
-/*
+
 template<size_t N, typename Comp>
 bool is_dominated_by_any(const typename my_queue<N>::Type & Q, const Label<N> & l, Comp c)
 {
@@ -174,17 +175,6 @@ bool is_dominated_by_any(const typename my_queue<N>::Type & Q, const Label<N> & 
     for(; it != end; it++)
     {
         if( c(*it, l) || it->cost == l.cost)
-            return true;
-    }
-    return false;
-}
-*/
-template<size_t N, typename Comp, typename Container>
-bool is_dominated_by_any(const Container & Q, const Label<N> & l, Comp c)
-{
-    BOOST_FOREACH(Label<N> a, Q)
-    {
-        if( c(a, l) || a.cost == l.cost)
             return true;
     }
     return false;
@@ -249,7 +239,7 @@ vector<Path> martins(int start_node, int dest_node, Graph & g, int start_time, s
             for(size_t i=1; i < N; i++)
                 l2.cost[i] = l.cost[i] + g.g[*ei].*objectives[i-1];
 
-            if(!is_dominated_by_any(node_q.equal_range(l2.node), l2, std_comp) && !is_dominated_by_any(P[l2.node],l2, std_comp) && (dest_node == invalid_node || !is_dominated_by_any(P[dest_node],l2, std_comp)))
+            if(!is_dominated_by_any(Q, l2, std_comp) && !is_dominated_by_any(P[l2.node],l2, std_comp) && (dest_node == invalid_node || !is_dominated_by_any(P[dest_node],l2, std_comp)))
             {
                 typename my_queue<N>::nodes_it it, end;
                 tie(it, end) = node_q.equal_range(l2.node);

@@ -18,8 +18,6 @@ public:
 
 struct Node
 {
-    float x;
-    float y;
 };
 
 struct Edge
@@ -30,7 +28,6 @@ struct Edge
     float mode_change;
     float cost;
     float line_change;
-    float co2;
     Duration duration;
 };
 
@@ -42,12 +39,8 @@ struct Graph
     Graph_t g;
     Graph(int nb_nodes);
     void add_edge(int source, int target, const Edge & e);
-    void set_coord(int node, float x, float y);
     bool public_transport_edge(int source, int target, float start, float arrival);
-    int dijkstra(int source, int target = -1);
-    int dijkstra_dist(int source, int target = -1);
-    int astar(int source, int target);
-    float distance(int source, int target);
+    bool dijkstra(int source, int target);
 };
 
 const int invalid_node = -1;

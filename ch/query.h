@@ -29,7 +29,6 @@ struct Path
 std::list<Path> query(Graph::node_t source, Graph::node_t target, const Graph::Type & graph);
 
 bool martins(Graph::node_t start_node, Graph::node_t dest_node, const Graph & g);
-bool martins_all(Graph::node_t start_node, const Graph & g);
 bool ch_martins(Graph::node_t start_node, Graph::node_t dest_node, const Graph & g);
 bool martins_witness(Graph::node_t start_node, Graph::node_t dest_node, Graph::cost_t cost, const Graph::Type & g);
 #endif

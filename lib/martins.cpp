@@ -10,7 +10,6 @@ float Edge::* get_objective(Objective o)
         case mode_change: return &Edge::mode_change; break;
         case cost: return &Edge::cost; break;
         case line_change: return &Edge::line_change; break;
-        case co2: return &Edge::co2; break;
         default: std::cerr << "Unknown objective..." << std::endl; break;
     }
 }

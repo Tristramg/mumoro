@@ -36,16 +36,6 @@ def duration(length, property, mode):
     else:
         raise NotAccessible()
  
-def co2(length, mode):
-    if mode == mumoro.Foot:
-        return 0
-    elif mode == mumoro.Bike:
-        return 0
-    elif mode == mumoro.Car:
-        return length * 0.15
-    elif mode == mumoro.PublicTransport:
-        return length * 0.05
-        
 class BaseLayer:
     def map(self, original_id):
         c = self.nodes_db.cursor()
@@ -97,15 +87,18 @@ class Layer(BaseLayer):
         self.mode = mode
         self.data = data
         self.name = name
-        c = config.Config()        
-        try:
-            self.conn = pg.connect("dbname=" + c.dbname + " user=" + c.dbuser + " password=" + c.dbpassword + " host=" + c.host);
+	c = config.Config()        
+	try:
+            if( c.host != "" and c.dbpassword != ""):
+                self.conn = pg.connect("dbname=" + c.dbname + " user=" + c.dbuser  + " password=" + c.dbpassword + " host=" + c.host)
+            else:
+                self.conn = pg.connect("dbname=" + c.dbname + " user=" + c.dbuser)
         except:
             print "I am unable to connect to the database"
         self.nodes_offset = 0
-        eld = elevation.ElevationData("North_America")
-        self.nodes_db = sqlite3.connect(':memory:', check_same_thread = False)
-        self.nodes_db.executescript('''
+	eld = elevation.ElevationData("Eurasia")
+	self.nodes_db = sqlite3.connect(':memory:', check_same_thread = False)
+	self.nodes_db.executescript('''
 CREATE TABLE nodes(
 original_id INTEGER PRIMARY KEY,
 id INTEGER,
@@ -157,7 +150,6 @@ CREATE INDEX original_idx ON nodes(original_id);
  
             try:
                 dur = duration(e.length, property, self.mode)
-                e.co2 = co2(e.length, self.mode)
                 e.duration = mumoro.Duration(dur)
                 if self.mode == mumoro.Bike:
                     e.elevation = max(0, target_alt - source_alt)
@@ -239,8 +231,6 @@ class MultimodalGraph:
                 else:
                     if self.graph.public_transport_edge(e['source'], e['target'], e['departure'], e['arrival']):
                         count += 1
-            for n in l.nodes():
-                self.graph.set_coord(n['id'], n['lon'], n['lat'])
 	    print "On layer {0}, {1} edges".format(l, count)
         print "The multimodal graph has been built and has {0} nodes and {1} edges".format(nb_nodes, count)
  
@@ -269,6 +259,7 @@ class MultimodalGraph:
             n2 = layer2.map(n1['original_id'])
             if n2:
                 self.graph.add_edge(n1['id'], n2, property)
+
     def connect_same_nodes_random(self, layer1, layer2, property, freq):
         count = 0
         for n1 in layer1.nodes():
@@ -276,6 +267,7 @@ class MultimodalGraph:
             if n2 and count % freq == 0:
                 self.graph.add_edge(n1['id'], n2, property)
                 count += 1
+                self.graph.add_edge(n1, n2, property)
 
 
     def connect_nodes_from_list(self, layer1, layer2, list, property, property2 = None):
@@ -292,11 +284,11 @@ class MultimodalGraph:
 
 
     def connect_nearest_nodes(self, layer1, layer2, property, property2 = None):
+        if property2 == None:
+            property2 = property
         for n in layer1.nodes():
             nearest = layer2.match(n['lon'], n['lat'])
             if nearest:
-                if property != None:
-                    self.graph.add_edge(n['id'], nearest, property)
-                if property2 != None:
-                    self.graph.add_edge(nearest, n['id'], property2)
+                self.graph.add_edge(n['id'], nearest, property)
+                self.graph.add_edge(nearest, n['id'], property2)
  

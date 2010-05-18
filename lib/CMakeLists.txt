@@ -2,6 +2,8 @@ CMAKE_MINimum_required(VERSION 2.6)
 
 SET( CMAKE_BUILD_TYPE DEBUG )
 
+FIND_LIBRARY(PQXX pqxx /opt/local/lib)
+
 find_package(Boost COMPONENTS graph REQUIRED)
 FIND_PACKAGE(PythonLibs REQUIRED)
 INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_PATH})
@@ -9,10 +11,10 @@ INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_PATH})
 
 include_directories(${Boost_INCLUDE_DIRS})
 
-ADD_DEFINITIONS( -O3 -Wall -fPIC -Wno-deprecated)
+ADD_DEFINITIONS( -O3 -Wall -Wno-deprecated)
 
-ADD_LIBRARY(mum_lib martins.cpp graph_wrapper.cpp) 
-TARGET_LINK_LIBRARIES(mum_lib)
+ADD_LIBRARY(mum_lib martins.cpp tsaggouris.cpp graph_wrapper.cpp) 
+TARGET_LINK_LIBRARIES(mum_lib ${PQXX})
 
 #ADD_EXECUTABLE(mum_test main.cpp )
 #TARGET_LINK_LIBRARIES(mum_test mum_lib)

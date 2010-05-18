@@ -1,6 +1,6 @@
 #include "dijkstra.h"
 #include "query.h"
-#include "tsaggouris.h"
+
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 
 struct found_goal{};
@@ -58,14 +58,14 @@ void bench(Graph & g, Graph & gc)
         boost::progress_timer t;
         for(int i=0; i < runs; i++)
         {
-            query_mono(starts[i], dests[i], gc.graph);
+            //query_mono(starts[i], dests[i], gc.graph);
         }
     } 
 }
 
 void martins_bench(Graph & g, Graph & gc)
 {
-    int runs = 100;
+    int runs = 10;
     std::vector<int> starts(runs);
     std::vector<int> dests(runs);
     for(int i=0; i < runs; i++)
@@ -77,7 +77,7 @@ void martins_bench(Graph & g, Graph & gc)
         boost::progress_timer t;
         for(int i=0; i < runs; i++)
         {
-            martins(starts[i], dests[i], g);
+            //martins(starts[i], dests[i], g);
         }
     }
 
@@ -86,32 +86,6 @@ void martins_bench(Graph & g, Graph & gc)
         for(int i=0; i < runs; i++)
         {
             ch_martins(starts[i], dests[i], gc);
-        }
-    }
- 
-}
-
-void tsaggouris_bench(Graph & g)
-{
-    int runs = 10;
-    std::vector<int> starts(runs);
-    for(int i=0; i < runs; i++)
-    {
-        starts[i] = rand() % boost::num_vertices(g.graph);
-    }
-    { 
-        boost::progress_timer t;
-        for(int i=0; i < runs; i++)
-        {
-            martins_all(starts[i], g);
-        }
-    }
-
-    {
-        boost::progress_timer t;
-        for(int i=0; i < runs; i++)
-        {
-            ssmosp(g, starts[i]);
         }
     }
  

@@ -1,5 +1,5 @@
-ch: main.o bench.o test.o dijkstra.o contraction.o query.o tsaggouris.o
-	g++ -o ch main.o bench.o test.o dijkstra.o contraction.o query.o tsaggouris.o -lpqxx -Wall -lboost_serialization
+ch: main.o bench.o test.o dijkstra.o contraction.o query.o
+	g++ -o ch main.o bench.o test.o dijkstra.o contraction.o query.o -lpqxx -Wall -lboost_serialization
 
 main.o: main.cc
 	g++ -O3 -Wall -o main.o -c main.cc
@@ -15,9 +15,6 @@ dijkstra.o: dijkstra.cc
 
 contraction.o: contraction.cc
 	g++ -O3 -Wall -o contraction.o -c contraction.cc
-
-tsaggouris.o: tsaggouris.cc
-	g++ -O3 -Wall -o tsaggouris.o -c tsaggouris.cc
 
 query.o: query.cc
 	g++ -O3 -Wall -o query.o -c query.cc
