@@ -42,16 +42,24 @@
 			    'dest': null
 			};
 			var disableClickEvent = false;
-			var iconStandard, iconDepart, iconArrivee;
-			var controlDrag = null;
-			var markerSize = new OpenLayers.Size(25,35);
-			var markerOffset = new OpenLayers.Pixel(-markerSize.w, -markerSize.h);
-			var icons = {
-			    'start': new OpenLayers.Icon('img/arrow-green.png',markerSize,markerOffset),
-			    'dest': new OpenLayers.Icon('img/arrow-finish.png',markerSize,markerOffset)
+			var icon_standard;
+			var icon = {
+			    'start': null,
+			    'dest': null
 			};
-			var markers = new OpenLayers.Layer.Markers( "Markers" );
-			//var markers = new OpenLayers.Layer.Vector("Markers");			
+			var controlDrag = null;
+			var layerMarkers = new OpenLayers.Layer.Vector("Markers");
+			icon_standard = OpenLayers.Util.extend({}, OpenLayers.Feature.Vector.style['default']);
+			icon_standard.graphicWidth = 25;
+			icon_standard.graphicHeight = 35;
+			icon_standard.graphicXOffset = -icon_standard.graphicWidth;
+			icon_standard.graphicYOffset = -icon_standard.graphicHeight;
+			icon_standard.graphicOpacity = 1.0;
+			icon_standard.pointRadius = 6;
+			icon['start'] = OpenLayers.Util.extend({}, icon_standard);
+			icon['start'] .externalGraphic = "img/arrow-green.png";
+			icon['dest']  = OpenLayers.Util.extend({}, icon_standard);
+			icon['dest'] .externalGraphic = "img/arrow-finish.png";  
 			var node_markers = {
 			     'start': null,
 			     'dest': null
