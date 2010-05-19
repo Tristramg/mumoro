@@ -28,6 +28,7 @@ class Mumoro:
 	c = config.Config()
 	self.data = data       
 	foot = layer.Layer('foot', mumoro.Foot, {'nodes': c.tableNodes, 'edges': c.tableEdges})
+	foot2 = layer.Layer('foot2', mumoro.Foot, {'nodes': c.tableNodes, 'edges': c.tableEdges})
         bike = layer.Layer('bike', mumoro.Bike, {'nodes': c.tableNodes, 'edges': c.tableEdges})
         car = layer.Layer('car', mumoro.Car, {'nodes': c.tableNodes, 'edges': c.tableEdges})
 #        bart = layer.GTFSLayer('bart', 'google_transit.zip', dbname='bart.db') 
@@ -43,21 +44,23 @@ class Mumoro:
         e2.mode_change = 0
         e2.duration = mumoro.Duration(30);
 
-        self.g = layer.MultimodalGraph([foot, bike, car])
+        self.g = layer.MultimodalGraph([foot, bike, car, foot2])
         self.g.connect_nodes_from_list(foot, bike, self.stations.stations, e, e2)
         e.mode_change = 0
-        self.g.connect_same_nodes(car, foot, e)
+        e.duration = mumoro.Duration(0)
+        self.g.connect_same_nodes(car, foot2, e)
+        self.g.connect_same_nodes(foot2, car, e)
 
 
     def path(self, slon, slat, dlon, dlat):
         start = self.g.match('foot', float(slon), float(slat))
-        print start
-        car_start = self.g.match('car', float(slon), float(slat))
-        print car_start
+        car_start = self.g.match('foot2', float(slon), float(slat))
         dest = self.g.match('foot', float(dlon), float(dlat))
+        car_dest = self.g.match('foot2', float(dlon), float(dlat))
+
         cherrypy.response.headers['Content-Type']= 'application/json'
         p = mumoro.martins(int(start), int(dest), self.g.graph, 30000, mumoro.mode_change, mumoro.line_change)
-        p_car = mumoro.martins(int(car_start), int(dest), self.g.graph, 30000)
+        p_car = mumoro.martins(int(car_start), int(car_dest), self.g.graph, 30000)
         if len(p_car) == 1:
             p_car[0].cost.append(0)
             p_car[0].cost.append(0)
