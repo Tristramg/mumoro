@@ -62,33 +62,6 @@
 			var paths;
 			var cacheStart;
 			var cacheDest;
-			OpenLayers.Control.Click = OpenLayers.Class(OpenLayers.Control, {                
-						defaultHandlerOptions: {
-							'single': true,
-							'double': false,
-							'pixelTolerance': 0,
-							'stopSingle': false,
-							'stopDouble': false
-						},initialize: function(options) {
-								this.handlerOptions = OpenLayers.Util.extend(
-										{},
-										this.defaultHandlerOptions);
-								OpenLayers.Control.prototype.initialize.apply(
-		    								this,
-										arguments); 
-								this.handler = new OpenLayers.Handler.Click(
-		    								this,
-										{
-		    									'click': function(e){
-												if(disableClickEvent) {disableClickEvent = false;}
-												else {createContextMenu(e.xy);}
-												}
-										},
-										this.handlerOptions
-								);
-						}
-
-			});
 		</script>
 		<script src="scripts/mumoro.js" type="text/javascript"></script>
 		<link rel="icon" type="image/png" href="img/arrow.png" />
