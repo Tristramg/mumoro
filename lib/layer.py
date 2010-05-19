@@ -264,10 +264,9 @@ class MultimodalGraph:
         count = 0
         for n1 in layer1.nodes():
             n2 = layer2.map(n1['original_id'])
+            count += 1
             if n2 and count % freq == 0:
                 self.graph.add_edge(n1['id'], n2, property)
-                count += 1
-                self.graph.add_edge(n1, n2, property)
 
 
     def connect_nodes_from_list(self, layer1, layer2, list, property, property2 = None):
