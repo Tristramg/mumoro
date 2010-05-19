@@ -101,7 +101,7 @@ bool Graph::dijkstra(int source, int target)
             .weight_map(get(&Edge::duration, g))
 //            .visitor(dijkstra_goal_visitor(target))
             .distance_zero(30000)
-            .distance_combine(calc_duration)
+            .distance_combine(&calc_duration)
             .distance_compare(Comp())
             );
     return false;
