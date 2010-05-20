@@ -31,11 +31,7 @@ class Mumoro:
 	foot2 = layer.Layer('foot2', mumoro.Foot, {'nodes': c.tableNodes, 'edges': c.tableEdges})
         bike = layer.Layer('bike', mumoro.Bike, {'nodes': c.tableNodes, 'edges': c.tableEdges})
         car = layer.Layer('car', mumoro.Car, {'nodes': c.tableNodes, 'edges': c.tableEdges})
-#        bart = layer.GTFSLayer('bart', 'google_transit.zip', dbname='bart.db') 
-#        muni = layer.GTFSLayer('muni', 'san-francisco-municipal-transportation-agency_20091125_0358.zip', dbname='muni.db') 
-
-        #pt = layer.GTFSLayer('muni', 'pt')
-        self.stations = bikestations.VeloStar(True)
+	self.stations = bikestations.VeloStar(True)
         self.timestamp = time.time()
         e = mumoro.Edge()
         e.mode_change = 1
@@ -179,7 +175,7 @@ class Mumoro:
         cherrypy.response.headers['Content-Type']= 'application/json'
         url = "nominatim.openstreetmap.org:80"
         params = urllib.urlencode({
-          "q": q,
+          "q": q.encode("utf-8"),
           "format":"json",
           "polygon": 0,
           "addressdetails" : 1,
