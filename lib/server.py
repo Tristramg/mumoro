@@ -125,13 +125,7 @@ class Mumoro:
 	return json.dumps(ret)
     
     def match(self, lon, lat):
-        cherrypy.response.headers['Content-Type']= 'application/json'
-        id = self.g.match('foot', lon, lat)
-        if id:
-            ret = {'node': id}
-            return json.dumps(ret)
-        else:
-            return '{"error": "No node found"}'
+        return self.g.match('foot', lon, lat)
 
     def bikes(self):
         if time.time() > self.timestamp + 60 * 5:
@@ -184,7 +178,40 @@ class Mumoro:
         conn = httplib.HTTPConnection(url)
         conn.request("GET", "/search?" + params)
         response = conn.getresponse()
-        return response.read()
+	ret = json.loads(response.read()) 
+	is_covered = False	
+	if ret:
+		cord_error = ""
+		lon = ret[0]['lon']
+		lat = ret[0]['lat']
+		display_name = ret[0]['display_name']
+		if self.arecovered(lon,lat):
+			id_node = self.match(lon,lat)
+			if id_node:
+				node_error = ""
+				is_covered = True
+			else:
+				node_error = "match failed"
+		else:
+			id_node = 0
+			node_error = "not covered area"
+	else:
+		cord_error = "geocoding failed"
+		lon = 0
+		lat = 0
+		display_name = ""
+		id_node = 0		
+		node_error = "match failed because geocoding failed"
+	data = {
+		'node': id_node,
+		'lon': lon,
+		'lat': lat,
+		'display_name': display_name,
+		'node_error': node_error,
+		'cord_error': cord_error,
+		'is_covered': is_covered
+	}
+	return json.dumps(data)
     def revgeo(self,lon,lat):
         cherrypy.response.headers['Content-Type']= 'application/json'
         url = "nominatim.openstreetmap.org:80"
@@ -199,9 +226,42 @@ class Mumoro:
         conn = httplib.HTTPConnection(url)
         conn.request("GET", "/reverse?" + params)
         response = conn.getresponse()
-        return response.read()
+        ret = json.loads(response.read()) 
+	is_covered = False	
+	if ret:
+		cord_error = ""
+		display_name = ret['display_name']
+		if self.arecovered(float(lon),float(lat)):
+			id_node = self.match(float(lon),float(lat))
+			if id_node:
+				node_error = ""
+				is_covered = True
+			else:
+				node_error = "match failed"
+		else:
+			id_node = 0
+			node_error = "not covered area"
+	else:
+		cord_error = "geocoding failed"
+		display_name = ""
+		id_node = 0		
+		node_error = "match failed because revgeocoding failed"
+	data = {
+		'node': id_node,
+		'display_name': display_name,
+		'node_error': node_error,
+		'cord_error': cord_error,
+		'is_covered': is_covered
+	}
+	return json.dumps(data)
+
+    def arecovered(self,lon,lat):
+        #Coverage area of Rennes. Hardcored for simplicity	
+	if( lon <= -1.73113 or lon >= -1.56359 or lat <= 48.07448 or lat >= 48.14532 ):
+	    return False	
+	else:
+            return True   
         
-    match.exposed = True
     path.exposed = True
     bikes.exposed = True
     h.exposed = True
