@@ -11,7 +11,7 @@ class shortURL:
     def __init__(self):
         pass
 
-    def addRouteToDatabase(self,lonMap,latMap,zoom,lonStart,latStart,lonDest,latDest,addressStart,addressDest):
+    def addRouteToDatabase(self,lonMap,latMap,zoom,lonStart,latStart,lonDest,latDest,addressStart,addressDest,nodeStart,nodeDest):
         c = config.Config()
         try:
             if( c.host != "" and c.dbpassword != ""):
@@ -23,7 +23,8 @@ class shortURL:
         except:
             print "I am unable to connect to the database"
         h = hashlib.md5()
-        h.update(addressStart.encode("utf-8"))
+	chrone = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())        
+	h.update(addressStart.encode("utf-8"))
         h.update(addressDest.encode("utf-8"))
         h.update(str(lonStart))
         h.update(str(latStart))
@@ -32,11 +33,13 @@ class shortURL:
         h.update(str(lonMap))
         h.update(str(latMap))
         h.update(str(zoom))
-        chrone = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+	h.update(str(nodeStart))
+	h.update(str(nodeDest))
+        h.update(chrone.encode("utf-8"))
         cur = self.conn.cursor()
-        query = "INSERT INTO " + c.tableURL + "(\"id\", \"zoom\", \"lonMap\", \"latMap\", \"lonStart\", \"latStart\", \"lonDest\", \"latDest\", \"addressStart\", \"addressDest\", \"chrone\") VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        query = "INSERT INTO " + c.tableURL + "(\"id\", \"zoom\", \"lonMap\", \"latMap\", \"lonStart\", \"latStart\", \"lonDest\", \"latDest\", \"addressStart\", \"addressDest\", \"chrone\", \"s_node\", \"d_node\") VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
 	try:        
-	    cur.execute( query , [ h.hexdigest()[0:16], zoom, lonMap, latMap, lonStart, latStart, lonDest, latDest, addressStart, addressDest, chrone ] )
+	    cur.execute( query , [ h.hexdigest()[0:16], zoom, lonMap, latMap, lonStart, latStart, lonDest, latDest, addressStart, addressDest, chrone, nodeStart, nodeDest ] )
 	except Exception as ex:
             print "I am unable to insert data into the database"
             print ex

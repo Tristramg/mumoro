@@ -31,15 +31,19 @@
 			var latStart=$latStart;
 			var lonDest=$lonDest;
 			var latDest=$latDest;
+			var snode=$snode;
+			var dnode=$dnode;
 			var fromHash=$fromHash;
-			var hurl='$hashUrl';
+			var hurl="$hashUrl";
 			var map; //complex object of type OpenLayers.Map
 			var routeLayer;
 			var proj4326 = new OpenLayers.Projection("EPSG:4326"); // longitude/latitude in decimal degrees
 			var proj900913 = new OpenLayers.Projection("EPSG:900913"); // Google projection
 			var nodes = {
 			    'start': null,
-			    'dest': null
+			    'dest': null,
+			    'fmouse_start': false,
+			    'fmouse_dest': false			
 			};
 			var disableClickEvent = false;
 			var icon_standard;
