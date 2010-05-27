@@ -91,23 +91,23 @@ class VeloStar:
         res = 'lat\tlon\ttitle\tdescription\ticon\ticonSize\ticonOffset\n'
         for s in self.stations:
             res += '%f\t%f\t' % (s['lat'], s['lon'])
-            res += (title + s['name'] + '<br>(' + s['num'] + ')</span><br>\t')
+            res += (title + s['name'] + ' (' + s['num'] + ')</span><br/>\t')
             if (s['state'] == 0):
-                res += ( textRed + 'Station supports only bike deposits</span><br>')
+                res += ( textRed + 'Station supports only bike deposits</span><br/>')
             elif (s['availableBikes'] == 0):
-                res += ( textRed + 'No available bikes</span><br>')
+                res += ( textRed + 'No available bikes</span><br/>')
             elif (s['availableBikes'] < 3):
-                res += ( textOrange + '%i Available bikes</span><br>' % s['availableBikes'])
+                res += ( textOrange + '%i Available bikes</span><br/>' % s['availableBikes'])
             else:
-                res += ( title + '%i Available bikes</span><br>' % s['availableBikes'])
+                res += ( title + '%i Available bikes</span><br/>' % s['availableBikes'])
             if (s['availableSlots'] == 0):
-                res += ( textRed + 'No available deposit slots</span><br>')
+                res += ( textRed + 'No available deposit slots</span><br/>')
             elif (s['availableSlots'] < 3):
-                res += ( textOrange + '%i Available slots</span><br>' % s['availableSlots'])
+                res += ( textOrange + '%i Available slots</span><br/>' % s['availableSlots'])
             else:
-                res += ( title + '%i Available slots</span><br>' % s['availableSlots'] )
-            res += ('<br>' + tinyText + 'Latest update at ' + s['chrone'] + '</span>')
-            res += ('<br>' + tinyText + 'Click again to close</span></div>\t')
+                res += ( title + '%i Available slots</span><br/>' % s['availableSlots'] )
+            res += ('<br/>' + tinyText + 'Latest update at ' + s['chrone'] + '</span>')
+            res += ('<br/>' + tinyText + 'Click again to close</span></div>\t')
             if (s['availableSlots'] == 0 or s['availableBikes'] == 0 or ['state'] == 0):
                 res += ('img/bike.station.red.png\t18,25\t-8,-25\n')
             elif (s['availableSlots'] < 3 or s['availableBikes'] < 3):
