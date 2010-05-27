@@ -52,6 +52,7 @@
 			    'dest': null
 			};
 			var controlDrag = null;
+			var bikeLayer = null;
 			var layerMarkers = new OpenLayers.Layer.Vector("Markers");
 			icon_standard = OpenLayers.Util.extend({}, OpenLayers.Feature.Vector.style['default']);
 			icon_standard.graphicWidth = 25;
@@ -83,9 +84,6 @@
 	<body onload="init();">
 		<h1>Mumoro demonstration on the city of Rennes</h1>
 		<h2>Demonstration of our multimodal and multiobjective routing algorithms</h2>
-		<p>			
-			<a href="/info">Read more here</a>
-		</p>
 		<div id="map"></div>		
 		<form method="get" action="javascript:validateAddresses(this);">
 			<div id="address_form">
@@ -118,13 +116,14 @@
 		</ul>
 		<div id="footer">
 			<hr/>
-			Streets data by 
+			Street data by 
 			<a href="http://www.openstreetmap.org/">Openstreetmap</a>
 			<img src="img/by-sa.png" width="75" height="14" alt="CC-BY-SA"/>
-			/ Bikes data by 
+			/ Bike data by 
 			<a href="http://data.keolis-rennes.com">Data Keolis Rennes</a>
 			<img src="img/by-nc-sa.png" width="75" height="14" alt="CC-BY-SA-NC"/>
 			/ Routing algorithms under GPL3
+			/ <a href="/info">Read more here</a>
 		</div>
 	</body>
 </html>
