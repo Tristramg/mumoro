@@ -86,19 +86,22 @@
 		<p>			
 			<a href="/info">Read more here</a>
 		</p>
+		<div id="map"></div>		
 		<form method="get" action="javascript:validateAddresses(this);">
 			<div id="address_form">
 				<label for="startAdr">Start location:</label>
 				<span id="formError_start"></span>
-				<span class="tinyText">Example: 23 rue de la Chalotais 35000 Rennes France</span>
 				<br/>			
-				<input type="text" name="startAdr" id="startAdr" tabindex="10" size="75" />
-				<input type="button" value="Reverse" onclick="return reverseLocations(this)"/>
+				<input type="text" name="startAdr" id="startAdr" tabindex="10" size="48" />
 				<br/>
 				<label for="endAdr">Destination:</label>
 				<span id="formError_dest"></span>
 				<br/>
-				<input type="text" name="endAdr" id="endAdr" tabindex="20" size="75" />
+				<input type="text" name="endAdr" id="endAdr" tabindex="20" size="48" />
+				<br/>
+				<span class="tinyText">Example: 23 rue de la Chalotais 35000 Rennes France</span>
+				<br/>
+				<input type="button" value="Reverse" onclick="return reverseLocations(this)"/>
 				<input type="submit" value="Calculate route" />
 			</div>
 		</form>
@@ -109,25 +112,19 @@
 		</div>
 		<p>
 		</p>
-		<div id="map"></div>
 		<ul id="myMenu" class="contextMenu">
 			<li class="start"><a href="#start">Set Start</a></li>
 			<li class="dest"><a href="#dest">Set Destination</a></li>
 		</ul>
 		<div id="footer">
 			<hr/>
-			Streets data provided by 
-			<a href="http://www.openstreetmap.org/">Open Street Maps</a>
+			Streets data by 
+			<a href="http://www.openstreetmap.org/">Openstreetmap</a>
 			<img src="img/by-sa.png" width="75" height="14" alt="CC-BY-SA"/>
-			<br/>
-			Bikes data provided by 
+			/ Bikes data by 
 			<a href="http://data.keolis-rennes.com">Data Keolis Rennes</a>
 			<img src="img/by-nc-sa.png" width="75" height="14" alt="CC-BY-SA-NC"/>
-			<br/>
-			Routing algorithms licensed by GPL License
-			<br/>
-			<br/>		
-			<img src="img/region.png" width="76" height="76" alt="Région Midi-Pyrénées"/>
+			/ Routing algorithms under GPL3
 		</div>
 	</body>
 </html>

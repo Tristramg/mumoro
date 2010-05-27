@@ -125,7 +125,8 @@ table.tablesorter .headerSortDown {
 	margin-bottom: 15px;
 	padding-top: 15px;
 	clear:both; 
-  text-align: center; 
+  	text-align: center;
+	font-size: x-small;
 }
 
 ul {
@@ -133,14 +134,15 @@ ul {
 }
 
 div#map{
-	width: 59%;
-	height: 400px; 
-	float: left;
+	width: 66%;
+	margin-top: 10px; 
+	height: 330px;	
+	float: right;
 }
 
 div#info{
-	width: 39%;
-	float: right;
+	width: 32%;
+	float: left;
 }
 
 div#bikes{
