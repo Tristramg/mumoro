@@ -133,13 +133,18 @@ ul {
 	list-style-type: circle;
 }
 
-div#map{
+#map{
 	margin-top: 10px;
 	overflow:auto;
 }
 
-div#info{
-	width: 32%;
+#info{
+	width: 50em;
+	float: left;
+}
+
+#address_form {
+	width: 50em;
 	float: left;
 }
 
