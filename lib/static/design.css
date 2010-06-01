@@ -134,10 +134,8 @@ ul {
 }
 
 div#map{
-	width: 66%;
-	margin-top: 10px; 
-	height: 330px;	
-	float: right;
+	margin-top: 10px;
+	overflow: auto
 }
 
 div#info{
