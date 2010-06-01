@@ -137,20 +137,13 @@ ul {
 	overflow: auto;
 	height: 400px;
 }
-
-#info{
-	float: left;	
-	width: 30em;
-	
-}
-
-#address_form {
+#lefting {
 	
 	float: left;	
-	width: 30em;
+	width: 28em;
 }
 
-div#bikes{
+#bikes{
    color: #423535;
 }
 

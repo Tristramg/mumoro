@@ -84,8 +84,9 @@
 	<body onload="init();">
 		<h1>Mumoro demonstration on the city of Rennes</h1>
 		<h2>Demonstration of our multimodal and multiobjective routing algorithms</h2>
-		<form method="get" action="javascript:validateAddresses(this);">
+		<div id="lefting">		
 			<div id="address_form">
+				<form method="get" action="javascript:validateAddresses(this);">
 				<label for="startAdr">Start location:</label>
 				<span id="formError_start"></span>
 				<br/>			
@@ -100,16 +101,15 @@
 				<br/>
 				<input type="button" value="Reverse" onclick="return reverseLocations(this)"/>
 				<input type="submit" value="Calculate route" />
+				</form>
 			</div>
-		</form>
-		<div id="map"></div>		
-		<div id="info">
-			<p id="path_costs"></p>
-			<p id="routing_description"></p>
-			<p id="hash_url"></p>
+			<div id="info">
+				<p id="path_costs"></p>
+				<p id="routing_description"></p>
+				<p id="hash_url"></p>
+			</div>
 		</div>
-		<p>
-		</p>
+		<div id="map"></div>		
 		<ul id="myMenu" class="contextMenu">
 			<li class="start"><a href="#start">Set Start</a></li>
 			<li class="dest"><a href="#dest">Set Destination</a></li>
