@@ -135,8 +135,7 @@ ul {
 
 div#map{
 	margin-top: 10px;
-	overflow: auto
-	float: right;
+	overflow:auto;
 }
 
 div#info{
