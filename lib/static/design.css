@@ -134,18 +134,20 @@ ul {
 }
 
 #map{
-	margin-top: 10px;
-	overflow:auto;
+	overflow: auto;
+	height: 400px;
 }
 
 #info{
-	width: 50em;
-	float: left;
+	float: left;	
+	width: 30em;
+	
 }
 
 #address_form {
-	width: 50em;
-	float: left;
+	
+	float: left;	
+	width: 30em;
 }
 
 div#bikes{
