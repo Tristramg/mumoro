@@ -2,6 +2,7 @@ import mumoro
 import psycopg2 as pg
 import sqlite3
 import elevation
+import math
 import config
  
 class NotAccessible(Exception):
@@ -253,6 +254,24 @@ class MultimodalGraph:
         for l in self.layers:
             if l.name == name:
                 return l.match(lon, lat)
+
+    def distance(self, n1, n2):
+        c1 = self.coordinates(n1)
+        c2 = self.coordinates(n2)
+        try:
+            delta = c2[0] - c1[0]
+            a = math.radians(c1[1])
+            b = math.radians(c2[1])
+            C = math.radians(delta)
+            x = math.sin(a) * math.sin(b) + math.cos(a) * math.cos(b) * math.cos(C)
+            distance = math.acos(x) # in radians
+            distance  = math.degrees(distance) # in degrees
+            distance  = distance * 60 # 60 nautical miles / lat degree
+            distance = distance * 1852 # conversion to meters
+            return distance;
+        except:
+            return 0
+
  
     def connect_same_nodes(self, layer1, layer2, property):
         for n1 in layer1.nodes():

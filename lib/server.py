@@ -25,13 +25,13 @@ loader = TemplateLoader(
 
 class Mumoro:
     def __init__(self,data):
-	c = config.Config()
-	self.data = data       
-	foot = layer.Layer('foot', mumoro.Foot, {'nodes': c.tableNodes, 'edges': c.tableEdges})
-	foot2 = layer.Layer('foot2', mumoro.Foot, {'nodes': c.tableNodes, 'edges': c.tableEdges})
+        c = config.Config()
+        self.data = data       
+        foot = layer.Layer('foot', mumoro.Foot, {'nodes': c.tableNodes, 'edges': c.tableEdges})
+        foot2 = layer.Layer('foot2', mumoro.Foot, {'nodes': c.tableNodes, 'edges': c.tableEdges})
         bike = layer.Layer('bike', mumoro.Bike, {'nodes': c.tableNodes, 'edges': c.tableEdges})
         car = layer.Layer('car', mumoro.Car, {'nodes': c.tableNodes, 'edges': c.tableEdges})
-	self.stations = bikestations.VeloStar(True)
+        self.stations = bikestations.VeloStar(False)
         self.timestamp = time.time()
         e = mumoro.Edge()
         e.mode_change = 1
@@ -48,6 +48,7 @@ class Mumoro:
         self.g.connect_same_nodes(foot2, car, e)
 
 
+    @cherrypy.expose
     def path(self, slon, slat, dlon, dlat):
         start = self.g.match('foot', float(slon), float(slat))
         car_start = self.g.match('foot2', float(slon), float(slat))
@@ -122,21 +123,23 @@ class Mumoro:
             features.append(feature)
             p_str['features'] = features
             ret['paths'].append(p_str)
-	return json.dumps(ret)
+        return json.dumps(ret)
     
+    @cherrypy.expose
     def match(self, lon, lat):
         return self.g.match('foot', lon, lat)
 
+    @cherrypy.expose
     def bikes(self):
         if time.time() > self.timestamp + 60 * 5:
             print "Updating bikestations"
-            self.stations = bikestations.VeloStar(True)
+            self.stations = bikestations.VeloStar(False)
         return self.stations.to_string()
 
     def addhash(self,mlon,mlat,zoom,slon,slat,dlon,dlat,saddress,daddress,snode,dnode):
         cherrypy.response.headers['Content-Type']= 'application/json'
         hashAdd = shorturl.shortURL()
-	hmd5 =hashAdd.addRouteToDatabase(mlon,mlat,zoom,slon,slat,dlon,dlat,saddress,daddress,snode,dnode)
+        hmd5 =hashAdd.addRouteToDatabase(mlon,mlat,zoom,slon,slat,dlon,dlat,saddress,daddress,snode,dnode)
         if( len(hmd5) > 0 ):
             ret = {
                 'h': hmd5
@@ -145,6 +148,7 @@ class Mumoro:
         else:
             return '{"error": "Add to DB failed"}'
 
+    @cherrypy.expose
     def h(self,id):
         hashCheck = shorturl.shortURL()
         res = hashCheck.getDataFromHash(id)
@@ -155,16 +159,19 @@ class Mumoro:
 
     @cherrypy.expose
     def index(self,fromHash=False,hashData=[]):
-	c = config.Config()        
-	tmpl = loader.load('index.html')
+        c = config.Config()        
+        tmpl = loader.load('index.html')
         if( not fromHash ):
             return tmpl.generate(fromHash='false',lonMap=-1.68038,latMap=48.11094,zoom=15,lonStart=0.0,latStart=0.0,lonDest=0.0,latDest=0.0,addressStart='',addressDest='',s_node=1,d_node=1,hashUrl=c.urlHash).render('html', doctype='html')
         else:
             return tmpl.generate(fromHash='true',lonMap=hashData[2],latMap=hashData[3],zoom=hashData[1],lonStart=hashData[4],latStart=hashData[5],lonDest=hashData[6],latDest=hashData[7],addressStart=hashData[8].decode('utf-8'),addressDest=hashData[9].decode('utf-8'),s_node=hashData[11],d_node=hashData[12],hashUrl=c.urlHash).render('html', doctype='html')
 
+    @cherrypy.expose
     def info(self):
         tmpl = loader.load('info.html')
         return tmpl.generate().render('html', doctype='html')
+    
+    @cherrypy.expose
     def geo(self,q):
         cherrypy.response.headers['Content-Type']= 'application/json'
         url = "nominatim.openstreetmap.org:80"
@@ -178,40 +185,42 @@ class Mumoro:
         conn = httplib.HTTPConnection(url)
         conn.request("GET", "/search?" + params)
         response = conn.getresponse()
-	ret = json.loads(response.read()) 
-	is_covered = False	
-	if ret:
-		cord_error = ""
-		lon = ret[0]['lon']
-		lat = ret[0]['lat']
-		display_name = ret[0]['display_name']
-		if self.arecovered(lon,lat):
-			id_node = self.match(lon,lat)
-			if id_node:
-				node_error = ""
-				is_covered = True
-			else:
-				node_error = "match failed"
-		else:
-			id_node = 0
-			node_error = "not covered area"
-	else:
-		cord_error = "geocoding failed"
-		lon = 0
-		lat = 0
-		display_name = ""
-		id_node = 0		
-		node_error = "match failed because geocoding failed"
-	data = {
-		'node': id_node,
-		'lon': lon,
-		'lat': lat,
-		'display_name': display_name,
-		'node_error': node_error,
-		'cord_error': cord_error,
-		'is_covered': is_covered
-	}
-	return json.dumps(data)
+        ret = json.loads(response.read()) 
+        is_covered = False      
+        if ret:
+                cord_error = ""
+                lon = ret[0]['lon']
+                lat = ret[0]['lat']
+                display_name = ret[0]['display_name']
+                if self.arecovered(lon,lat):
+                        id_node = self.match(lon,lat)
+                        if id_node:
+                                node_error = ""
+                                is_covered = True
+                        else:
+                                node_error = "match failed"
+                else:
+                        id_node = 0
+                        node_error = "not covered area"
+        else:
+                cord_error = "geocoding failed"
+                lon = 0
+                lat = 0
+                display_name = ""
+                id_node = 0             
+                node_error = "match failed because geocoding failed"
+        data = {
+                'node': id_node,
+                'lon': lon,
+                'lat': lat,
+                'display_name': display_name,
+                'node_error': node_error,
+                'cord_error': cord_error,
+                'is_covered': is_covered
+        }
+        return json.dumps(data)
+
+    @cherrypy.expose
     def revgeo(self,lon,lat):
         cherrypy.response.headers['Content-Type']= 'application/json'
         url = "nominatim.openstreetmap.org:80"
@@ -227,51 +236,42 @@ class Mumoro:
         conn.request("GET", "/reverse?" + params)
         response = conn.getresponse()
         ret = json.loads(response.read()) 
-	is_covered = False	
-	if ret:
-		cord_error = ""
-		display_name = ret['display_name']
-		if self.arecovered(float(lon),float(lat)):
-			id_node = self.match(float(lon),float(lat))
-			if id_node:
-				node_error = ""
-				is_covered = True
-			else:
-				node_error = "match failed"
-		else:
-			id_node = 0
-			node_error = "not covered area"
-	else:
-		cord_error = "geocoding failed"
-		display_name = ""
-		id_node = 0		
-		node_error = "match failed because revgeocoding failed"
-	data = {
-		'node': id_node,
-		'display_name': display_name,
-		'node_error': node_error,
-		'cord_error': cord_error,
-		'is_covered': is_covered
-	}
-	return json.dumps(data)
+        is_covered = False      
+        if ret:
+                cord_error = ""
+                display_name = ret['display_name']
+                if self.arecovered(float(lon),float(lat)):
+                        id_node = self.match(float(lon),float(lat))
+                        if id_node:
+                                node_error = ""
+                                is_covered = True
+                        else:
+                                node_error = "match failed"
+                else:
+                        id_node = 0
+                        node_error = "not covered area"
+        else:
+                cord_error = "geocoding failed"
+                display_name = ""
+                id_node = 0             
+                node_error = "match failed because revgeocoding failed"
+        data = {
+                'node': id_node,
+                'display_name': display_name,
+                'node_error': node_error,
+                'cord_error': cord_error,
+                'is_covered': is_covered
+        }
+        return json.dumps(data)
 
     def arecovered(self,lon,lat):
-        #Coverage area of Rennes. Hardcored for simplicity	
-	if( lon <= -1.73113 or lon >= -1.56359 or lat <= 48.07448 or lat >= 48.14532 ):
-	    return False	
-	else:
+        #Coverage area of Rennes. Hardcored for simplicity      
+        if( lon <= -1.73113 or lon >= -1.56359 or lat <= 48.07448 or lat >= 48.14532 ):
+            return False        
+        else:
             return True   
         
-    path.exposed = True
-    bikes.exposed = True
-    h.exposed = True
-    index.exposed = True
-    addhash.exposed = True
-    info.exposed = True
-    geo.exposed = True
-    revgeo.exposed = True
-
-def main():
+if __name__ == '__main__':
     c = config.Config()
     data = {} # We'll replace this later
     cherrypy.config.update({
@@ -285,10 +285,8 @@ def main():
     cherrypy.tree.mount(Mumoro(data), '/', config={
         '/': {
                 'tools.staticdir.on': True,
-		'tools.staticdir.dir': 'static'
+                'tools.staticdir.dir': 'static'
            },
     })
     cherrypy.quickstart()
-if __name__ == '__main__':
-    main()
 
