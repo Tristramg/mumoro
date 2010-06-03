@@ -31,7 +31,7 @@ class Mumoro:
         foot2 = layer.Layer('foot2', mumoro.Foot, {'nodes': c.tableNodes, 'edges': c.tableEdges})
         bike = layer.Layer('bike', mumoro.Bike, {'nodes': c.tableNodes, 'edges': c.tableEdges})
         car = layer.Layer('car', mumoro.Car, {'nodes': c.tableNodes, 'edges': c.tableEdges})
-        self.stations = bikestations.VeloStar(False)
+        self.stations = bikestations.VeloStar(True)
         self.timestamp = time.time()
         e = mumoro.Edge()
         e.mode_change = 1
@@ -133,8 +133,11 @@ class Mumoro:
     def bikes(self):
         if time.time() > self.timestamp + 60 * 5:
             print "Updating bikestations"
-            self.stations = bikestations.VeloStar(False)
-        return self.stations.to_string()
+            self.stations = bikestations.VeloStar(True)
+            print "Done !"
+        str = self.stations.to_string()
+        print "Got string"
+        return str;
 
     def addhash(self,mlon,mlat,zoom,slon,slat,dlon,dlat,saddress,daddress,snode,dnode):
         cherrypy.response.headers['Content-Type']= 'application/json'
@@ -281,6 +284,8 @@ if __name__ == '__main__':
         'tools.trailing_slash.on': True,
         'tools.staticdir.root': os.path.abspath(os.path.dirname(__file__)),
         'server.socket_port': c.cpPort,
+        'server.socket_host': '0.0.0.0'
+
     })
     cherrypy.tree.mount(Mumoro(data), '/', config={
         '/': {
