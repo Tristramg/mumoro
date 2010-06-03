@@ -139,6 +139,7 @@ class Mumoro:
         print "Got string"
         return str;
 
+    @cherrypy.expose
     def addhash(self,mlon,mlat,zoom,slon,slat,dlon,dlat,saddress,daddress,snode,dnode):
         cherrypy.response.headers['Content-Type']= 'application/json'
         hashAdd = shorturl.shortURL()
