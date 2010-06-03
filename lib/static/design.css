@@ -8,11 +8,14 @@ a img {
     border: none;
     }
 
-body {
+html, body {
     background-color: #594747;
     font-family: "Verdana", Arial, Helvetica, sans-serif;
     color: #ffffff; 
     font-size: 12pt;
+    height: 99%;
+    margin: 0;
+    padding: 0;
 }
 
 h1 {
@@ -117,63 +120,60 @@ table.tablesorter .headerSortDown {
     background-repeat: no-repeat;
 }
 
-#footer {   
-    float: none;
-    margin-left: 11%;
-    width: 1002px;  
-    min-height: 5%;
-    margin-bottom: 15px;
-    padding-top: 15px;
-    clear:both; 
-    text-align: center;
-    font-size: x-small;
-}
-
 ul {
     list-style-type: circle;
 }
-
-#map{
-    overflow: auto;
-    height: 400px;
+#licences {
+    z-index: 10000;
+    position:absolute;
+    bottom: 2em;
+    right: 1em;
+  color: black;
+  font-size:smaller;
 }
+
+#licences a {
+    color: black;
+}
+#map{
+    position: absolute;
+    border: 1px solid black;
+    margin: 0px; 
+    padding: 0px;
+    left: 27em;
+    right: 2px;
+    top: 0px;
+    bottom: 0px;
+
+}
+
+#main {
+    position: absolute;
+    top: 100px;
+    bottom: 0px;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+div#footer {
+    position: absolute;
+    width: 750px;
+    bottom: 0;
+    left: 10px;
+}
+#header {
+    position: absolute;
+    top:0px;
+}
+
 #lefting {
-    
-    float: left;    
-    width: 28em;
+    margin: 5px;
+    max-width: 27em;
 }
 
 #bikes{
-   color: #423535;
-}
-
-#myList {
-    margin: 1em;
-    float: left;
-}
-            
-#myList UL {
-    padding: 0px;
-    margin: 0em 1em;
-}
-            
-#myList LI {
-    width: 100px;
-    border: solid 1px #2AA7DE;
-    background: #6CC8EF;
-    padding: 5px 5px;
-    margin: 2px 0px;
-    list-style: none;
-}
-            
-#options {
-    clear: left;
-}
-            
-#options INPUT {
-    font-family: Verdana, Arial, Helvetica, sans-serif;
-    font-size: 11px;
-    width: 150px;
+    color: #423535;
 }
 
 /* Generic context menu styles */

@@ -5,7 +5,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />        
-        <link rel="stylesheet" media="screen" type="text/css" title="Design" href="design.css" /> 
         <script type="text/javascript">
             var gaJsHost = (("https:" == document.location.protocol) ?"https://ssl." : "http://www.");
             document.write(unescape("%3Cscript src='" + gaJsHost +"google-analytics.com/ga.js'type='text/javascript'%3E%3C/script%3E"));
@@ -77,57 +76,52 @@
             var cacheDest;
         </script>
         <script src="scripts/mumoro.js" type="text/javascript"></script>
+        <link rel="stylesheet" media="screen" type="text/css" title="Design" href="design.css" /> 
         <link rel="icon" type="image/png" href="img/arrow.png" />
         <title>Mumoro demonstration</title>
-
     </head>
+
     <body onload="init();">
-        <h1>Mumoro demonstration on the city of Rennes</h1>
-        <h2>Demonstration of our multimodal and multiobjective routing algorithms</h2>
-        <div id="lefting">      
-            <div id="address_form">
-                <form method="get" action="javascript:validateAddresses(this);">
-                <label for="startAdr">Start location:</label>
-                <span id="formError_start"></span>
-                <br/>           
-                <input type="text" name="startAdr" id="startAdr" tabindex="10" size="50" />
-                <br/>
-                <label for="endAdr">Destination:</label>
-                <span id="formError_dest"></span>
-                <br/>
-                <input type="text" name="endAdr" id="endAdr" tabindex="20" size="50" />
-                <br/>
-                <span class="tinyText">Example: 23 rue de la Chalotais 35000 Rennes France</span>
-                <br/>
-                <input type="button" value="Reverse" onclick="return reverseLocations(this)"/>
-                <input type="submit" value="Calculate route" />
-                </form>
+        <div id="header">
+            <h1>Mumoro demonstration on the city of Rennes</h1>
+            <h2>Multimodal and multiobjective routing <a href="/info">Read more here</a></h2>
+        </div>  
+
+        <div id="main">
+            <div id="lefting">      
+                <div id="address_form">
+                    <form method="get" action="javascript:validateAddresses(this);">
+                        <label for="startAdr">Start location:</label>
+                        <span id="formError_start"></span>
+                        <br/>           
+                        <input type="text" name="startAdr" id="startAdr" tabindex="10" size="50" />
+                        <br/>
+                        <label for="endAdr">Destination:</label>
+                        <span id="formError_dest"></span>
+                        <br/>
+                        <input type="text" name="endAdr" id="endAdr" tabindex="20" size="50" />
+                        <br/>
+                        <span class="tinyText">Example: 23 rue de la Chalotais 35000 Rennes France</span>
+                        <br/>
+                        <input type="button" value="Reverse" onclick="return reverseLocations(this)"/>
+                        <input type="submit" value="Calculate route" />
+                    </form>
+                </div>
+                <div id="info">
+                    <p id="path_costs"></p>
+                    <p id="routing_description"></p>
+                    <p id="hash_url"></p>
+                </div>
             </div>
-            <div id="info">
-                <p id="path_costs"></p>
-                <p id="routing_description"></p>
-                <p id="hash_url"></p>
-            </div>
+            <div id="map">
+                <div id="licences">
+                   Data: <a href="http://www.openstreetmap.org/">Openstreetmap</a>(CC by-sa), <a href="http://data.keolis-rennes.com">VéloStar</a>(CC by-nc-nd), Routing algorithms(GPLv3)
+                </div>
+            </div>        
         </div>
-        <div id="map"></div>        
-        <ul id="myMenu" class="contextMenu">
-            <li class="start"><a href="#start">Set Start</a></li>
-            <li class="dest"><a href="#dest">Set Destination</a></li>
+        <ul id="myMenu" class="contextMenu"> 
+            <li class="start"><a href="#start">Set Start</a></li> 
+            <li class="dest"><a href="#dest">Set Destination</a></li> 
         </ul>
-        <div id="footer">
-            <center>            
-            <p>         
-            <hr/>
-            Street data by 
-            <a href="http://www.openstreetmap.org/">Openstreetmap</a>
-            <img src="img/by-sa.png" width="75" height="14" alt="CC-BY-SA"/>
-            / Bike data by 
-            <a href="http://data.keolis-rennes.com">Data Keolis Rennes</a>
-            <img src="img/by-nc-sa.png" width="75" height="14" alt="CC-BY-SA-NC"/>
-            / Routing algorithms under GPL3
-            / <a href="/info">Read more here</a>
-            </p>
-            </center>
-        </div>
     </body>
 </html>
