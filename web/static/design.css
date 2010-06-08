@@ -1,0 +1,233 @@
+a, a:visited,a:hover,a:focus,a:active {
+    text-decoration: underline;
+    color: #ffffff;
+    font-style: italic;
+}
+
+a img {
+    border: none;
+    }
+
+html, body {
+    background-color: #594747;
+    font-family: "Verdana", Arial, Helvetica, sans-serif;
+    color: #ffffff; 
+    font-size: 12pt;
+    height: 99%;
+    margin: 0;
+    padding: 0;
+}
+
+h1 {
+    font-size: x-large;
+}
+
+h2 {
+    font-size: large;
+}
+
+.tinyText {
+    font-size: x-small;
+}
+
+.smallTitle {
+    font-size: small;
+}
+
+.errorRed {
+    color: #ff2f2f; 
+    font-size: x-small;
+}
+
+.errorOrange {
+    color: #fd6e2f;
+    font-size: x-small;
+}
+
+.bikeRed {
+    color: #ff2f2f;
+    font-size: small
+}
+
+.bikeOrange {
+    color: #fd6e2f;
+    font-size: small
+}
+
+
+table {
+   border-collapse: collapse;
+}
+
+td, th
+{
+   border: 1px solid white;
+}
+
+table.tablesorter {
+    font-size: x-small;
+    background-color: #4D4D4D;
+    border: 1px solid #000;
+}
+
+table.tablesorter th {
+    text-align: left;
+    padding: 5px;
+    background-color: #6E6E6E;
+}
+
+table.tablesorter td {
+    color: #FFF;
+    padding: 5px;
+}
+
+table.tablesorter tr:hover {
+    background-color: #90D090;
+    cursor: pointer;
+}
+
+table.tablesorter .even {
+    background-color: #3D3D3D;
+}
+
+table.tablesorter .odd {
+    background-color: #6E6E6E;
+}
+
+table.tablesorter .hl{
+    background-color: #60A060;
+}
+
+
+table.tablesorter .header {
+    background-image: url(img/bg.png);
+    background-repeat: no-repeat;
+    border-left: 1px solid #FFF;
+    border-right: 1px solid #000;
+    border-top: 1px solid #FFF;
+    padding-left: 30px;
+    padding-top: 8px;
+    height: auto;
+}
+
+table.tablesorter .headerSortUp {
+    background-image: url(img/asc.png);
+    background-repeat: no-repeat;
+}
+
+table.tablesorter .headerSortDown {
+    background-image: url(img/desc.png);
+    background-repeat: no-repeat;
+}
+
+ul {
+    list-style-type: circle;
+}
+#licences {
+    z-index: 10000;
+    position:absolute;
+    bottom: 2em;
+    right: 1em;
+  color: black;
+  font-size:smaller;
+}
+
+#licences a {
+    color: black;
+}
+#map{
+    position: absolute;
+    border: 1px solid black;
+    margin: 0px; 
+    padding: 0px;
+    left: 27em;
+    right: 2px;
+    top: 0px;
+    bottom: 0px;
+
+}
+
+#main {
+    position: absolute;
+    top: 100px;
+    bottom: 0px;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+div#footer {
+    position: absolute;
+    width: 750px;
+    bottom: 0;
+    left: 10px;
+}
+#header {
+    position: absolute;
+    top:0px;
+}
+
+#lefting {
+    margin: 5px;
+    max-width: 27em;
+}
+
+#bikes{
+    color: #423535;
+}
+
+/* Generic context menu styles */
+.contextMenu {
+    position: absolute;
+    width: 120px;
+    z-index: 99999;
+    border: solid 1px #CCC;
+    background: #EEE;
+    padding: 0px;
+    margin: 0px;
+    display: none;
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 11px;
+}
+
+.contextMenu LI {
+    list-style: none;
+    padding: 0px;
+    margin: 0px;
+}
+
+.contextMenu A {
+    color: #333;
+    text-decoration: none;
+    display: block;
+    line-height: 20px;
+    height: 20px;
+    background-position: 6px center;
+    background-repeat: no-repeat;
+    outline: none;
+    padding: 1px 5px;
+    padding-left: 28px;
+}
+
+.contextMenu LI.hover A {
+    color: #FFF;
+    background-color: #3399FF;
+}
+
+.contextMenu LI.disabled A {
+    color: #AAA;
+    cursor: default;
+}
+
+.contextMenu LI.hover.disabled A {
+    background-color: transparent;
+}
+
+.contextMenu LI.separator {
+    border-top: solid 1px #CCC;
+}
+
+.contextMenu LI.start A { background-image: url(img/context-arrow-green.png); }
+.contextMenu LI.dest A { background-image: url(img/context-arrow-finish.png); }
+
+

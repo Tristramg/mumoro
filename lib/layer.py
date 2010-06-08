@@ -1,9 +1,8 @@
-import mumoro
+import core.mumoro as mumoro
 import psycopg2 as pg
 import sqlite3
 import elevation
 import math
-import config
  
 class NotAccessible(Exception):
     pass
@@ -84,11 +83,10 @@ class BaseLayer:
  
  
 class Layer(BaseLayer):
-    def __init__(self, name, mode, data):
+    def __init__(self, name, mode, data, c):
         self.mode = mode
         self.data = data
         self.name = name
-	c = config.Config()        
 	try:
             if( c.host != "" and c.dbpassword != ""):
                 self.conn = pg.connect("dbname=" + c.dbname + " user=" + c.dbuser  + " password=" + c.dbpassword + " host=" + c.host)

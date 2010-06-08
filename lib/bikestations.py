@@ -1,6 +1,5 @@
 import os.path
 import urllib
-import config
 import psycopg2 as pg
 from xml.dom.minidom import parse
 import datetime
@@ -18,7 +17,8 @@ def get_float(node):
 class VeloStar:
     stations = []
     conn = None
-    def __init__(self,fromDB):
+    def __init__(self,fromDB, config):
+        self.config = config
         if( fromDB ):
             self.from_db()
         else:
@@ -48,18 +48,17 @@ class VeloStar:
                 except:
                     print 'At least one tag misses: num, name, state, lat, lon, availableSlots, availableBikes, districtName'
     def from_db(self):
-        c = config.Config()
         try:
-            if( c.host != "" and c.dbpassword != ""):
-                tmp = ("dbname=%s user=%s password=%s host=%s") % ( c.dbname, c.dbuser, c.dbpassword, c.host )
+            if( self.config.host != "" and self.config.dbpassword != ""):
+                tmp = ("dbname=%s user=%s password=%s host=%s") % ( self.config.dbname, self.config.dbuser, self.config.dbpassword, self.config.host )
                 self.conn = pg.connect( tmp )
             else:
-                tmp = ("dbname=%s user=%s") % ( c.dbname, c.dbuser )
+                tmp = ("dbname=%s user=%s") % ( self.config.dbname, self.config.dbuser )
                 self.conn = pg.connect( tmp )
         except:
             print "I am unable to connect to the database"
         cur = self.conn.cursor()
-        query = ("SELECT \"id_station\",\"av_slots\",\"av_bikes\",\"name\",\"district_name\", \"lon\",\"lat\",\"chrone\" FROM %s;") % ( c.tableBikeStations ) 
+        query = ("SELECT \"id_station\",\"av_slots\",\"av_bikes\",\"name\",\"district_name\", \"lon\",\"lat\",\"chrone\" FROM %s;") % ( self.config.tableBikeStations ) 
 	try:        
 	    cur.execute( query )
 	except Exception as ex:

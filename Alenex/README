@@ -1,7 +1,0 @@
-This contains the code used for the benchmarks used for an article
-sumission to the Alenex2010 workshop.
-
-To compile, you need boost. It has been tested with GCC 4.0 (macOSX) and GCC 4.4 (Linux).
-
-Simply run make to compile
-Run ./alenex_experiments to start the benchmarks
