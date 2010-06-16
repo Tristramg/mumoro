@@ -1,8 +1,10 @@
 #include "graph_wrapper.h"
 #include <iostream>
+#include <fstream>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
+#include <boost/graph/adj_list_serialize.hpp>
 
-Edge::Edge() : distance(0), elevation(0), mode_change(0), cost(0), line_change(0)
+Edge::Edge() : distance(0), elevation(0), mode_change(0), cost(0), line_change(0), co2(0)
 {
 }
 
@@ -32,6 +34,10 @@ float Duration::operator()(float start) const
     }
 }
 
+Graph::Graph(const std::string & filename)
+{
+    load(filename);
+}
 
 Graph::Graph(int nb_nodes) : g(nb_nodes)
 {
@@ -99,7 +105,7 @@ bool Graph::dijkstra(int source, int target)
             boost::predecessor_map(&p[0])
             .distance_map(&d[0])
             .weight_map(get(&Edge::duration, g))
-//            .visitor(dijkstra_goal_visitor(target))
+            .visitor(dijkstra_goal_visitor(target))
             .distance_zero(30000)
             .distance_combine(&calc_duration)
             .distance_compare(Comp())
@@ -112,3 +118,23 @@ bool Graph::dijkstra(int source, int target)
     }
 
 }
+    
+
+void Graph::load(const std::string & filename)
+{
+    std::cout << "Loading graph from file " << filename << std::endl;
+    std::ifstream ifile(filename.c_str());
+    boost::archive::binary_iarchive iArchive(ifile);
+    iArchive >> g; //graph;   
+    std::cout << "   " << boost::num_vertices(g) << " nodes" << std::endl;
+    std::cout << "   " << boost::num_edges(g) << " edges" << std::endl;
+}
+
+void Graph::save(const std::string & filename) const
+{
+    std::ofstream ofile(filename.c_str());
+    boost::archive::binary_oarchive oArchive(ofile);
+    oArchive << g;
+}
+
+
