@@ -1,9 +1,12 @@
 import os.path
 import urllib
-import psycopg2 as pg
 from xml.dom.minidom import parse
 import datetime
 import time
+
+from sqlalchemy import *
+from sqlalchemy.orm import *
+from sqlalchemy.dialects.postgresql.base import *
 
 def get_text(node):
     return node.childNodes[0].nodeValue
@@ -15,10 +18,23 @@ def get_float(node):
     return float(get_text(node))
 
 class VeloStar:
-    stations = []
-    conn = None
     def __init__(self,fromDB, config):
+        self.stations = []
         self.config = config
+        self.engine = create_engine('sqlite:///db_test.db', echo=True)
+        self.metadata = MetaData()
+
+        self.bike_stations_table = Table('bike_stations', self.metadata,
+        Column('id_station', Integer, primary_key=True),
+        Column('av_bikes', Integer),
+        Column('av_slots', Integer),
+        Column('name', Text),
+        Column('district_name', Text),
+        Column('lon', DOUBLE_PRECISION),
+        Column('lat', DOUBLE_PRECISION),
+        Column('chrone', TIMESTAMP(timezone=False)),
+        )
+        self.metadata.create_all(self.engine)
         if( fromDB ):
             self.from_db()
         else:
@@ -48,36 +64,20 @@ class VeloStar:
                 except:
                     print 'At least one tag misses: num, name, state, lat, lon, availableSlots, availableBikes, districtName'
     def from_db(self):
-        try:
-            if( self.config.host != "" and self.config.dbpassword != ""):
-                tmp = ("dbname=%s user=%s password=%s host=%s") % ( self.config.dbname, self.config.dbuser, self.config.dbpassword, self.config.host )
-                self.conn = pg.connect( tmp )
-            else:
-                tmp = ("dbname=%s user=%s") % ( self.config.dbname, self.config.dbuser )
-                self.conn = pg.connect( tmp )
-        except:
-            print "I am unable to connect to the database"
-        cur = self.conn.cursor()
-        query = ("SELECT \"id_station\",\"av_slots\",\"av_bikes\",\"name\",\"district_name\", \"lon\",\"lat\",\"chrone\" FROM %s;") % ( self.config.tableBikeStations ) 
-	try:        
-	    cur.execute( query )
-	except Exception as ex:
-            print "I am unable to retrieve data from the database"
-            print ex
-        res = cur.fetchall()
-        self.conn.close()
-        for tmp in res:
+        Session = sessionmaker(bind=self.engine)
+        self.session = Session()
+        for tmp in session.query(BikeStation)
             try:
                 s = {
-                 'num': str(tmp[0]),
-                 'name': tmp[3],
+                 'num': str(tmp.id_sation),
+                 'name': tmp.name,
                  'state': "1",
-                 'lat': tmp[6],
-                 'lon': tmp[5],
-                 'availableSlots': tmp[1],
-                 'availableBikes': tmp[2],
-                 'districtName': tmp[4],
-                 'chrone': tmp[7].strftime("%H:%M")
+                 'lat': tmp.lat,
+                 'lon': tmp.lon,
+                 'availableSlots': tmp.av_bikes,
+                 'availableBikes': tmp.av_slots,
+                 'districtName': tmp.district_name,
+                 'chrone': tmp.chrone.strftime("%H:%M")
                 }
                 self.stations.append(s)
             except:
@@ -114,6 +114,20 @@ class VeloStar:
             else:
                 res += ('img/bike.station.green.png\t18,25\t-8,-25\n')
         return res
+
+class BikeStation(object):
+        def __init__(self, id_station, av_bikes, av_slots, name, district_name, lon, lat, chrone):
+            self.id_station = id_station
+            self.av_bikes = av_bikes
+            self.av_slots = av_slots
+            self.name = name
+            self.district_name = district_name
+            self.lon = lon
+            self.lat = lat
+            self.chrone = chrone
+   
+        def __repr__(self):
+            return "<hurl('%s','%s','%s','%s','%s','%s','%s','%s')>" % (self.id_station, self.av_bikes, self.av_slots, self.name,self.district_name, self.lon, self.lat, self.chrone)
 
 
 if __name__ == "__main__":

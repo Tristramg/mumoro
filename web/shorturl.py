@@ -3,25 +3,36 @@
 import hashlib
 import string
 import config
-import psycopg2 as pg
 import time
 
+from sqlalchemy import *
+from sqlalchemy.orm import *
+from sqlalchemy.dialects.postgresql.base import *
+
 class shortURL:
-    conn = None
     def __init__(self):
-        pass
+        self.engine = create_engine('sqlite:///db_test.db', echo=True)
+        self.metadata = MetaData()
+
+        self.hash_table = Table('hurl', self.metadata,
+        Column('id', String(length=16), primary_key=True),
+        Column('zoom', Integer),
+        Column('lonMap', DOUBLE_PRECISION),
+        Column('latMap', DOUBLE_PRECISION),
+        Column('lonStart', DOUBLE_PRECISION),
+        Column('latStart', DOUBLE_PRECISION),
+        Column('lonDest', DOUBLE_PRECISION),
+        Column('latDest', DOUBLE_PRECISION),
+        Column('addressStart', Text),
+        Column('addressDest', Text),
+        Column('chrone', TIMESTAMP(timezone=False)),
+        Column('s_node', Integer),
+        Column('d_node', Integer),
+        )
+        self.metadata.create_all(self.engine)
+        mapper(HUrl, self.hash_Table)
 
     def addRouteToDatabase(self,lonMap,latMap,zoom,lonStart,latStart,lonDest,latDest,addressStart,addressDest,nodeStart,nodeDest):
-        c = config.Config()
-        try:
-            if( c.host != "" and c.dbpassword != ""):
-                tmp = ("dbname=%s user=%s password=%s host=%s") % ( c.dbname, c.dbuser, c.dbpassword, c.host )
-                self.conn = pg.connect( tmp )
-            else:
-                tmp = ("dbname=%s user=%s") % ( c.dbname, c.dbuser )
-                self.conn = pg.connect( tmp )
-        except:
-            print "I am unable to connect to the database"
         h = hashlib.md5()
 	chrone = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())        
 	h.update(addressStart.encode("utf-8"))
@@ -36,65 +47,39 @@ class shortURL:
 	h.update(str(nodeStart))
 	h.update(str(nodeDest))
         h.update(chrone.encode("utf-8"))
-        cur = self.conn.cursor()
-        query = "INSERT INTO " + c.tableURL + "(\"id\", \"zoom\", \"lonMap\", \"latMap\", \"lonStart\", \"latStart\", \"lonDest\", \"latDest\", \"addressStart\", \"addressDest\", \"chrone\", \"s_node\", \"d_node\") VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-	try:        
-	    cur.execute( query , [ h.hexdigest()[0:16], zoom, lonMap, latMap, lonStart, latStart, lonDest, latDest, addressStart, addressDest, chrone, nodeStart, nodeDest ] )
-	except Exception as ex:
-            print "I am unable to insert data into the database"
-            print ex
-        self.conn.commit()
-        self.conn.close()
+        Session = sessionmaker(bind=self.engine)
+        self.session = Session()
+        self.session.add( HUrl( h.hexdigest()[0:16], zoom, lonMap, latMap, lonStart, latStart, lonDest, latDest, addressStart, addressDest, chrone, nodeStart, nodeDest) )
+        self.session.commit()
         return h.hexdigest()[0:16]
 
-    def hashExists(self,value):
-	res = False        
-	c = config.Config()
-        try:
-            if( c.host != "" and c.dbpassword != ""):
-                tmp = ("dbname=%s user=%s password=%s host=%s") % ( c.dbname, c.dbuser, c.dbpassword, c.host )
-                self.conn = pg.connect( tmp )
-            else:
-                tmp = ("dbname=%s user=%s") % ( c.dbname, c.dbuser )
-                self.conn = pg.connect( tmp )
-        except:
-            print "I am unable to connect to the database"
-        cur = self.conn.cursor()
-        query = ("SELECT COUNT(*) as nb FROM %s WHERE id='%s'") % ( c.tableURL, value) 
-	try:        
-	    cur.execute( query )
-	except Exception as ex:
-            print "I am unable to verify if hash exists in the database"
-            print ex
-        if( int(cur.fetchone()[0]) == 0 ):
-            res = False
-        else:
-            res = True
-        self.conn.close()
-        return res
-
     def getDataFromHash(self,value):
-        if( not self.hashExists(value) ):
+        Session = sessionmaker(bind=self.engine)
+        self.session = Session()
+        ver = session.query(HUrl).filter(HUrl.id == value).count()
+        if( ver == 0 ):
             return []
         else:
-            c = config.Config()
-            try:
-                if( c.host != "" and c.dbpassword != ""):
-                    tmp = ("dbname=%s user=%s password=%s host=%s") % ( c.dbname, c.dbuser, c.dbpassword, c.host )
-                    self.conn = pg.connect( tmp )
-                else:
-                    tmp = ("dbname=%s user=%s") % ( c.dbname, c.dbuser )
-                    self.conn = pg.connect( tmp )
-            except:
-                print "I am unable to connect to the database"
-            cur = self.conn.cursor()
-            query = ("SELECT * FROM %s WHERE id='%s'") % ( c.tableURL, value) 
-	    try:        
-	        cur.execute( query )
-	    except Exception as ex:
-                print "I am unable to read data from the database"
-                print ex
-            tmp = cur.fetchone()
-            self.conn.close()
+            tmp = session.query(HUrl).filter(HUrl.id == value)
             return tmp
+
+
+class HUrl(object):
+        def __init__(self, id, zoom, lonMap, latMap, lonStart, latStart, lonDest, latDest, addressStart, addressDest, chrone, s_node, d_node):
+            self.id = id
+            self.zoom = zoom
+            self.lonMap = lonMap
+            self.latMap = latMap
+            self.lonStart = lonStart
+            self.latStart = latStart
+            self.lonDest = lonDest
+            self.latDest = latDest
+            self.addressStart = addressStart
+            self.addressDest = addressDest
+            self.chrone = chrone
+            self.s_node = s_node
+            self.d_node = d_node
+   
+        def __repr__(self):
+            return "<hurl('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')>" % (self.id, self.zoom, self.lonMap, self.latMap,self.lonStart, self.latStart, self.lonDest, self.latDest,self.addressStart, self.addressDest, self.chrone, self.s_node, self.d_node)
 

@@ -1,8 +1,11 @@
 import core.mumoro as mumoro
-import psycopg2 as pg
+#import psycopg2 as pg
 import sqlite3
 import elevation
 import math
+
+from sqlalchemy import *
+from sqlalchemy.orm import *
  
 class NotAccessible(Exception):
     pass
@@ -37,48 +40,97 @@ def duration(length, property, mode):
         raise NotAccessible()
  
 class BaseLayer:
-    def map(self, original_id):
-        c = self.nodes_db.cursor()
-        c.execute('SELECT id FROM nodes WHERE original_id=?', (original_id,))
-        row = c.fetchone()
-        if row:
-            return int(row[0]) + self.offset
-        else:
-            print "Unable to find id {0}".format(original_id)
+    class Node(object):
+        def __init__(self, id, lon, lat, the_geom):
+            self.id = id
+            self.lon = lon
+            self.lat = lat
+            self.the_geom = the_geom
+   
+        def __repr__(self):
+            return "<Node('%s','%s', '%s', '%s')>" % (self.id, self.lon, self.lat, self.the_geom)
+
+    class Edge(object):
+        def __init__(self, id, source, target, length, car, car_rev, bike, bike_rev, foot, the_geom):
+            self.id = id
+            self.source = source
+            self.target = target
+            self.length = length
+            self.car = car
+            self.car_rev = car_rev
+            self.bike = bike
+            self.bike_rev = bike_rev
+            self.foot = foot
+            self.the_geom = the_geom
+
+        def __repr__(self):
+            return "<Edge('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')>" % (self.id, self.source, self.target, self.length,self.car, self.car_rev, self.bike, self.bike_rev,self.foot, self.the_geom)
+
+    def __init__(self):
+        self.engine = create_engine('sqlite:///db_test.db', echo=True)
+        self.metadata = MetaData()
+        mapper(Node, self.nodes_table)
+        mapper(Edge, self.edges_table)
+        
+
+    def map(self, o_id):
+        Session = sessionmaker(bind=self.engine)
+        self.session = Session()        
+        #c = self.nodes_db.cursor()
+        #c.execute('SELECT id FROM nodes WHERE original_id=?', (original_id,))
+        #row = c.fetchone()
+        try:        
+                row = self.session.query(Node.id).filter_by(original_id=o_id).one()
+                return int(row[0]) + self.offset   
+        except NoResultFound, e:
+                print "Unable to find id {0}".format(o_id)
+        
  
-    def match(self, lon, lat):
+    def match(self, ln, lt):
         epsilon = 0.002
-        query = "SELECT id FROM nodes WHERE lon >= ? AND lon <= ? AND lat >= ? AND lat <= ? ORDER BY (lon-?)*(lon-?) + (lat-?) * (lat-?) LIMIT 1"
-        cur = self.nodes_db.cursor()
-        cur.execute(query, (float(lon) - epsilon, float(lon) + epsilon, float(lat) - epsilon, float(lat) + epsilon, lon, lon, lat, lat))
-        row = cur.fetchone()
-        if row:
-            return int(row[0]) + self.offset
+        Session = sessionmaker(bind=self.engine)
+        self.session = Session()        
+        #query = "SELECT id FROM nodes WHERE lon >= ? AND lon <= ? AND lat >= ? AND lat <= ? ORDER BY (lon-?)*(lon-?) + (lat-?) * (lat-?) LIMIT 1"
+        #cur = self.nodes_db.cursor()
+        #cur.execute(query, (float(lon) - epsilon, float(lon) + epsilon, float(lat) - epsilon, float(lat) + epsilon, lon, lon, lat, lat))
+        #row = cur.fetchone()
+        try:        
+                row = self.session.query(Node.id).filter_by(lon>=float(ln)-epsilon).filter_by(lon<=float(ln)+epsilon).filter_by(lat>=float(lt)-epsilon).filter_by(lat<=float(lt)+epsilon).order_by((Node.lon-ln)*(Node.lon-ln)+(Node.lat-lt)*(Node.lat-lt)).one()[1]
+                return int(row[0]) + self.offset   
+        except NoResultFound, e:
+                print "Unable to find id {0}".format(o_id)        
+
  
-    def coordinates(self, node):
-        query = "SELECT lon, lat, original_id, network FROM nodes WHERE id=?"
-        cur = self.nodes_db.cursor()
-        cur.execute(query, (node - self.offset,))
-        row = cur.fetchone()
-        if row[3] == "osm":
+    def coordinates(self, nd):
+        #query = "SELECT lon, lat, original_id, network FROM nodes WHERE id=?"
+        #cur = self.nodes_db.cursor()
+        #cur.execute(query, (node - self.offset,))
+        #row = cur.fetchone()
+        Session = sessionmaker(bind=self.engine)
+        self.session = Session()
+        res = self.session.query(Node.lon,Node.lat,Node.original_id).filter_by(Node.id=nd)    
+        if res.network == "osm":
             network = self.name
         else:
-            network = row[3]
-        if row:
-            return (row[0], row[1], row[2], network)
+            network = res.network      
+        if res:
+            return (res.lon, res.lat, res.original_id, network)
         else:
-            print "Unknow node {0} on layer {1}".format(node, self.name)
+            print "Unknow node {0} on layer {1}".format(nd, self.name)
  
     def nodes(self):
-        query = "SELECT id, original_id, lon, lat FROM nodes"
-        cur = self.nodes_db.cursor()
-        cur.execute(query)
-        for row in cur:
+        #query = "SELECT id, original_id, lon, lat FROM nodes"
+        #cur = self.nodes_db.cursor()
+        #cur.execute(query)
+        Session = sessionmaker(bind=self.engine)
+        self.session = Session()
+               
+        for row in self.session.query(Node.id,Node.original_id,Node.lon,Node.lat):
             yield {
-                    'id': int(row[0]) + self.offset,
-                    'original_id': row[1],
-                    'lon': float(row[2]),
-                    'lat': float(row[3])
+                    'id': int(row.id) + self.offset,
+                    'original_id': row.original_id,
+                    'lon': float(row.lon),
+                    'lat': float(row.lat)
                     }
  
  
@@ -87,13 +139,14 @@ class Layer(BaseLayer):
         self.mode = mode
         self.data = data
         self.name = name
-	try:
-            if( c.host != "" and c.dbpassword != ""):
-                self.conn = pg.connect("dbname=" + c.dbname + " user=" + c.dbuser  + " password=" + c.dbpassword + " host=" + c.host)
-            else:
-                self.conn = pg.connect("dbname=" + c.dbname + " user=" + c.dbuser)
-        except:
-            print "I am unable to connect to the database"
+        	
+        #try:
+        #    if( c.host != "" and c.dbpassword != ""):
+        #        self.conn = pg.connect("dbname=" + c.dbname + " user=" + c.dbuser  + " password=" + c.dbpassword + " host=" + c.host)
+        #    else:
+        #        self.conn = pg.connect("dbname=" + c.dbname + " user=" + c.dbuser)
+        #except:
+        #    print "I am unable to connect to the database"
         self.nodes_offset = 0
 	eld = elevation.ElevationData("Eurasia")
 	self.nodes_db = sqlite3.connect(':memory:', check_same_thread = False)
@@ -111,7 +164,7 @@ CREATE INDEX id_idx ON nodes(id);
 CREATE INDEX original_idx ON nodes(original_id);
 ''')
         nodes_cur = self.conn.cursor()
-        #nodes_cur.execute('SELECT id, st_x(the_geom) as lon, st_y(the_geom) as lat FROM {0}'.format(data['nodes']))
+        ##nodes_cur.execute('SELECT id, st_x(the_geom) as lon, st_y(the_geom) as lat FROM {0}'.format(data['nodes']))
         nodes_cur.execute('SELECT id, lon, lat FROM {0}'.format(data['nodes']))
         self.count = 0
         for n in nodes_cur:
@@ -177,37 +230,42 @@ CREATE INDEX original_idx ON nodes(original_id);
  
 class GTFSLayer(BaseLayer):
     def __init__(self, name, data):
-        self.nodes_db = sqlite3.connect(data, check_same_thread = False)
-        c = self.nodes_db.cursor()
-        c.execute("SELECT count(1) FROM nodes")
-        self.count = int(c.fetchone()[0])
+        Session = sessionmaker(bind=self.engine)
+        self.session = Session()        
+        #self.nodes_db = sqlite3.connect(data, check_same_thread = False)
+        #c = self.nodes_db.cursor()
+        #c.execute("SELECT count(1) FROM nodes")
+        self.count = self.session.query(Node).count()        
+        #self.count = int(c.fetchone()[0])
         self.offset = 0
         self.name = name
         print "Layer {0} loaded with {1} nodes".format(name, self.count)
  
     def edges(self):
-        c = self.nodes_db.cursor()
-        c.execute("SELECT source, target, start_secs, arrival_secs FROM edges")
-        for row in c:
+        Session = sessionmaker(bind=self.engine)
+        self.session = Session()        
+        #c = self.nodes_db.cursor()
+        #c.execute("SELECT source, target, start_secs, arrival_secs FROM edges")
+        for row in self.session.query(Edges.source,Edges.target,Edges.start_secs,Edges.arrival_secs):
             yield {
-                    'source': row[0] + self.offset,
-                    'target': row[1] + self.offset,
-                    'departure': row[2],
-                    'arrival': row[3]
+                    'source': row.source + self.offset,
+                    'target': row.target + self.offset,
+                    'departure': row.start_secs,
+                    'arrival': row.arrival_secs
                     }
  
         # Connects every node corresponding to a same stop:
         # if a stop is used by 3 routes, the stop will be represented by 3 nodes
-        c.execute("SELECT n1.id, n2.id FROM nodes as n1, nodes as n2 WHERE n1.original_id = n2.original_id AND n1.route <> n2.route")
+        #c.execute("SELECT n1.id, n2.id FROM nodes as n1, nodes as n2 WHERE n1.original_id = n2.original_id AND n1.route <> n2.route")
         e = mumoro.Edge()
         e.line_change = 1
         e.duration = mumoro.Duration(60) # There should be at least a minute between two bus/trains at the same station
-        for row in c:
-            yield {
-                    'source': row[0] + self.offset,
-                    'target': row[1] + self.offset,
-                    'properties': e
-                    }
+        #for row in self.session.query(Edges.source,Edges.target,Edges.start_secs,Edges.arrival_secs):# Didn't find yet how to name colums in a 
+        #    yield {                                                                                  # query with sqlalchemy
+        #            'source': row[0] + self.offset,    
+        #            'target': row[1] + self.offset,
+        #            'properties': e
+        #            }
  
 class MultimodalGraph:
     def __init__(self, layers):
@@ -307,4 +365,7 @@ class MultimodalGraph:
             if nearest:
                 self.graph.add_edge(n['id'], nearest, property)
                 self.graph.add_edge(nearest, n['id'], property2)
+
+
+
  
