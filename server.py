@@ -41,13 +41,16 @@ class Mumoro:
         e2.mode_change = 0
         e2.duration = mumoro.Duration(30);
 
-        self.g = layer.MultimodalGraph([foot, bike, car, foot2])
-        self.g.connect_nodes_from_list(foot, bike, self.stations.stations, e, e2)
-        e.mode_change = 0
-        e.duration = mumoro.Duration(0)
-        self.g.connect_same_nodes(car, foot2, e)
-        self.g.connect_same_nodes(foot2, car, e)
-
+        if False:
+            self.g = layer.MultimodalGraph([foot, bike, car, foot2])
+            self.g.connect_nodes_from_list(foot, bike, self.stations.stations, e, e2)
+            e.mode_change = 0
+            e.duration = mumoro.Duration(0)
+            self.g.connect_same_nodes(car, foot2, e)
+            self.g.connect_same_nodes(foot2, car, e)
+            self.g.save("graph_dump")
+        else:
+            self.g = layer.MultimodalGraph([foot, bike, car, foot2], "graph_dump")
 
     @cherrypy.expose
     def path(self, slon, slat, dlon, dlat):

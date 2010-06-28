@@ -1,36 +1,37 @@
 Mumoro: MUltiModal MUltiObjective ROuting
 
-This lib aims to provide multimodal routing: combining subway, walking and bike.
-It can also be used as a basic routing algorithm.
+This library aims to provide multimodal routing: combining subway, walking and bike.
+
+The lib folder provides the algorithms
+The web folder is an example of web application (can be run as standalone web server)
 
 
-We divided the project in three parts:
-* lib: where everything interesting happens
-* tools: various tools, to generate useable data
-* ui: user interfaces, a graphical one based on marble for now
-
-Requirements
+== Requirements ==
 * GCC: C++ complier (other aren't testetd)
 * Boost: no C++ dev should live without it (used for its Dijkstra's algorithm)
-* CMake: compling tool (replacing autotools and so on)
-* SQLite: lightweight and fast SQL database
-* Python: for the web interface
+    Only the headers are needed
+* Python
+* Swig: for interfacing python
 
-Optional requirements
-* Marble: we use its widget for the standalone GUI
-* Expat: for parsing osm data
+== How to install ==
+# Just run the following command
+sudo python setup.py install
 
-How to compile it
-* cmake .
-* make
+# Alternative:
+# If you don't have the rights to install it system-wide, or don't want to, use virtualenv:
+# Create a virtual environment and activate it
+python virtualenv.py env
+source env/bin/activate
+python setup.py install
 
-How to run it
-* grab an osm database 
-  * on http://www.openstreetmaP.ORG
-  * center on your favorite town
-  * clic on the export tab an select OpenStreetMap XML Data
-  * if it's gray'ed out, try zooming on a smaller part of the town
-* use tool/osm2mumoro to parse the database
-* use ui/gui/mumoro to play with it
+
+== How to run it ==
+* grab an osm database either
+  * on http://www.openstreetmap.org
+      * center on your favorite town
+      * clic on the export tab an select OpenStreetMap XML Data
+      * if it's gray'ed out, try zooming on a smaller part of the town
+  * on http://download.geofabrik.de/osm/
+  * on http://downloads.cloudmade.com/ 
 
 Comments at tristramg (a) gmail (dot) com

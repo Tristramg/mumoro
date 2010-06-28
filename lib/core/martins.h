@@ -3,7 +3,7 @@
 
 #include "graph_wrapper.h"
 
-enum Objective {dist, elevation, mode_change, cost, line_change};
+enum Objective {dist, elevation, mode_change, cost, line_change, co2};
 
 struct Path
 {

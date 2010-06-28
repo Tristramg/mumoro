@@ -268,7 +268,7 @@ class GTFSLayer(BaseLayer):
         #            }
  
 class MultimodalGraph:
-    def __init__(self, layers):
+    def __init__(self, layers, filename = None):
         nb_nodes = 0
         self.node_to_layer = []
         self.layers = layers
@@ -279,18 +279,26 @@ class MultimodalGraph:
  
         self.graph = mumoro.Graph(nb_nodes)
  
-        count = 0
-        for l in layers:
-            for e in l.edges():
-                if e.has_key('properties'):
-                    self.graph.add_edge(e['source'], e['target'], e['properties'])
-                    count += 1
-                else:
-                    if self.graph.public_transport_edge(e['source'], e['target'], e['departure'], e['arrival']):
+        if filename:
+            self.graph = mumoro.Graph(filename)
+        else:
+            count = 0
+            for l in layers:
+                for e in l.edges():
+                    if e.has_key('properties'):
+                        self.graph.add_edge(e['source'], e['target'], e['properties'])
                         count += 1
-	    print "On layer {0}, {1} edges".format(l, count)
-        print "The multimodal graph has been built and has {0} nodes and {1} edges".format(nb_nodes, count)
+                    else:
+                        if self.graph.public_transport_edge(e['source'], e['target'], e['departure'], e['arrival']):
+                            count += 1
+            print "On layer {0}, {1} edges".format(l, count)
+            print "The multimodal graph has been built and has {0} nodes and {1} edges".format(nb_nodes, count)
  
+    def save(self, filename):
+        self.graph.save(filename)
+
+    def load(self, filename):
+        self.graph.save(filename)
  
     def layer(self, node):
         for l in self.node_to_layer:
