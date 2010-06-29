@@ -1,6 +1,8 @@
 import sqlite3
+import sys
 import transitfeed
 import datetime
+from optparse import OptionParser
 
 def convert(gtfs, sqlite, network_name, start_date, end_date):
     s = transitfeed.Schedule()
@@ -71,6 +73,13 @@ def convert(gtfs, sqlite, network_name, start_date, end_date):
 
 
 if __name__ == '__main__':
-    #print "hello world"
-    #convert('la.zip', 'la', 'metro')
-    convert('bart.zip', 'pt2', 'bart', datetime.date(2010, 06, 01),datetime.date(2010,9, 01))
+    parser = OptionParser("Usage: %prog gtfs_file.zip database_name network_name start_date end_date")
+    (options, args) = parser.parse_args()
+    if len(args) != 5:
+        sys.stderr.write("Wrong number of arguments. Expected 5, got {0}\n".format(len(args)))
+        sys.exit(1)
+
+    start = datetime.datetime.strptime(args[3], "%Y%m%d")
+    end = datetime.datetime.strptime(args[4], "%Y%m%d")
+
+    convert(args[0], args[1], args[2], start, end)
