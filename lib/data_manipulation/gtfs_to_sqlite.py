@@ -1,7 +1,7 @@
 import sqlite3
 import transitfeed
 
-def convert(gtfs, sqlite, network_name):
+def convert(gtfs, sqlite, network_name, start, end):
     s = transitfeed.Schedule()
     s.Load(gtfs)
     sql = sqlite3.connect(sqlite)
@@ -22,7 +22,8 @@ def convert(gtfs, sqlite, network_name):
                     source INTEGER,
                     target INTEGER,
                     start_secs INTEGER,
-                    arrival_secs INTEGER
+                    arrival_secs INTEGER,
+                    services TEXT
                  );
     ''')
 
@@ -58,5 +59,8 @@ def convert(gtfs, sqlite, network_name):
 
     sql.commit()
 
-#convert('bart.zip', 'pt2', 'bart')
-convert('la.zip', 'la', 'metro')
+
+if __name__ == '__main__':
+    print "hello world"
+    convert('la.zip', 'la', 'metro')
+    #convert('bart.zip', 'pt2', 'bart')
