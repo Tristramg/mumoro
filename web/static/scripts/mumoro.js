@@ -157,9 +157,14 @@ function init() {
     );
     // Define the map layer
     // Other defined layers are OpenLayers.Layer.OSM.Mapnik, OpenLayers.Layer.OSM.Maplint and OpenLayers.Layer.OSM.CycleMap
-    layerTilesMapnik = new OpenLayers.Layer.OSM.Mapnik("Mapnik");
+   layerTilesMapnik = new OpenLayers.Layer.OSM.Mapnik("Mapnik");
     map.addLayer(layerTilesMapnik);
-    layerTilesCycle = new OpenLayers.Layer.OSM.CycleMap("CycleMap");
+    var cloudmade = new OpenLayers.Layer.CloudMade("CloudMade", {
+    key: 'fff941bc66c34422a2e41a529e34aebc',
+    styleId: 7843
+});
+    map.addLayer(cloudmade);
+     layerTilesCycle = new OpenLayers.Layer.OSM.CycleMap("CycleMap");
     map.addLayer(layerTilesCycle);
     layerTilesAtHome = new OpenLayers.Layer.OSM.Osmarender("Osmarender");
     map.addLayer(layerTilesAtHome);
@@ -168,7 +173,7 @@ function init() {
         "bike": {strokeColor: '#7373e5'},
         "foot": {strokeColor: '#f14d4d'},
         "foot2": {strokeColor: '#f14d4d'},
-            "car": {strokeColor: '#830531'},
+        "car": {strokeColor: '#830531'},
         "star": {strokeColor: '#61bd61'},
         "connection": {strokeColor: '#830531', strokeDashstyle: 'dashdot', strokeWidth: 2}
     };
