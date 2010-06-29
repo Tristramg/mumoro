@@ -1,23 +1,59 @@
 #include <boost/graph/adjacency_list.hpp>
+#include <boost/serialization/vector.hpp>
 #include <boost/serialization/map.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 
+#include <boost/tuple/tuple.hpp>
+#include <bitset>
 
 #ifndef GRAPH_WRAPPER_H
+
 #define GRAPH_WRAPPER_H
 
 typedef enum {Foot, Bike, Car, PublicTransport} Mode;
+typedef std::bitset<128> Services;
+typedef boost::tuple<float, float, Services> Time;
+
+struct No_traffic{};
+
+namespace boost { namespace serialization {
+template <class Archive>
+void save(Archive &ar, const Time &t, const unsigned int version)
+{
+    ar << boost::get<0>(t);
+    ar << boost::get<1>(t);
+    std::string s = boost::get<2>(t).to_string();
+    ar << s;
+}
+
+template <class Archive>
+void load(Archive &ar, Time &t, const unsigned int version)
+{
+    ar >> boost::get<0>(t);
+    ar >> boost::get<1>(t);
+    std::string s;;
+    ar >> s;
+    boost::get<2>(t) = Services(s);
+}
+
+template <class Archive>
+void serialize(Archive &ar, Time &t, const unsigned int version)
+{
+        boost::serialization::split_free(ar, t, version);
+}
+}
+} 
 
 class Duration
 {
     int const_duration;
-    std::map<float, float> timetable;
+    std::vector<Time> timetable;
 public:
     Duration();
     Duration(float const_duration);
-    void append(float start, float arrival);
-    float operator()(float start_time) const;
+    void append(float start, float arrival, const char * services = "0");
+    float operator()(float start_time, int day) const;
 
     template<class Archive>
         void serialize(Archive& ar, const unsigned int version)

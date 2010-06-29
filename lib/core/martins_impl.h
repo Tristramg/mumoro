@@ -204,7 +204,7 @@ template<size_t N>
 }
 
 template<size_t N, typename Comp>
-vector<Path> martins(int start_node, int dest_node, Graph & g, int start_time, std::vector<float Edge::*> objectives, Comp std_comp)
+vector<Path> martins(int start_node, int dest_node, Graph & g, int start_time, int day, std::vector<float Edge::*> objectives, Comp std_comp)
 {
     std::cout << "Running martins from " << start_node << " to " << dest_node
         << ". Total nodes: " << num_vertices(g.g) << ", total edges: " << num_edges(g.g) << std::endl;
@@ -235,7 +235,7 @@ vector<Path> martins(int start_node, int dest_node, Graph & g, int start_time, s
             l2.node = boost::target(*ei,g.g);
             l2.pred_idx = P[l.node].size() - 1;
 
-            l2.cost[0] = g.g[*ei].duration(l.cost[0]);
+            l2.cost[0] = g.g[*ei].duration(l.cost[0], day);
             for(size_t i=1; i < N; i++)
                 l2.cost[i] = l.cost[i] + g.g[*ei].*objectives[i-1];
 

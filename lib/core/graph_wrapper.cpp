@@ -12,25 +12,37 @@ Duration::Duration(float d) : const_duration(d) {}
 
 Duration::Duration() : const_duration(-1) {}
 
-void Duration::append(float start, float arrival)
+void Duration::append(float start, float arrival, const char * services)
 {
-    timetable[start] = arrival;
+    BOOST_ASSERT(boost::get<1>(timetable.back()) < start);
+    BOOST_ASSERT(start < arrival);
+    timetable.push_back(Time(start, arrival, Services(0)));
+
 }
 
-float Duration::operator()(float start) const
+float Duration::operator()(float start, int day) const
 {
+    float next_day = 0;
     if (const_duration >= 0)
         return start + const_duration;
     else
     {
-        std::map<float, float>::const_iterator it;
+        std::vector<Time>::const_iterator it;
 
         for(it = timetable.begin(); it != timetable.end(); it++)
         {
-            if (it->first >= start)
-                return it->second;
+            float tt_start, tt_arrival;
+            Services s;
+            boost::tie(tt_start, tt_arrival, s) = *it;
+            if (tt_start >= start && s[day])
+                return tt_arrival;
+            if (next_day != 0 && s[day+1])
+                next_day = start + 24*3600;
         }
-        return (start / (24*3600) + 1)  * 24*3600 + timetable.begin()->second;
+        if(next_day > 0)
+            return next_day;
+        else 
+            throw No_traffic();
     }
 }
 
@@ -87,7 +99,7 @@ bool Graph::public_transport_edge(int source, int target, float start, float arr
 
 float calc_duration(float in, Duration d)
 {
-    return d(in);
+    return d(in, 0);
 }
 
 struct Comp

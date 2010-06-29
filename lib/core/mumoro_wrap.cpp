@@ -2689,27 +2689,30 @@ SWIG_Python_MustGetPtr(PyObject *obj, swig_type_info *ty, int argnum, int flags)
 #define SWIGTYPE_p_Edge swig_types[1]
 #define SWIGTYPE_p_Graph swig_types[2]
 #define SWIGTYPE_p_Mode swig_types[3]
-#define SWIGTYPE_p_Node swig_types[4]
-#define SWIGTYPE_p_Path swig_types[5]
-#define SWIGTYPE_p_allocator_type swig_types[6]
-#define SWIGTYPE_p_boost__adjacency_listT_boost__listS_boost__vecS_boost__directedS_Node_Edge_t swig_types[7]
-#define SWIGTYPE_p_boost__graph_traitsT_Graph_t_t__edge_descriptor swig_types[8]
-#define SWIGTYPE_p_char swig_types[9]
-#define SWIGTYPE_p_difference_type swig_types[10]
-#define SWIGTYPE_p_p_PyObject swig_types[11]
-#define SWIGTYPE_p_size_type swig_types[12]
-#define SWIGTYPE_p_std__invalid_argument swig_types[13]
-#define SWIGTYPE_p_std__listT_int_std__allocatorT_int_t_t swig_types[14]
-#define SWIGTYPE_p_std__listT_int_std__allocatorT_int_t_t__allocator_type swig_types[15]
-#define SWIGTYPE_p_std__vectorT_Path_std__allocatorT_Path_t_t swig_types[16]
-#define SWIGTYPE_p_std__vectorT_Path_std__allocatorT_Path_t_t__allocator_type swig_types[17]
-#define SWIGTYPE_p_std__vectorT_Path_std__allocatorT_Path_t_t__value_type swig_types[18]
-#define SWIGTYPE_p_std__vectorT_float_std__allocatorT_float_t_t swig_types[19]
-#define SWIGTYPE_p_std__vectorT_float_std__allocatorT_float_t_t__allocator_type swig_types[20]
-#define SWIGTYPE_p_swig__SwigPyIterator swig_types[21]
-#define SWIGTYPE_p_value_type swig_types[22]
-static swig_type_info *swig_types[24];
-static swig_module_info swig_module = {swig_types, 23, 0, 0, 0, 0};
+#define SWIGTYPE_p_No_traffic swig_types[4]
+#define SWIGTYPE_p_Node swig_types[5]
+#define SWIGTYPE_p_Path swig_types[6]
+#define SWIGTYPE_p_allocator_type swig_types[7]
+#define SWIGTYPE_p_boost__adjacency_listT_boost__listS_boost__vecS_boost__directedS_Node_Edge_t swig_types[8]
+#define SWIGTYPE_p_boost__graph_traitsT_Graph_t_t__edge_descriptor swig_types[9]
+#define SWIGTYPE_p_boost__tupleT_float_float_std__bitsetT_128_t_t swig_types[10]
+#define SWIGTYPE_p_char swig_types[11]
+#define SWIGTYPE_p_difference_type swig_types[12]
+#define SWIGTYPE_p_p_PyObject swig_types[13]
+#define SWIGTYPE_p_size_type swig_types[14]
+#define SWIGTYPE_p_std__bitsetT_128_t swig_types[15]
+#define SWIGTYPE_p_std__invalid_argument swig_types[16]
+#define SWIGTYPE_p_std__listT_int_std__allocatorT_int_t_t swig_types[17]
+#define SWIGTYPE_p_std__listT_int_std__allocatorT_int_t_t__allocator_type swig_types[18]
+#define SWIGTYPE_p_std__vectorT_Path_std__allocatorT_Path_t_t swig_types[19]
+#define SWIGTYPE_p_std__vectorT_Path_std__allocatorT_Path_t_t__allocator_type swig_types[20]
+#define SWIGTYPE_p_std__vectorT_Path_std__allocatorT_Path_t_t__value_type swig_types[21]
+#define SWIGTYPE_p_std__vectorT_float_std__allocatorT_float_t_t swig_types[22]
+#define SWIGTYPE_p_std__vectorT_float_std__allocatorT_float_t_t__allocator_type swig_types[23]
+#define SWIGTYPE_p_swig__SwigPyIterator swig_types[24]
+#define SWIGTYPE_p_value_type swig_types[25]
+static swig_type_info *swig_types[27];
+static swig_module_info swig_module = {swig_types, 26, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -4519,6 +4522,129 @@ SWIGINTERN void std_list_Sl_int_Sg____setitem____SWIG_1(std::list< int > *self,s
 SWIGINTERN void std_list_Sl_int_Sg__append(std::list< int > *self,std::list< int >::value_type const &x){
       self->push_back(x);
     }
+
+SWIGINTERN swig_type_info*
+SWIG_pchar_descriptor(void)
+{
+  static int init = 0;
+  static swig_type_info* info = 0;
+  if (!init) {
+    info = SWIG_TypeQuery("_p_char");
+    init = 1;
+  }
+  return info;
+}
+
+
+SWIGINTERN int
+SWIG_AsCharPtrAndSize(PyObject *obj, char** cptr, size_t* psize, int *alloc)
+{
+#if PY_VERSION_HEX>=0x03000000
+  if (PyUnicode_Check(obj))
+#else  
+  if (PyString_Check(obj))
+#endif
+  {
+    char *cstr; Py_ssize_t len;
+#if PY_VERSION_HEX>=0x03000000
+    if (!alloc && cptr) {
+        /* We can't allow converting without allocation, since the internal
+           representation of string in Python 3 is UCS-2/UCS-4 but we require
+           a UTF-8 representation.
+           TODO(bhy) More detailed explanation */
+        return SWIG_RuntimeError;
+    }
+    obj = PyUnicode_AsUTF8String(obj);
+    PyBytes_AsStringAndSize(obj, &cstr, &len);
+    if(alloc) *alloc = SWIG_NEWOBJ;
+#else
+    PyString_AsStringAndSize(obj, &cstr, &len);
+#endif
+    if (cptr) {
+      if (alloc) {
+	/* 
+	   In python the user should not be able to modify the inner
+	   string representation. To warranty that, if you define
+	   SWIG_PYTHON_SAFE_CSTRINGS, a new/copy of the python string
+	   buffer is always returned.
+
+	   The default behavior is just to return the pointer value,
+	   so, be careful.
+	*/ 
+#if defined(SWIG_PYTHON_SAFE_CSTRINGS)
+	if (*alloc != SWIG_OLDOBJ) 
+#else
+	if (*alloc == SWIG_NEWOBJ) 
+#endif
+	  {
+	    *cptr = reinterpret_cast< char* >(memcpy((new char[len + 1]), cstr, sizeof(char)*(len + 1)));
+	    *alloc = SWIG_NEWOBJ;
+	  }
+	else {
+	  *cptr = cstr;
+	  *alloc = SWIG_OLDOBJ;
+	}
+      } else {
+        #if PY_VERSION_HEX>=0x03000000
+        assert(0); /* Should never reach here in Python 3 */
+        #endif
+	*cptr = SWIG_Python_str_AsChar(obj);
+      }
+    }
+    if (psize) *psize = len + 1;
+#if PY_VERSION_HEX>=0x03000000
+    Py_XDECREF(obj);
+#endif
+    return SWIG_OK;
+  } else {
+    swig_type_info* pchar_descriptor = SWIG_pchar_descriptor();
+    if (pchar_descriptor) {
+      void* vptr = 0;
+      if (SWIG_ConvertPtr(obj, &vptr, pchar_descriptor, 0) == SWIG_OK) {
+	if (cptr) *cptr = (char *) vptr;
+	if (psize) *psize = vptr ? (strlen((char *)vptr) + 1) : 0;
+	if (alloc) *alloc = SWIG_OLDOBJ;
+	return SWIG_OK;
+      }
+    }
+  }
+  return SWIG_TypeError;
+}
+
+
+
+
+
+SWIGINTERN int
+SWIG_AsPtr_std_string (PyObject * obj, std::string **val) 
+{
+  char* buf = 0 ; size_t size = 0; int alloc = SWIG_OLDOBJ;
+  if (SWIG_IsOK((SWIG_AsCharPtrAndSize(obj, &buf, &size, &alloc)))) {
+    if (buf) {
+      if (val) *val = new std::string(buf, size - 1);
+      if (alloc == SWIG_NEWOBJ) delete[] buf;
+      return SWIG_NEWOBJ;
+    } else {
+      if (val) *val = 0;
+      return SWIG_OLDOBJ;
+    }
+  } else {
+    static int init = 0;
+    static swig_type_info* descriptor = 0;
+    if (!init) {
+      descriptor = SWIG_TypeQuery("std::string" " *");
+      init = 1;
+    }
+    if (descriptor) {
+      std::string *vptr;
+      int res = SWIG_ConvertPtr(obj, (void**)&vptr, descriptor, 0);
+      if (SWIG_IsOK(res) && val) *val = vptr;
+      return res;
+    }
+  }
+  return SWIG_ERROR;
+}
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -10701,6 +10827,67 @@ SWIGINTERN PyObject *_wrap_martins__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObj
   int arg2 ;
   Graph *arg3 = 0 ;
   int arg4 ;
+  int arg5 ;
+  int val1 ;
+  int ecode1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  int val4 ;
+  int ecode4 = 0 ;
+  int val5 ;
+  int ecode5 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  std::vector< Path,std::allocator< Path > > result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOO:martins",&obj0,&obj1,&obj2,&obj3,&obj4)) SWIG_fail;
+  ecode1 = SWIG_AsVal_int(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "martins" "', argument " "1"" of type '" "int""'");
+  } 
+  arg1 = static_cast< int >(val1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "martins" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_Graph,  0 );
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "martins" "', argument " "3"" of type '" "Graph &""'"); 
+  }
+  if (!argp3) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "martins" "', argument " "3"" of type '" "Graph &""'"); 
+  }
+  arg3 = reinterpret_cast< Graph * >(argp3);
+  ecode4 = SWIG_AsVal_int(obj3, &val4);
+  if (!SWIG_IsOK(ecode4)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "martins" "', argument " "4"" of type '" "int""'");
+  } 
+  arg4 = static_cast< int >(val4);
+  ecode5 = SWIG_AsVal_int(obj4, &val5);
+  if (!SWIG_IsOK(ecode5)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "martins" "', argument " "5"" of type '" "int""'");
+  } 
+  arg5 = static_cast< int >(val5);
+  result = martins(arg1,arg2,*arg3,arg4,arg5);
+  resultobj = swig::from(static_cast< std::vector<Path,std::allocator< Path > > >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_martins__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  int arg1 ;
+  int arg2 ;
+  Graph *arg3 = 0 ;
+  int arg4 ;
   int val1 ;
   int ecode1 = 0 ;
   int val2 ;
@@ -10747,117 +10934,13 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_martins__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  int arg1 ;
-  int arg2 ;
-  Graph *arg3 = 0 ;
-  int val1 ;
-  int ecode1 = 0 ;
-  int val2 ;
-  int ecode2 = 0 ;
-  void *argp3 = 0 ;
-  int res3 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  PyObject * obj2 = 0 ;
-  std::vector< Path,std::allocator< Path > > result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OOO:martins",&obj0,&obj1,&obj2)) SWIG_fail;
-  ecode1 = SWIG_AsVal_int(obj0, &val1);
-  if (!SWIG_IsOK(ecode1)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "martins" "', argument " "1"" of type '" "int""'");
-  } 
-  arg1 = static_cast< int >(val1);
-  ecode2 = SWIG_AsVal_int(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "martins" "', argument " "2"" of type '" "int""'");
-  } 
-  arg2 = static_cast< int >(val2);
-  res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_Graph,  0 );
-  if (!SWIG_IsOK(res3)) {
-    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "martins" "', argument " "3"" of type '" "Graph &""'"); 
-  }
-  if (!argp3) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "martins" "', argument " "3"" of type '" "Graph &""'"); 
-  }
-  arg3 = reinterpret_cast< Graph * >(argp3);
-  result = martins(arg1,arg2,*arg3);
-  resultobj = swig::from(static_cast< std::vector<Path,std::allocator< Path > > >(result));
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
 SWIGINTERN PyObject *_wrap_martins__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int arg1 ;
   int arg2 ;
   Graph *arg3 = 0 ;
   int arg4 ;
-  Objective arg5 ;
-  int val1 ;
-  int ecode1 = 0 ;
-  int val2 ;
-  int ecode2 = 0 ;
-  void *argp3 = 0 ;
-  int res3 = 0 ;
-  int val4 ;
-  int ecode4 = 0 ;
-  int val5 ;
-  int ecode5 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  PyObject * obj2 = 0 ;
-  PyObject * obj3 = 0 ;
-  PyObject * obj4 = 0 ;
-  std::vector< Path,std::allocator< Path > > result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OOOOO:martins",&obj0,&obj1,&obj2,&obj3,&obj4)) SWIG_fail;
-  ecode1 = SWIG_AsVal_int(obj0, &val1);
-  if (!SWIG_IsOK(ecode1)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "martins" "', argument " "1"" of type '" "int""'");
-  } 
-  arg1 = static_cast< int >(val1);
-  ecode2 = SWIG_AsVal_int(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "martins" "', argument " "2"" of type '" "int""'");
-  } 
-  arg2 = static_cast< int >(val2);
-  res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_Graph,  0 );
-  if (!SWIG_IsOK(res3)) {
-    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "martins" "', argument " "3"" of type '" "Graph &""'"); 
-  }
-  if (!argp3) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "martins" "', argument " "3"" of type '" "Graph &""'"); 
-  }
-  arg3 = reinterpret_cast< Graph * >(argp3);
-  ecode4 = SWIG_AsVal_int(obj3, &val4);
-  if (!SWIG_IsOK(ecode4)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "martins" "', argument " "4"" of type '" "int""'");
-  } 
-  arg4 = static_cast< int >(val4);
-  ecode5 = SWIG_AsVal_int(obj4, &val5);
-  if (!SWIG_IsOK(ecode5)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "martins" "', argument " "5"" of type '" "Objective""'");
-  } 
-  arg5 = static_cast< Objective >(val5);
-  result = martins(arg1,arg2,*arg3,arg4,arg5);
-  resultobj = swig::from(static_cast< std::vector<Path,std::allocator< Path > > >(result));
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_martins__SWIG_3(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  int arg1 ;
-  int arg2 ;
-  Graph *arg3 = 0 ;
-  int arg4 ;
-  Objective arg5 ;
+  int arg5 ;
   Objective arg6 ;
   int val1 ;
   int ecode1 = 0 ;
@@ -10905,9 +10988,9 @@ SWIGINTERN PyObject *_wrap_martins__SWIG_3(PyObject *SWIGUNUSEDPARM(self), PyObj
   arg4 = static_cast< int >(val4);
   ecode5 = SWIG_AsVal_int(obj4, &val5);
   if (!SWIG_IsOK(ecode5)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "martins" "', argument " "5"" of type '" "Objective""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "martins" "', argument " "5"" of type '" "int""'");
   } 
-  arg5 = static_cast< Objective >(val5);
+  arg5 = static_cast< int >(val5);
   ecode6 = SWIG_AsVal_int(obj5, &val6);
   if (!SWIG_IsOK(ecode6)) {
     SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "martins" "', argument " "6"" of type '" "Objective""'");
@@ -10921,13 +11004,13 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_martins__SWIG_4(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_martins__SWIG_3(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int arg1 ;
   int arg2 ;
   Graph *arg3 = 0 ;
   int arg4 ;
-  Objective arg5 ;
+  int arg5 ;
   Objective arg6 ;
   Objective arg7 ;
   int val1 ;
@@ -10979,9 +11062,9 @@ SWIGINTERN PyObject *_wrap_martins__SWIG_4(PyObject *SWIGUNUSEDPARM(self), PyObj
   arg4 = static_cast< int >(val4);
   ecode5 = SWIG_AsVal_int(obj4, &val5);
   if (!SWIG_IsOK(ecode5)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "martins" "', argument " "5"" of type '" "Objective""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "martins" "', argument " "5"" of type '" "int""'");
   } 
-  arg5 = static_cast< Objective >(val5);
+  arg5 = static_cast< int >(val5);
   ecode6 = SWIG_AsVal_int(obj5, &val6);
   if (!SWIG_IsOK(ecode6)) {
     SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "martins" "', argument " "6"" of type '" "Objective""'");
@@ -11000,36 +11083,103 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_martins__SWIG_4(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  int arg1 ;
+  int arg2 ;
+  Graph *arg3 = 0 ;
+  int arg4 ;
+  int arg5 ;
+  Objective arg6 ;
+  Objective arg7 ;
+  Objective arg8 ;
+  int val1 ;
+  int ecode1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  int val4 ;
+  int ecode4 = 0 ;
+  int val5 ;
+  int ecode5 = 0 ;
+  int val6 ;
+  int ecode6 = 0 ;
+  int val7 ;
+  int ecode7 = 0 ;
+  int val8 ;
+  int ecode8 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  PyObject * obj5 = 0 ;
+  PyObject * obj6 = 0 ;
+  PyObject * obj7 = 0 ;
+  std::vector< Path,std::allocator< Path > > result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOO:martins",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7)) SWIG_fail;
+  ecode1 = SWIG_AsVal_int(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "martins" "', argument " "1"" of type '" "int""'");
+  } 
+  arg1 = static_cast< int >(val1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "martins" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_Graph,  0 );
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "martins" "', argument " "3"" of type '" "Graph &""'"); 
+  }
+  if (!argp3) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "martins" "', argument " "3"" of type '" "Graph &""'"); 
+  }
+  arg3 = reinterpret_cast< Graph * >(argp3);
+  ecode4 = SWIG_AsVal_int(obj3, &val4);
+  if (!SWIG_IsOK(ecode4)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "martins" "', argument " "4"" of type '" "int""'");
+  } 
+  arg4 = static_cast< int >(val4);
+  ecode5 = SWIG_AsVal_int(obj4, &val5);
+  if (!SWIG_IsOK(ecode5)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "martins" "', argument " "5"" of type '" "int""'");
+  } 
+  arg5 = static_cast< int >(val5);
+  ecode6 = SWIG_AsVal_int(obj5, &val6);
+  if (!SWIG_IsOK(ecode6)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "martins" "', argument " "6"" of type '" "Objective""'");
+  } 
+  arg6 = static_cast< Objective >(val6);
+  ecode7 = SWIG_AsVal_int(obj6, &val7);
+  if (!SWIG_IsOK(ecode7)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "martins" "', argument " "7"" of type '" "Objective""'");
+  } 
+  arg7 = static_cast< Objective >(val7);
+  ecode8 = SWIG_AsVal_int(obj7, &val8);
+  if (!SWIG_IsOK(ecode8)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "martins" "', argument " "8"" of type '" "Objective""'");
+  } 
+  arg8 = static_cast< Objective >(val8);
+  result = martins(arg1,arg2,*arg3,arg4,arg5,arg6,arg7,arg8);
+  resultobj = swig::from(static_cast< std::vector<Path,std::allocator< Path > > >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_martins(PyObject *self, PyObject *args) {
   int argc;
-  PyObject *argv[8];
+  PyObject *argv[9];
   int ii;
   
   if (!PyTuple_Check(args)) SWIG_fail;
   argc = (int)PyObject_Length(args);
-  for (ii = 0; (ii < argc) && (ii < 7); ii++) {
+  for (ii = 0; (ii < argc) && (ii < 8); ii++) {
     argv[ii] = PyTuple_GET_ITEM(args,ii);
-  }
-  if (argc == 3) {
-    int _v;
-    {
-      int res = SWIG_AsVal_int(argv[0], NULL);
-      _v = SWIG_CheckState(res);
-    }
-    if (_v) {
-      {
-        int res = SWIG_AsVal_int(argv[1], NULL);
-        _v = SWIG_CheckState(res);
-      }
-      if (_v) {
-        void *vptr = 0;
-        int res = SWIG_ConvertPtr(argv[2], &vptr, SWIGTYPE_p_Graph, 0);
-        _v = SWIG_CheckState(res);
-        if (_v) {
-          return _wrap_martins__SWIG_1(self, args);
-        }
-      }
-    }
   }
   if (argc == 4) {
     int _v;
@@ -11052,7 +11202,7 @@ SWIGINTERN PyObject *_wrap_martins(PyObject *self, PyObject *args) {
             _v = SWIG_CheckState(res);
           }
           if (_v) {
-            return _wrap_martins__SWIG_0(self, args);
+            return _wrap_martins__SWIG_1(self, args);
           }
         }
       }
@@ -11084,7 +11234,7 @@ SWIGINTERN PyObject *_wrap_martins(PyObject *self, PyObject *args) {
               _v = SWIG_CheckState(res);
             }
             if (_v) {
-              return _wrap_martins__SWIG_2(self, args);
+              return _wrap_martins__SWIG_0(self, args);
             }
           }
         }
@@ -11122,7 +11272,7 @@ SWIGINTERN PyObject *_wrap_martins(PyObject *self, PyObject *args) {
                 _v = SWIG_CheckState(res);
               }
               if (_v) {
-                return _wrap_martins__SWIG_3(self, args);
+                return _wrap_martins__SWIG_2(self, args);
               }
             }
           }
@@ -11166,334 +11316,8 @@ SWIGINTERN PyObject *_wrap_martins(PyObject *self, PyObject *args) {
                   _v = SWIG_CheckState(res);
                 }
                 if (_v) {
-                  return _wrap_martins__SWIG_4(self, args);
+                  return _wrap_martins__SWIG_3(self, args);
                 }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  
-fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'martins'.\n"
-    "  Possible C/C++ prototypes are:\n"
-    "    martins(int,int,Graph &,int)\n"
-    "    martins(int,int,Graph &)\n"
-    "    martins(int,int,Graph &,int,Objective)\n"
-    "    martins(int,int,Graph &,int,Objective,Objective)\n"
-    "    martins(int,int,Graph &,int,Objective,Objective,Objective)\n");
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_relaxed_martins__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  int arg1 ;
-  int arg2 ;
-  Graph *arg3 = 0 ;
-  int arg4 ;
-  Objective arg5 ;
-  float arg6 ;
-  int val1 ;
-  int ecode1 = 0 ;
-  int val2 ;
-  int ecode2 = 0 ;
-  void *argp3 = 0 ;
-  int res3 = 0 ;
-  int val4 ;
-  int ecode4 = 0 ;
-  int val5 ;
-  int ecode5 = 0 ;
-  float val6 ;
-  int ecode6 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  PyObject * obj2 = 0 ;
-  PyObject * obj3 = 0 ;
-  PyObject * obj4 = 0 ;
-  PyObject * obj5 = 0 ;
-  std::vector< Path,std::allocator< Path > > result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOO:relaxed_martins",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5)) SWIG_fail;
-  ecode1 = SWIG_AsVal_int(obj0, &val1);
-  if (!SWIG_IsOK(ecode1)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "relaxed_martins" "', argument " "1"" of type '" "int""'");
-  } 
-  arg1 = static_cast< int >(val1);
-  ecode2 = SWIG_AsVal_int(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "relaxed_martins" "', argument " "2"" of type '" "int""'");
-  } 
-  arg2 = static_cast< int >(val2);
-  res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_Graph,  0 );
-  if (!SWIG_IsOK(res3)) {
-    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "relaxed_martins" "', argument " "3"" of type '" "Graph &""'"); 
-  }
-  if (!argp3) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "relaxed_martins" "', argument " "3"" of type '" "Graph &""'"); 
-  }
-  arg3 = reinterpret_cast< Graph * >(argp3);
-  ecode4 = SWIG_AsVal_int(obj3, &val4);
-  if (!SWIG_IsOK(ecode4)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "relaxed_martins" "', argument " "4"" of type '" "int""'");
-  } 
-  arg4 = static_cast< int >(val4);
-  ecode5 = SWIG_AsVal_int(obj4, &val5);
-  if (!SWIG_IsOK(ecode5)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "relaxed_martins" "', argument " "5"" of type '" "Objective""'");
-  } 
-  arg5 = static_cast< Objective >(val5);
-  ecode6 = SWIG_AsVal_float(obj5, &val6);
-  if (!SWIG_IsOK(ecode6)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "relaxed_martins" "', argument " "6"" of type '" "float""'");
-  } 
-  arg6 = static_cast< float >(val6);
-  result = relaxed_martins(arg1,arg2,*arg3,arg4,arg5,arg6);
-  resultobj = swig::from(static_cast< std::vector<Path,std::allocator< Path > > >(result));
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_relaxed_martins__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  int arg1 ;
-  int arg2 ;
-  Graph *arg3 = 0 ;
-  int arg4 ;
-  Objective arg5 ;
-  float arg6 ;
-  Objective arg7 ;
-  float arg8 ;
-  int val1 ;
-  int ecode1 = 0 ;
-  int val2 ;
-  int ecode2 = 0 ;
-  void *argp3 = 0 ;
-  int res3 = 0 ;
-  int val4 ;
-  int ecode4 = 0 ;
-  int val5 ;
-  int ecode5 = 0 ;
-  float val6 ;
-  int ecode6 = 0 ;
-  int val7 ;
-  int ecode7 = 0 ;
-  float val8 ;
-  int ecode8 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  PyObject * obj2 = 0 ;
-  PyObject * obj3 = 0 ;
-  PyObject * obj4 = 0 ;
-  PyObject * obj5 = 0 ;
-  PyObject * obj6 = 0 ;
-  PyObject * obj7 = 0 ;
-  std::vector< Path,std::allocator< Path > > result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOO:relaxed_martins",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7)) SWIG_fail;
-  ecode1 = SWIG_AsVal_int(obj0, &val1);
-  if (!SWIG_IsOK(ecode1)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "relaxed_martins" "', argument " "1"" of type '" "int""'");
-  } 
-  arg1 = static_cast< int >(val1);
-  ecode2 = SWIG_AsVal_int(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "relaxed_martins" "', argument " "2"" of type '" "int""'");
-  } 
-  arg2 = static_cast< int >(val2);
-  res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_Graph,  0 );
-  if (!SWIG_IsOK(res3)) {
-    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "relaxed_martins" "', argument " "3"" of type '" "Graph &""'"); 
-  }
-  if (!argp3) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "relaxed_martins" "', argument " "3"" of type '" "Graph &""'"); 
-  }
-  arg3 = reinterpret_cast< Graph * >(argp3);
-  ecode4 = SWIG_AsVal_int(obj3, &val4);
-  if (!SWIG_IsOK(ecode4)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "relaxed_martins" "', argument " "4"" of type '" "int""'");
-  } 
-  arg4 = static_cast< int >(val4);
-  ecode5 = SWIG_AsVal_int(obj4, &val5);
-  if (!SWIG_IsOK(ecode5)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "relaxed_martins" "', argument " "5"" of type '" "Objective""'");
-  } 
-  arg5 = static_cast< Objective >(val5);
-  ecode6 = SWIG_AsVal_float(obj5, &val6);
-  if (!SWIG_IsOK(ecode6)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "relaxed_martins" "', argument " "6"" of type '" "float""'");
-  } 
-  arg6 = static_cast< float >(val6);
-  ecode7 = SWIG_AsVal_int(obj6, &val7);
-  if (!SWIG_IsOK(ecode7)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "relaxed_martins" "', argument " "7"" of type '" "Objective""'");
-  } 
-  arg7 = static_cast< Objective >(val7);
-  ecode8 = SWIG_AsVal_float(obj7, &val8);
-  if (!SWIG_IsOK(ecode8)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "relaxed_martins" "', argument " "8"" of type '" "float""'");
-  } 
-  arg8 = static_cast< float >(val8);
-  result = relaxed_martins(arg1,arg2,*arg3,arg4,arg5,arg6,arg7,arg8);
-  resultobj = swig::from(static_cast< std::vector<Path,std::allocator< Path > > >(result));
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_relaxed_martins__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  int arg1 ;
-  int arg2 ;
-  Graph *arg3 = 0 ;
-  int arg4 ;
-  Objective arg5 ;
-  float arg6 ;
-  Objective arg7 ;
-  float arg8 ;
-  Objective arg9 ;
-  float arg10 ;
-  int val1 ;
-  int ecode1 = 0 ;
-  int val2 ;
-  int ecode2 = 0 ;
-  void *argp3 = 0 ;
-  int res3 = 0 ;
-  int val4 ;
-  int ecode4 = 0 ;
-  int val5 ;
-  int ecode5 = 0 ;
-  float val6 ;
-  int ecode6 = 0 ;
-  int val7 ;
-  int ecode7 = 0 ;
-  float val8 ;
-  int ecode8 = 0 ;
-  int val9 ;
-  int ecode9 = 0 ;
-  float val10 ;
-  int ecode10 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  PyObject * obj2 = 0 ;
-  PyObject * obj3 = 0 ;
-  PyObject * obj4 = 0 ;
-  PyObject * obj5 = 0 ;
-  PyObject * obj6 = 0 ;
-  PyObject * obj7 = 0 ;
-  PyObject * obj8 = 0 ;
-  PyObject * obj9 = 0 ;
-  std::vector< Path,std::allocator< Path > > result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOO:relaxed_martins",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9)) SWIG_fail;
-  ecode1 = SWIG_AsVal_int(obj0, &val1);
-  if (!SWIG_IsOK(ecode1)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "relaxed_martins" "', argument " "1"" of type '" "int""'");
-  } 
-  arg1 = static_cast< int >(val1);
-  ecode2 = SWIG_AsVal_int(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "relaxed_martins" "', argument " "2"" of type '" "int""'");
-  } 
-  arg2 = static_cast< int >(val2);
-  res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_Graph,  0 );
-  if (!SWIG_IsOK(res3)) {
-    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "relaxed_martins" "', argument " "3"" of type '" "Graph &""'"); 
-  }
-  if (!argp3) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "relaxed_martins" "', argument " "3"" of type '" "Graph &""'"); 
-  }
-  arg3 = reinterpret_cast< Graph * >(argp3);
-  ecode4 = SWIG_AsVal_int(obj3, &val4);
-  if (!SWIG_IsOK(ecode4)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "relaxed_martins" "', argument " "4"" of type '" "int""'");
-  } 
-  arg4 = static_cast< int >(val4);
-  ecode5 = SWIG_AsVal_int(obj4, &val5);
-  if (!SWIG_IsOK(ecode5)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "relaxed_martins" "', argument " "5"" of type '" "Objective""'");
-  } 
-  arg5 = static_cast< Objective >(val5);
-  ecode6 = SWIG_AsVal_float(obj5, &val6);
-  if (!SWIG_IsOK(ecode6)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "relaxed_martins" "', argument " "6"" of type '" "float""'");
-  } 
-  arg6 = static_cast< float >(val6);
-  ecode7 = SWIG_AsVal_int(obj6, &val7);
-  if (!SWIG_IsOK(ecode7)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "relaxed_martins" "', argument " "7"" of type '" "Objective""'");
-  } 
-  arg7 = static_cast< Objective >(val7);
-  ecode8 = SWIG_AsVal_float(obj7, &val8);
-  if (!SWIG_IsOK(ecode8)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "relaxed_martins" "', argument " "8"" of type '" "float""'");
-  } 
-  arg8 = static_cast< float >(val8);
-  ecode9 = SWIG_AsVal_int(obj8, &val9);
-  if (!SWIG_IsOK(ecode9)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "relaxed_martins" "', argument " "9"" of type '" "Objective""'");
-  } 
-  arg9 = static_cast< Objective >(val9);
-  ecode10 = SWIG_AsVal_float(obj9, &val10);
-  if (!SWIG_IsOK(ecode10)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "relaxed_martins" "', argument " "10"" of type '" "float""'");
-  } 
-  arg10 = static_cast< float >(val10);
-  result = relaxed_martins(arg1,arg2,*arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10);
-  resultobj = swig::from(static_cast< std::vector<Path,std::allocator< Path > > >(result));
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_relaxed_martins(PyObject *self, PyObject *args) {
-  int argc;
-  PyObject *argv[11];
-  int ii;
-  
-  if (!PyTuple_Check(args)) SWIG_fail;
-  argc = (int)PyObject_Length(args);
-  for (ii = 0; (ii < argc) && (ii < 10); ii++) {
-    argv[ii] = PyTuple_GET_ITEM(args,ii);
-  }
-  if (argc == 6) {
-    int _v;
-    {
-      int res = SWIG_AsVal_int(argv[0], NULL);
-      _v = SWIG_CheckState(res);
-    }
-    if (_v) {
-      {
-        int res = SWIG_AsVal_int(argv[1], NULL);
-        _v = SWIG_CheckState(res);
-      }
-      if (_v) {
-        void *vptr = 0;
-        int res = SWIG_ConvertPtr(argv[2], &vptr, SWIGTYPE_p_Graph, 0);
-        _v = SWIG_CheckState(res);
-        if (_v) {
-          {
-            int res = SWIG_AsVal_int(argv[3], NULL);
-            _v = SWIG_CheckState(res);
-          }
-          if (_v) {
-            {
-              int res = SWIG_AsVal_int(argv[4], NULL);
-              _v = SWIG_CheckState(res);
-            }
-            if (_v) {
-              {
-                int res = SWIG_AsVal_float(argv[5], NULL);
-                _v = SWIG_CheckState(res);
-              }
-              if (_v) {
-                return _wrap_relaxed_martins__SWIG_0(self, args);
               }
             }
           }
@@ -11528,7 +11352,7 @@ SWIGINTERN PyObject *_wrap_relaxed_martins(PyObject *self, PyObject *args) {
             }
             if (_v) {
               {
-                int res = SWIG_AsVal_float(argv[5], NULL);
+                int res = SWIG_AsVal_int(argv[5], NULL);
                 _v = SWIG_CheckState(res);
               }
               if (_v) {
@@ -11538,11 +11362,11 @@ SWIGINTERN PyObject *_wrap_relaxed_martins(PyObject *self, PyObject *args) {
                 }
                 if (_v) {
                   {
-                    int res = SWIG_AsVal_float(argv[7], NULL);
+                    int res = SWIG_AsVal_int(argv[7], NULL);
                     _v = SWIG_CheckState(res);
                   }
                   if (_v) {
-                    return _wrap_relaxed_martins__SWIG_1(self, args);
+                    return _wrap_martins__SWIG_4(self, args);
                   }
                 }
               }
@@ -11552,7 +11376,321 @@ SWIGINTERN PyObject *_wrap_relaxed_martins(PyObject *self, PyObject *args) {
       }
     }
   }
-  if (argc == 10) {
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'martins'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    martins(int,int,Graph &,int,int)\n"
+    "    martins(int,int,Graph &,int)\n"
+    "    martins(int,int,Graph &,int,int,Objective)\n"
+    "    martins(int,int,Graph &,int,int,Objective,Objective)\n"
+    "    martins(int,int,Graph &,int,int,Objective,Objective,Objective)\n");
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_relaxed_martins__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  int arg1 ;
+  int arg2 ;
+  Graph *arg3 = 0 ;
+  int arg4 ;
+  int arg5 ;
+  Objective arg6 ;
+  float arg7 ;
+  int val1 ;
+  int ecode1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  int val4 ;
+  int ecode4 = 0 ;
+  int val5 ;
+  int ecode5 = 0 ;
+  int val6 ;
+  int ecode6 = 0 ;
+  float val7 ;
+  int ecode7 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  PyObject * obj5 = 0 ;
+  PyObject * obj6 = 0 ;
+  std::vector< Path,std::allocator< Path > > result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOO:relaxed_martins",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6)) SWIG_fail;
+  ecode1 = SWIG_AsVal_int(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "relaxed_martins" "', argument " "1"" of type '" "int""'");
+  } 
+  arg1 = static_cast< int >(val1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "relaxed_martins" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_Graph,  0 );
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "relaxed_martins" "', argument " "3"" of type '" "Graph &""'"); 
+  }
+  if (!argp3) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "relaxed_martins" "', argument " "3"" of type '" "Graph &""'"); 
+  }
+  arg3 = reinterpret_cast< Graph * >(argp3);
+  ecode4 = SWIG_AsVal_int(obj3, &val4);
+  if (!SWIG_IsOK(ecode4)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "relaxed_martins" "', argument " "4"" of type '" "int""'");
+  } 
+  arg4 = static_cast< int >(val4);
+  ecode5 = SWIG_AsVal_int(obj4, &val5);
+  if (!SWIG_IsOK(ecode5)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "relaxed_martins" "', argument " "5"" of type '" "int""'");
+  } 
+  arg5 = static_cast< int >(val5);
+  ecode6 = SWIG_AsVal_int(obj5, &val6);
+  if (!SWIG_IsOK(ecode6)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "relaxed_martins" "', argument " "6"" of type '" "Objective""'");
+  } 
+  arg6 = static_cast< Objective >(val6);
+  ecode7 = SWIG_AsVal_float(obj6, &val7);
+  if (!SWIG_IsOK(ecode7)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "relaxed_martins" "', argument " "7"" of type '" "float""'");
+  } 
+  arg7 = static_cast< float >(val7);
+  result = relaxed_martins(arg1,arg2,*arg3,arg4,arg5,arg6,arg7);
+  resultobj = swig::from(static_cast< std::vector<Path,std::allocator< Path > > >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_relaxed_martins__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  int arg1 ;
+  int arg2 ;
+  Graph *arg3 = 0 ;
+  int arg4 ;
+  int arg5 ;
+  Objective arg6 ;
+  float arg7 ;
+  Objective arg8 ;
+  float arg9 ;
+  int val1 ;
+  int ecode1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  int val4 ;
+  int ecode4 = 0 ;
+  int val5 ;
+  int ecode5 = 0 ;
+  int val6 ;
+  int ecode6 = 0 ;
+  float val7 ;
+  int ecode7 = 0 ;
+  int val8 ;
+  int ecode8 = 0 ;
+  float val9 ;
+  int ecode9 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  PyObject * obj5 = 0 ;
+  PyObject * obj6 = 0 ;
+  PyObject * obj7 = 0 ;
+  PyObject * obj8 = 0 ;
+  std::vector< Path,std::allocator< Path > > result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOO:relaxed_martins",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8)) SWIG_fail;
+  ecode1 = SWIG_AsVal_int(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "relaxed_martins" "', argument " "1"" of type '" "int""'");
+  } 
+  arg1 = static_cast< int >(val1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "relaxed_martins" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_Graph,  0 );
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "relaxed_martins" "', argument " "3"" of type '" "Graph &""'"); 
+  }
+  if (!argp3) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "relaxed_martins" "', argument " "3"" of type '" "Graph &""'"); 
+  }
+  arg3 = reinterpret_cast< Graph * >(argp3);
+  ecode4 = SWIG_AsVal_int(obj3, &val4);
+  if (!SWIG_IsOK(ecode4)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "relaxed_martins" "', argument " "4"" of type '" "int""'");
+  } 
+  arg4 = static_cast< int >(val4);
+  ecode5 = SWIG_AsVal_int(obj4, &val5);
+  if (!SWIG_IsOK(ecode5)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "relaxed_martins" "', argument " "5"" of type '" "int""'");
+  } 
+  arg5 = static_cast< int >(val5);
+  ecode6 = SWIG_AsVal_int(obj5, &val6);
+  if (!SWIG_IsOK(ecode6)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "relaxed_martins" "', argument " "6"" of type '" "Objective""'");
+  } 
+  arg6 = static_cast< Objective >(val6);
+  ecode7 = SWIG_AsVal_float(obj6, &val7);
+  if (!SWIG_IsOK(ecode7)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "relaxed_martins" "', argument " "7"" of type '" "float""'");
+  } 
+  arg7 = static_cast< float >(val7);
+  ecode8 = SWIG_AsVal_int(obj7, &val8);
+  if (!SWIG_IsOK(ecode8)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "relaxed_martins" "', argument " "8"" of type '" "Objective""'");
+  } 
+  arg8 = static_cast< Objective >(val8);
+  ecode9 = SWIG_AsVal_float(obj8, &val9);
+  if (!SWIG_IsOK(ecode9)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "relaxed_martins" "', argument " "9"" of type '" "float""'");
+  } 
+  arg9 = static_cast< float >(val9);
+  result = relaxed_martins(arg1,arg2,*arg3,arg4,arg5,arg6,arg7,arg8,arg9);
+  resultobj = swig::from(static_cast< std::vector<Path,std::allocator< Path > > >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_relaxed_martins__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  int arg1 ;
+  int arg2 ;
+  Graph *arg3 = 0 ;
+  int arg4 ;
+  int arg5 ;
+  Objective arg6 ;
+  float arg7 ;
+  Objective arg8 ;
+  float arg9 ;
+  Objective arg10 ;
+  float arg11 ;
+  int val1 ;
+  int ecode1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  int val4 ;
+  int ecode4 = 0 ;
+  int val5 ;
+  int ecode5 = 0 ;
+  int val6 ;
+  int ecode6 = 0 ;
+  float val7 ;
+  int ecode7 = 0 ;
+  int val8 ;
+  int ecode8 = 0 ;
+  float val9 ;
+  int ecode9 = 0 ;
+  int val10 ;
+  int ecode10 = 0 ;
+  float val11 ;
+  int ecode11 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  PyObject * obj5 = 0 ;
+  PyObject * obj6 = 0 ;
+  PyObject * obj7 = 0 ;
+  PyObject * obj8 = 0 ;
+  PyObject * obj9 = 0 ;
+  PyObject * obj10 = 0 ;
+  std::vector< Path,std::allocator< Path > > result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOOO:relaxed_martins",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10)) SWIG_fail;
+  ecode1 = SWIG_AsVal_int(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "relaxed_martins" "', argument " "1"" of type '" "int""'");
+  } 
+  arg1 = static_cast< int >(val1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "relaxed_martins" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_Graph,  0 );
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "relaxed_martins" "', argument " "3"" of type '" "Graph &""'"); 
+  }
+  if (!argp3) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "relaxed_martins" "', argument " "3"" of type '" "Graph &""'"); 
+  }
+  arg3 = reinterpret_cast< Graph * >(argp3);
+  ecode4 = SWIG_AsVal_int(obj3, &val4);
+  if (!SWIG_IsOK(ecode4)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "relaxed_martins" "', argument " "4"" of type '" "int""'");
+  } 
+  arg4 = static_cast< int >(val4);
+  ecode5 = SWIG_AsVal_int(obj4, &val5);
+  if (!SWIG_IsOK(ecode5)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "relaxed_martins" "', argument " "5"" of type '" "int""'");
+  } 
+  arg5 = static_cast< int >(val5);
+  ecode6 = SWIG_AsVal_int(obj5, &val6);
+  if (!SWIG_IsOK(ecode6)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode6), "in method '" "relaxed_martins" "', argument " "6"" of type '" "Objective""'");
+  } 
+  arg6 = static_cast< Objective >(val6);
+  ecode7 = SWIG_AsVal_float(obj6, &val7);
+  if (!SWIG_IsOK(ecode7)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode7), "in method '" "relaxed_martins" "', argument " "7"" of type '" "float""'");
+  } 
+  arg7 = static_cast< float >(val7);
+  ecode8 = SWIG_AsVal_int(obj7, &val8);
+  if (!SWIG_IsOK(ecode8)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "relaxed_martins" "', argument " "8"" of type '" "Objective""'");
+  } 
+  arg8 = static_cast< Objective >(val8);
+  ecode9 = SWIG_AsVal_float(obj8, &val9);
+  if (!SWIG_IsOK(ecode9)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "relaxed_martins" "', argument " "9"" of type '" "float""'");
+  } 
+  arg9 = static_cast< float >(val9);
+  ecode10 = SWIG_AsVal_int(obj9, &val10);
+  if (!SWIG_IsOK(ecode10)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode10), "in method '" "relaxed_martins" "', argument " "10"" of type '" "Objective""'");
+  } 
+  arg10 = static_cast< Objective >(val10);
+  ecode11 = SWIG_AsVal_float(obj10, &val11);
+  if (!SWIG_IsOK(ecode11)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode11), "in method '" "relaxed_martins" "', argument " "11"" of type '" "float""'");
+  } 
+  arg11 = static_cast< float >(val11);
+  result = relaxed_martins(arg1,arg2,*arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10,arg11);
+  resultobj = swig::from(static_cast< std::vector<Path,std::allocator< Path > > >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_relaxed_martins(PyObject *self, PyObject *args) {
+  int argc;
+  PyObject *argv[12];
+  int ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = (int)PyObject_Length(args);
+  for (ii = 0; (ii < argc) && (ii < 11); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 7) {
     int _v;
     {
       int res = SWIG_AsVal_int(argv[0], NULL);
@@ -11579,31 +11717,139 @@ SWIGINTERN PyObject *_wrap_relaxed_martins(PyObject *self, PyObject *args) {
             }
             if (_v) {
               {
-                int res = SWIG_AsVal_float(argv[5], NULL);
+                int res = SWIG_AsVal_int(argv[5], NULL);
                 _v = SWIG_CheckState(res);
               }
               if (_v) {
                 {
-                  int res = SWIG_AsVal_int(argv[6], NULL);
+                  int res = SWIG_AsVal_float(argv[6], NULL);
+                  _v = SWIG_CheckState(res);
+                }
+                if (_v) {
+                  return _wrap_relaxed_martins__SWIG_0(self, args);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  if (argc == 9) {
+    int _v;
+    {
+      int res = SWIG_AsVal_int(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      {
+        int res = SWIG_AsVal_int(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        void *vptr = 0;
+        int res = SWIG_ConvertPtr(argv[2], &vptr, SWIGTYPE_p_Graph, 0);
+        _v = SWIG_CheckState(res);
+        if (_v) {
+          {
+            int res = SWIG_AsVal_int(argv[3], NULL);
+            _v = SWIG_CheckState(res);
+          }
+          if (_v) {
+            {
+              int res = SWIG_AsVal_int(argv[4], NULL);
+              _v = SWIG_CheckState(res);
+            }
+            if (_v) {
+              {
+                int res = SWIG_AsVal_int(argv[5], NULL);
+                _v = SWIG_CheckState(res);
+              }
+              if (_v) {
+                {
+                  int res = SWIG_AsVal_float(argv[6], NULL);
                   _v = SWIG_CheckState(res);
                 }
                 if (_v) {
                   {
-                    int res = SWIG_AsVal_float(argv[7], NULL);
+                    int res = SWIG_AsVal_int(argv[7], NULL);
                     _v = SWIG_CheckState(res);
                   }
                   if (_v) {
                     {
-                      int res = SWIG_AsVal_int(argv[8], NULL);
+                      int res = SWIG_AsVal_float(argv[8], NULL);
+                      _v = SWIG_CheckState(res);
+                    }
+                    if (_v) {
+                      return _wrap_relaxed_martins__SWIG_1(self, args);
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  if (argc == 11) {
+    int _v;
+    {
+      int res = SWIG_AsVal_int(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      {
+        int res = SWIG_AsVal_int(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        void *vptr = 0;
+        int res = SWIG_ConvertPtr(argv[2], &vptr, SWIGTYPE_p_Graph, 0);
+        _v = SWIG_CheckState(res);
+        if (_v) {
+          {
+            int res = SWIG_AsVal_int(argv[3], NULL);
+            _v = SWIG_CheckState(res);
+          }
+          if (_v) {
+            {
+              int res = SWIG_AsVal_int(argv[4], NULL);
+              _v = SWIG_CheckState(res);
+            }
+            if (_v) {
+              {
+                int res = SWIG_AsVal_int(argv[5], NULL);
+                _v = SWIG_CheckState(res);
+              }
+              if (_v) {
+                {
+                  int res = SWIG_AsVal_float(argv[6], NULL);
+                  _v = SWIG_CheckState(res);
+                }
+                if (_v) {
+                  {
+                    int res = SWIG_AsVal_int(argv[7], NULL);
+                    _v = SWIG_CheckState(res);
+                  }
+                  if (_v) {
+                    {
+                      int res = SWIG_AsVal_float(argv[8], NULL);
                       _v = SWIG_CheckState(res);
                     }
                     if (_v) {
                       {
-                        int res = SWIG_AsVal_float(argv[9], NULL);
+                        int res = SWIG_AsVal_int(argv[9], NULL);
                         _v = SWIG_CheckState(res);
                       }
                       if (_v) {
-                        return _wrap_relaxed_martins__SWIG_2(self, args);
+                        {
+                          int res = SWIG_AsVal_float(argv[10], NULL);
+                          _v = SWIG_CheckState(res);
+                        }
+                        if (_v) {
+                          return _wrap_relaxed_martins__SWIG_2(self, args);
+                        }
                       }
                     }
                   }
@@ -11619,12 +11865,53 @@ SWIGINTERN PyObject *_wrap_relaxed_martins(PyObject *self, PyObject *args) {
 fail:
   SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'relaxed_martins'.\n"
     "  Possible C/C++ prototypes are:\n"
-    "    relaxed_martins(int,int,Graph &,int,Objective,float)\n"
-    "    relaxed_martins(int,int,Graph &,int,Objective,float,Objective,float)\n"
-    "    relaxed_martins(int,int,Graph &,int,Objective,float,Objective,float,Objective,float)\n");
+    "    relaxed_martins(int,int,Graph &,int,int,Objective,float)\n"
+    "    relaxed_martins(int,int,Graph &,int,int,Objective,float,Objective,float)\n"
+    "    relaxed_martins(int,int,Graph &,int,int,Objective,float,Objective,float,Objective,float)\n");
   return NULL;
 }
 
+
+SWIGINTERN PyObject *_wrap_new_No_traffic(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  No_traffic *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)":new_No_traffic")) SWIG_fail;
+  result = (No_traffic *)new No_traffic();
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_No_traffic, SWIG_POINTER_NEW |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_delete_No_traffic(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  No_traffic *arg1 = (No_traffic *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:delete_No_traffic",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_No_traffic, SWIG_POINTER_DISOWN |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_No_traffic" "', argument " "1"" of type '" "No_traffic *""'"); 
+  }
+  arg1 = reinterpret_cast< No_traffic * >(argp1);
+  delete arg1;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *No_traffic_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *obj;
+  if (!PyArg_ParseTuple(args,(char*)"O:swigregister", &obj)) return NULL;
+  SWIG_TypeNewClientData(SWIGTYPE_p_No_traffic, SWIG_NewClientData(obj));
+  return SWIG_Py_Void();
+}
 
 SWIGINTERN PyObject *_wrap_new_Duration__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
@@ -11694,7 +11981,58 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_Duration_append(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_Duration_append__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Duration *arg1 = (Duration *) 0 ;
+  float arg2 ;
+  float arg3 ;
+  char *arg4 = (char *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  float val2 ;
+  int ecode2 = 0 ;
+  float val3 ;
+  int ecode3 = 0 ;
+  int res4 ;
+  char *buf4 = 0 ;
+  int alloc4 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOO:Duration_append",&obj0,&obj1,&obj2,&obj3)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Duration, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Duration_append" "', argument " "1"" of type '" "Duration *""'"); 
+  }
+  arg1 = reinterpret_cast< Duration * >(argp1);
+  ecode2 = SWIG_AsVal_float(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "Duration_append" "', argument " "2"" of type '" "float""'");
+  } 
+  arg2 = static_cast< float >(val2);
+  ecode3 = SWIG_AsVal_float(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "Duration_append" "', argument " "3"" of type '" "float""'");
+  } 
+  arg3 = static_cast< float >(val3);
+  res4 = SWIG_AsCharPtrAndSize(obj3, &buf4, NULL, &alloc4);
+  if (!SWIG_IsOK(res4)) {
+    SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "Duration_append" "', argument " "4"" of type '" "char const *""'");
+  }
+  arg4 = reinterpret_cast< char * >(buf4);
+  (arg1)->append(arg2,arg3,(char const *)arg4);
+  resultobj = SWIG_Py_Void();
+  if (alloc4 == SWIG_NEWOBJ) delete[] buf4;
+  return resultobj;
+fail:
+  if (alloc4 == SWIG_NEWOBJ) delete[] buf4;
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Duration_append__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   Duration *arg1 = (Duration *) 0 ;
   float arg2 ;
@@ -11733,19 +12071,89 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_Duration_append(PyObject *self, PyObject *args) {
+  int argc;
+  PyObject *argv[5];
+  int ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = (int)PyObject_Length(args);
+  for (ii = 0; (ii < argc) && (ii < 4); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 3) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_Duration, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        int res = SWIG_AsVal_float(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        {
+          int res = SWIG_AsVal_float(argv[2], NULL);
+          _v = SWIG_CheckState(res);
+        }
+        if (_v) {
+          return _wrap_Duration_append__SWIG_1(self, args);
+        }
+      }
+    }
+  }
+  if (argc == 4) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_Duration, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        int res = SWIG_AsVal_float(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        {
+          int res = SWIG_AsVal_float(argv[2], NULL);
+          _v = SWIG_CheckState(res);
+        }
+        if (_v) {
+          int res = SWIG_AsCharPtrAndSize(argv[3], 0, NULL, 0);
+          _v = SWIG_CheckState(res);
+          if (_v) {
+            return _wrap_Duration_append__SWIG_0(self, args);
+          }
+        }
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'Duration_append'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    append(Duration *,float,float,char const *)\n"
+    "    append(Duration *,float,float)\n");
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_Duration___call__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   Duration *arg1 = (Duration *) 0 ;
   float arg2 ;
+  int arg3 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   float val2 ;
   int ecode2 = 0 ;
+  int val3 ;
+  int ecode3 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
   float result;
   
-  if (!PyArg_ParseTuple(args,(char *)"OO:Duration___call__",&obj0,&obj1)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOO:Duration___call__",&obj0,&obj1,&obj2)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Duration, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Duration___call__" "', argument " "1"" of type '" "Duration const *""'"); 
@@ -11756,7 +12164,12 @@ SWIGINTERN PyObject *_wrap_Duration___call__(PyObject *SWIGUNUSEDPARM(self), PyO
     SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "Duration___call__" "', argument " "2"" of type '" "float""'");
   } 
   arg2 = static_cast< float >(val2);
-  result = (float)((Duration const *)arg1)->operator ()(arg2);
+  ecode3 = SWIG_AsVal_int(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "Duration___call__" "', argument " "3"" of type '" "int""'");
+  } 
+  arg3 = static_cast< int >(val3);
+  result = (float)((Duration const *)arg1)->operator ()(arg2,arg3);
   resultobj = SWIG_From_float(static_cast< float >(result));
   return resultobj;
 fail:
@@ -12106,6 +12519,58 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_Edge_co2_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Edge *arg1 = (Edge *) 0 ;
+  float arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  float val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:Edge_co2_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Edge, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Edge_co2_set" "', argument " "1"" of type '" "Edge *""'"); 
+  }
+  arg1 = reinterpret_cast< Edge * >(argp1);
+  ecode2 = SWIG_AsVal_float(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "Edge_co2_set" "', argument " "2"" of type '" "float""'");
+  } 
+  arg2 = static_cast< float >(val2);
+  if (arg1) (arg1)->co2 = arg2;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Edge_co2_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Edge *arg1 = (Edge *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  float result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:Edge_co2_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Edge, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Edge_co2_get" "', argument " "1"" of type '" "Edge *""'"); 
+  }
+  arg1 = reinterpret_cast< Edge * >(argp1);
+  result = (float) ((arg1)->co2);
+  resultobj = SWIG_From_float(static_cast< float >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_Edge_duration_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   Edge *arg1 = (Edge *) 0 ;
@@ -12189,10 +12654,10 @@ SWIGINTERN PyObject *Edge_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject 
 SWIGINTERN PyObject *_wrap_Graph_g_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   Graph *arg1 = (Graph *) 0 ;
-  Graph_t arg2 ;
+  Graph_t *arg2 = (Graph_t *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  void *argp2 ;
+  void *argp2 = 0 ;
   int res2 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
@@ -12203,20 +12668,12 @@ SWIGINTERN PyObject *_wrap_Graph_g_set(PyObject *SWIGUNUSEDPARM(self), PyObject 
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Graph_g_set" "', argument " "1"" of type '" "Graph *""'"); 
   }
   arg1 = reinterpret_cast< Graph * >(argp1);
-  {
-    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_boost__adjacency_listT_boost__listS_boost__vecS_boost__directedS_Node_Edge_t,  0  | 0);
-    if (!SWIG_IsOK(res2)) {
-      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Graph_g_set" "', argument " "2"" of type '" "Graph_t""'"); 
-    }  
-    if (!argp2) {
-      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Graph_g_set" "', argument " "2"" of type '" "Graph_t""'");
-    } else {
-      Graph_t * temp = reinterpret_cast< Graph_t * >(argp2);
-      arg2 = *temp;
-      if (SWIG_IsNewObj(res2)) delete temp;
-    }
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_boost__adjacency_listT_boost__listS_boost__vecS_boost__directedS_Node_Edge_t, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Graph_g_set" "', argument " "2"" of type '" "Graph_t *""'"); 
   }
-  if (arg1) (arg1)->g = arg2;
+  arg2 = reinterpret_cast< Graph_t * >(argp2);
+  if (arg1) (arg1)->g = *arg2;
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -12230,7 +12687,7 @@ SWIGINTERN PyObject *_wrap_Graph_g_get(PyObject *SWIGUNUSEDPARM(self), PyObject 
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
-  Graph_t result;
+  Graph_t *result = 0 ;
   
   if (!PyArg_ParseTuple(args,(char *)"O:Graph_g_get",&obj0)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Graph, 0 |  0 );
@@ -12238,15 +12695,15 @@ SWIGINTERN PyObject *_wrap_Graph_g_get(PyObject *SWIGUNUSEDPARM(self), PyObject 
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Graph_g_get" "', argument " "1"" of type '" "Graph *""'"); 
   }
   arg1 = reinterpret_cast< Graph * >(argp1);
-  result =  ((arg1)->g);
-  resultobj = SWIG_NewPointerObj((new Graph_t(static_cast< const Graph_t& >(result))), SWIGTYPE_p_boost__adjacency_listT_boost__listS_boost__vecS_boost__directedS_Node_Edge_t, SWIG_POINTER_OWN |  0 );
+  result = (Graph_t *)& ((arg1)->g);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_boost__adjacency_listT_boost__listS_boost__vecS_boost__directedS_Node_Edge_t, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
 }
 
 
-SWIGINTERN PyObject *_wrap_new_Graph(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_new_Graph__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   int arg1 ;
   int val1 ;
@@ -12264,6 +12721,73 @@ SWIGINTERN PyObject *_wrap_new_Graph(PyObject *SWIGUNUSEDPARM(self), PyObject *a
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_Graph, SWIG_POINTER_NEW |  0 );
   return resultobj;
 fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_Graph__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::string *arg1 = 0 ;
+  int res1 = SWIG_OLDOBJ ;
+  PyObject * obj0 = 0 ;
+  Graph *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:new_Graph",&obj0)) SWIG_fail;
+  {
+    std::string *ptr = (std::string *)0;
+    res1 = SWIG_AsPtr_std_string(obj0, &ptr);
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "new_Graph" "', argument " "1"" of type '" "std::string const &""'"); 
+    }
+    if (!ptr) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_Graph" "', argument " "1"" of type '" "std::string const &""'"); 
+    }
+    arg1 = ptr;
+  }
+  result = (Graph *)new Graph((std::string const &)*arg1);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_Graph, SWIG_POINTER_NEW |  0 );
+  if (SWIG_IsNewObj(res1)) delete arg1;
+  return resultobj;
+fail:
+  if (SWIG_IsNewObj(res1)) delete arg1;
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_Graph(PyObject *self, PyObject *args) {
+  int argc;
+  PyObject *argv[2];
+  int ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = (int)PyObject_Length(args);
+  for (ii = 0; (ii < argc) && (ii < 1); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 1) {
+    int _v;
+    {
+      int res = SWIG_AsVal_int(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      return _wrap_new_Graph__SWIG_0(self, args);
+    }
+  }
+  if (argc == 1) {
+    int _v;
+    int res = SWIG_AsPtr_std_string(argv[0], (std::string**)(0));
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      return _wrap_new_Graph__SWIG_1(self, args);
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number of arguments for overloaded function 'new_Graph'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    Graph(int)\n"
+    "    Graph(std::string const &)\n");
   return NULL;
 }
 
@@ -12413,6 +12937,80 @@ SWIGINTERN PyObject *_wrap_Graph_dijkstra(PyObject *SWIGUNUSEDPARM(self), PyObje
   resultobj = SWIG_From_bool(static_cast< bool >(result));
   return resultobj;
 fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Graph_save(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Graph *arg1 = (Graph *) 0 ;
+  std::string *arg2 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int res2 = SWIG_OLDOBJ ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:Graph_save",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Graph, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Graph_save" "', argument " "1"" of type '" "Graph const *""'"); 
+  }
+  arg1 = reinterpret_cast< Graph * >(argp1);
+  {
+    std::string *ptr = (std::string *)0;
+    res2 = SWIG_AsPtr_std_string(obj1, &ptr);
+    if (!SWIG_IsOK(res2)) {
+      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Graph_save" "', argument " "2"" of type '" "std::string const &""'"); 
+    }
+    if (!ptr) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Graph_save" "', argument " "2"" of type '" "std::string const &""'"); 
+    }
+    arg2 = ptr;
+  }
+  ((Graph const *)arg1)->save((std::string const &)*arg2);
+  resultobj = SWIG_Py_Void();
+  if (SWIG_IsNewObj(res2)) delete arg2;
+  return resultobj;
+fail:
+  if (SWIG_IsNewObj(res2)) delete arg2;
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Graph_load(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Graph *arg1 = (Graph *) 0 ;
+  std::string *arg2 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int res2 = SWIG_OLDOBJ ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:Graph_load",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Graph, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Graph_load" "', argument " "1"" of type '" "Graph *""'"); 
+  }
+  arg1 = reinterpret_cast< Graph * >(argp1);
+  {
+    std::string *ptr = (std::string *)0;
+    res2 = SWIG_AsPtr_std_string(obj1, &ptr);
+    if (!SWIG_IsOK(res2)) {
+      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Graph_load" "', argument " "2"" of type '" "std::string const &""'"); 
+    }
+    if (!ptr) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Graph_load" "', argument " "2"" of type '" "std::string const &""'"); 
+    }
+    arg2 = ptr;
+  }
+  (arg1)->load((std::string const &)*arg2);
+  resultobj = SWIG_Py_Void();
+  if (SWIG_IsNewObj(res2)) delete arg2;
+  return resultobj;
+fail:
+  if (SWIG_IsNewObj(res2)) delete arg2;
   return NULL;
 }
 
@@ -12592,6 +13190,9 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"Path_swigregister", Path_swigregister, METH_VARARGS, NULL},
 	 { (char *)"martins", _wrap_martins, METH_VARARGS, NULL},
 	 { (char *)"relaxed_martins", _wrap_relaxed_martins, METH_VARARGS, NULL},
+	 { (char *)"new_No_traffic", _wrap_new_No_traffic, METH_VARARGS, NULL},
+	 { (char *)"delete_No_traffic", _wrap_delete_No_traffic, METH_VARARGS, NULL},
+	 { (char *)"No_traffic_swigregister", No_traffic_swigregister, METH_VARARGS, NULL},
 	 { (char *)"new_Duration", _wrap_new_Duration, METH_VARARGS, NULL},
 	 { (char *)"Duration_append", _wrap_Duration_append, METH_VARARGS, NULL},
 	 { (char *)"Duration___call__", _wrap_Duration___call__, METH_VARARGS, NULL},
@@ -12611,6 +13212,8 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"Edge_cost_get", _wrap_Edge_cost_get, METH_VARARGS, NULL},
 	 { (char *)"Edge_line_change_set", _wrap_Edge_line_change_set, METH_VARARGS, NULL},
 	 { (char *)"Edge_line_change_get", _wrap_Edge_line_change_get, METH_VARARGS, NULL},
+	 { (char *)"Edge_co2_set", _wrap_Edge_co2_set, METH_VARARGS, NULL},
+	 { (char *)"Edge_co2_get", _wrap_Edge_co2_get, METH_VARARGS, NULL},
 	 { (char *)"Edge_duration_set", _wrap_Edge_duration_set, METH_VARARGS, NULL},
 	 { (char *)"Edge_duration_get", _wrap_Edge_duration_get, METH_VARARGS, NULL},
 	 { (char *)"delete_Edge", _wrap_delete_Edge, METH_VARARGS, NULL},
@@ -12621,6 +13224,8 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"Graph_add_edge", _wrap_Graph_add_edge, METH_VARARGS, NULL},
 	 { (char *)"Graph_public_transport_edge", _wrap_Graph_public_transport_edge, METH_VARARGS, NULL},
 	 { (char *)"Graph_dijkstra", _wrap_Graph_dijkstra, METH_VARARGS, NULL},
+	 { (char *)"Graph_save", _wrap_Graph_save, METH_VARARGS, NULL},
+	 { (char *)"Graph_load", _wrap_Graph_load, METH_VARARGS, NULL},
 	 { (char *)"delete_Graph", _wrap_delete_Graph, METH_VARARGS, NULL},
 	 { (char *)"Graph_swigregister", Graph_swigregister, METH_VARARGS, NULL},
 	 { NULL, NULL, 0, NULL }
@@ -12633,15 +13238,18 @@ static swig_type_info _swigt__p_Duration = {"_p_Duration", "Duration *", 0, 0, (
 static swig_type_info _swigt__p_Edge = {"_p_Edge", "Edge *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_Graph = {"_p_Graph", "Graph *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_Mode = {"_p_Mode", "enum Mode *|Mode *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_No_traffic = {"_p_No_traffic", "No_traffic *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_Node = {"_p_Node", "Node *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_Path = {"_p_Path", "Path *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_allocator_type = {"_p_allocator_type", "allocator_type *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_boost__adjacency_listT_boost__listS_boost__vecS_boost__directedS_Node_Edge_t = {"_p_boost__adjacency_listT_boost__listS_boost__vecS_boost__directedS_Node_Edge_t", "Graph_t *|boost::adjacency_list< boost::listS,boost::vecS,boost::directedS,Node,Edge > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_boost__graph_traitsT_Graph_t_t__edge_descriptor = {"_p_boost__graph_traitsT_Graph_t_t__edge_descriptor", "boost::graph_traits< Graph_t >::edge_descriptor *|edge_t *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_boost__tupleT_float_float_std__bitsetT_128_t_t = {"_p_boost__tupleT_float_float_std__bitsetT_128_t_t", "boost::tuple< float,float,std::bitset< 128 > > *|Time *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_char = {"_p_char", "char *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_difference_type = {"_p_difference_type", "difference_type *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_p_PyObject = {"_p_p_PyObject", "PyObject **", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_size_type = {"_p_size_type", "size_type *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_std__bitsetT_128_t = {"_p_std__bitsetT_128_t", "std::bitset< 128 > *|Services *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__invalid_argument = {"_p_std__invalid_argument", "std::invalid_argument *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__listT_int_std__allocatorT_int_t_t = {"_p_std__listT_int_std__allocatorT_int_t_t", "std::list< int,std::allocator< int > > *|std::list< int > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__listT_int_std__allocatorT_int_t_t__allocator_type = {"_p_std__listT_int_std__allocatorT_int_t_t__allocator_type", "std::list< int >::allocator_type *|std::allocator< int > *", 0, 0, (void*)0, 0};
@@ -12658,15 +13266,18 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_Edge,
   &_swigt__p_Graph,
   &_swigt__p_Mode,
+  &_swigt__p_No_traffic,
   &_swigt__p_Node,
   &_swigt__p_Path,
   &_swigt__p_allocator_type,
   &_swigt__p_boost__adjacency_listT_boost__listS_boost__vecS_boost__directedS_Node_Edge_t,
   &_swigt__p_boost__graph_traitsT_Graph_t_t__edge_descriptor,
+  &_swigt__p_boost__tupleT_float_float_std__bitsetT_128_t_t,
   &_swigt__p_char,
   &_swigt__p_difference_type,
   &_swigt__p_p_PyObject,
   &_swigt__p_size_type,
+  &_swigt__p_std__bitsetT_128_t,
   &_swigt__p_std__invalid_argument,
   &_swigt__p_std__listT_int_std__allocatorT_int_t_t,
   &_swigt__p_std__listT_int_std__allocatorT_int_t_t__allocator_type,
@@ -12683,15 +13294,18 @@ static swig_cast_info _swigc__p_Duration[] = {  {&_swigt__p_Duration, 0, 0, 0},{
 static swig_cast_info _swigc__p_Edge[] = {  {&_swigt__p_Edge, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_Graph[] = {  {&_swigt__p_Graph, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_Mode[] = {  {&_swigt__p_Mode, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_No_traffic[] = {  {&_swigt__p_No_traffic, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_Node[] = {  {&_swigt__p_Node, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_Path[] = {  {&_swigt__p_Path, 0, 0, 0},  {&_swigt__p_std__vectorT_Path_std__allocatorT_Path_t_t__value_type, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_allocator_type[] = {  {&_swigt__p_allocator_type, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_boost__adjacency_listT_boost__listS_boost__vecS_boost__directedS_Node_Edge_t[] = {  {&_swigt__p_boost__adjacency_listT_boost__listS_boost__vecS_boost__directedS_Node_Edge_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_boost__graph_traitsT_Graph_t_t__edge_descriptor[] = {  {&_swigt__p_boost__graph_traitsT_Graph_t_t__edge_descriptor, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_boost__tupleT_float_float_std__bitsetT_128_t_t[] = {  {&_swigt__p_boost__tupleT_float_float_std__bitsetT_128_t_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_char[] = {  {&_swigt__p_char, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_difference_type[] = {  {&_swigt__p_difference_type, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_p_PyObject[] = {  {&_swigt__p_p_PyObject, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_size_type[] = {  {&_swigt__p_size_type, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_std__bitsetT_128_t[] = {  {&_swigt__p_std__bitsetT_128_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__invalid_argument[] = {  {&_swigt__p_std__invalid_argument, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__listT_int_std__allocatorT_int_t_t[] = {  {&_swigt__p_std__listT_int_std__allocatorT_int_t_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__listT_int_std__allocatorT_int_t_t__allocator_type[] = {  {&_swigt__p_std__listT_int_std__allocatorT_int_t_t__allocator_type, 0, 0, 0},{0, 0, 0, 0}};
@@ -12708,15 +13322,18 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_Edge,
   _swigc__p_Graph,
   _swigc__p_Mode,
+  _swigc__p_No_traffic,
   _swigc__p_Node,
   _swigc__p_Path,
   _swigc__p_allocator_type,
   _swigc__p_boost__adjacency_listT_boost__listS_boost__vecS_boost__directedS_Node_Edge_t,
   _swigc__p_boost__graph_traitsT_Graph_t_t__edge_descriptor,
+  _swigc__p_boost__tupleT_float_float_std__bitsetT_128_t_t,
   _swigc__p_char,
   _swigc__p_difference_type,
   _swigc__p_p_PyObject,
   _swigc__p_size_type,
+  _swigc__p_std__bitsetT_128_t,
   _swigc__p_std__invalid_argument,
   _swigc__p_std__listT_int_std__allocatorT_int_t_t,
   _swigc__p_std__listT_int_std__allocatorT_int_t_t__allocator_type,
@@ -13325,6 +13942,7 @@ SWIG_init(void) {
   SWIG_Python_SetConstant(d, "mode_change",SWIG_From_int(static_cast< int >(mode_change)));
   SWIG_Python_SetConstant(d, "cost",SWIG_From_int(static_cast< int >(cost)));
   SWIG_Python_SetConstant(d, "line_change",SWIG_From_int(static_cast< int >(line_change)));
+  SWIG_Python_SetConstant(d, "co2",SWIG_From_int(static_cast< int >(co2)));
   SWIG_Python_SetConstant(d, "Foot",SWIG_From_int(static_cast< int >(Foot)));
   SWIG_Python_SetConstant(d, "Bike",SWIG_From_int(static_cast< int >(Bike)));
   SWIG_Python_SetConstant(d, "Car",SWIG_From_int(static_cast< int >(Car)));
