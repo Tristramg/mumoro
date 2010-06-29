@@ -1,6 +1,7 @@
 #include "query.h"
 #include <functional>
 using namespace boost::multi_index;
+int Graph::comps = 0;
 
 // Décrit une étiquette (label) utilisée pendant l'exploration
 // Cela représente un état de l'exploration et un chemin possible
@@ -105,6 +106,7 @@ bool is_dominated_by_any(const Container & c, const Label & l)
 bool martins(Graph::node_t start_node, Graph::node_t dest_node, const Graph & g)
 {
     my_queue::Type Q;
+    Graph::comps = 0;
     std::vector< std::deque<Label> > P(num_vertices(g.graph));
 
     Label start;
@@ -149,7 +151,7 @@ bool martins(Graph::node_t start_node, Graph::node_t dest_node, const Graph & g)
         }
     }
 
-    std::cout << "Labels visited: " << visited << ", solutions found: " << P[dest_node].size() << std::endl;
+    std::cout << "Labels visited: " << visited << ", solutions found: " << P[dest_node].size() << ", dominations tests: " << Graph::comps << std::endl;
  /*   BOOST_FOREACH(Label l, P[dest_node])
     {
         std::cout << "[" << l.cost[0] << ";" << l.cost[1] << "]" << std::endl;
@@ -165,6 +167,7 @@ bool martins(Graph::node_t start_node, Graph::node_t dest_node, const Graph & g)
 // - s'il n'est dominé par aucun label dans la liste réalisable, le rajouter
 bool ch_martins(Graph::node_t start_node, Graph::node_t dest_node, const Graph & g)
 {  
+    Graph::comps = 0;
     typedef Graph::node_t node_t;
     typedef Graph::edge_t edge_t;
 
@@ -299,7 +302,7 @@ bool ch_martins(Graph::node_t start_node, Graph::node_t dest_node, const Graph &
         }
     }
 
-    std::cout << "Labels visited: " << visited << ", solutions found: " << found.size() << std::endl;
+    std::cout << "Labels visited: " << visited << ", solutions found: " << found.size() << ", domination tests: " << Graph::comps << std::endl;
     /*   BOOST_FOREACH(Label l, found)
          {
          std::cout << "[" << l.cost[0] << ";" << l.cost[1] << "]" << std::endl;

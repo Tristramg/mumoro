@@ -65,7 +65,7 @@ void bench(Graph & g, Graph & gc)
 
 void martins_bench(Graph & g, Graph & gc)
 {
-    int runs = 10;
+    int runs = 100;
     std::vector<int> starts(runs);
     std::vector<int> dests(runs);
     for(int i=0; i < runs; i++)
@@ -77,7 +77,7 @@ void martins_bench(Graph & g, Graph & gc)
         boost::progress_timer t;
         for(int i=0; i < runs; i++)
         {
-            //martins(starts[i], dests[i], g);
+            martins(starts[i], dests[i], g);
         }
     }
 

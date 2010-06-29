@@ -29,9 +29,11 @@ struct Graph
     static const int objectives = 2;
     static const int N = 2;
     typedef array<float, objectives> cost_t;
+    static int comps;
 
     bool static dominates(const cost_t & a, const cost_t & b)
     {
+        comps++;
         for(int i=0; i < N; i++)
         {
             if(a[i] > b[i])
