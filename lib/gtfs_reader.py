@@ -1,34 +1,14 @@
-import sqlite3
+from datastructures import *
 import sys
 import transitfeed
 import datetime
 from optparse import OptionParser
 
-def convert(gtfs, sqlite, network_name, start_date, end_date):
+def convert(filename, nodes_table, edges_table, start_date, end_date):
     s = transitfeed.Schedule()
     s.Load(gtfs)
-    sql = sqlite3.connect(sqlite)
-    sql.executescript('''CREATE TABLE IF NOT EXISTS nodes(
-                    id INTEGER PRIMARY KEY,
-                    original_id TEXT,
-                    lon REAL,
-                    lat REAL,
-                    network TEXT,
-                    route TEXT
-                );
-                CREATE INDEX IF NOT EXISTS lon_lat_idx ON nodes(lon, lat);
-                CREATE INDEX IF NOT EXISTS id_idx ON nodes(id);
-                CREATE INDEX IF NOT EXISTS id_idx ON nodes(original_id);
-
-                CREATE TABLE IF NOT EXISTS edges (
-                    id INTEGER PRIMARY KEY,
-                    source INTEGER,
-                    target INTEGER,
-                    start_secs INTEGER,
-                    arrival_secs INTEGER,
-                    services TEXT
-                 );
-    ''')
+    
+    
 
     #Start with mapping (route_id, stop_id) to an int
     map = {}
@@ -72,14 +52,3 @@ def convert(gtfs, sqlite, network_name, start_date, end_date):
     sql.commit()
 
 
-if __name__ == '__main__':
-    parser = OptionParser("Usage: %prog gtfs_file.zip database_name network_name start_date end_date")
-    (options, args) = parser.parse_args()
-    if len(args) != 5:
-        sys.stderr.write("Wrong number of arguments. Expected 5, got {0}\n".format(len(args)))
-        sys.exit(1)
-
-    start = datetime.datetime.strptime(args[3], "%Y%m%d")
-    end = datetime.datetime.strptime(args[4], "%Y%m%d")
-
-    convert(args[0], args[1], args[2], start, end)
