@@ -1,55 +1,66 @@
 import osm4routing
-import gtfs_reader
-import uuid
+from lib import gtfs_reader
 from lib.datastructures import *
 from sqlalchemy import *
-from sqlalchemy.orm import mapper, sessionmaker
+from sqlalchemy.orm import mapper, sessionmaker, clear_mappers
 
-def import_osm(filename, db_string, nodes_table, edges_table):
-    osm4routing.parse(filename, db_string, nodes_table, edges_table) 
+class Importer():
+    def __init__(self, db_string):
+        self.db_string = db_string
+        engine = create_engine(db_string)
+        self.metadata = MetaData(bind = engine)
 
+        self.mumoro_metadata = Table('metadata', self.metadata,
+                Column('id', Integer, primary_key=True),
+                Column('node_or_edge', String),
+                Column('name', String),
+                Column('origin', String)
+                )
+    
+        self.metadata.create_all()
+        mapper(Metadata, self.mumoro_metadata)
+
+        Session = sessionmaker(bind=engine)
+        self.session = Session()
+
+    def init_mappers(self):
+        clear_mappers()
+        mapper(Metadata, self.mumoro_metadata)
+
+
+
+    def import_osm(self, filename):
+        nodes = Metadata("OSM nodes", "Nodes", filename)
+        edges = Metadata("OSM edges", "Edges", filename)
+        self.session.add(nodes)
+        self.session.add(edges)
+        self.session.commit()
+        osm4routing.parse(filename, self.db_string, str(nodes.id), str(edges.id)) 
+        self.init_mappers()
+
+
+    def import_gtfs(self, filename, start_date, end_date, network_name = "GTFS"):
+        nodes2 = Metadata(network_name, "Nodes", filename)
+        self.session.add(nodes2)
+        self.session.commit()
+        mapper(PT_Node, create_pt_nodes_table(str(nodes2.id), self.metadata))
+        edges2 = Metadata(network_name, "Edges", filename)
+        self.session.add(edges2)
+        self.session.commit()
+        mapper(PT_Edge, create_pt_edges_table(str(edges2.id), self.metadata))
+        self.session.commit()
+        gtfs_reader.convert(filename, self.session, start_date, end_date)
+        self.init_mappers()
+    
 
 if __name__ == "__main__":
     db_string = 'sqlite:///blah.db'
-    engine = create_engine(db_string)
-    metadata = MetaData(bind = engine)
-
-    mumoro_metadata = Table('metadata', metadata,
-            Column('id', Integer, primary_key=True),
-            Column('name', String),
-            Column('origin', String)
-            )
-    
-    metadata.create_all()
-    mapper(Metadata, mumoro_metadata)
-
-    Session = sessionmaker(bind=engine)
-    session = Session()
-
     osm_file = "rennes.osm.bz2"
-    nodes = Metadata("OSM nodes", osm_file)
-    edges = Metadata("OSM edges", osm_file)
-    session.add(nodes)
-    session.add(edges)
-    session.commit()
-    import_osm("rennes.osm.bz2", db_string, str(nodes.id), str(edges.id))
-
     bart_file = "bart.zip"
     start_date = "20100701"
     end_date = "20101031"
-    nodes2 = Metadata("Bart", bart_file)
-    edges2 = Metadata("Bart", bart_file)
-    session.add(nodes2)
-    session.add(edges2)
-    session.commit()
-#    gtfs_reader.convert(bart_file, str(nodes2.id), str(edges2.id), start_date, end_date)
-
-#    n1 = create_nodes_table('nodes', metadata)
-#    n2 = create_nodes_table('nodes2', metadata)
-#    e1 = create_edges_table('edges', metadata)
-#    e2 = create_edges_table('edges2', metadata)
-#    metadata.create_all()
-#    mapper(Node, n1)
-#    session.add(Node("blah", 1, 2))
-#    session.commit()
+    i = Importer(db_string)
+    i.import_osm(osm_file)
+    i.import_gtfs(bart_file, start_date, end_date, "BART")
+    i.import_gtfs(bart_file, start_date, end_date, "BART2")
 

@@ -1,6 +1,9 @@
+from sqlalchemy import *
+
 class Metadata(object):
-    def __init__(self, name, origin):
+    def __init__(self, name, node_or_edge, origin):
         self.name = name
+        self.node_or_edge = node_or_edge
         self.origin = origin
 
 class Node(object):
@@ -11,8 +14,8 @@ class Node(object):
         self.the_geom = the_geom
 
 class PT_Node(object):
-    def __init__(self, original_id, lon, lat, route, the_geom = ""):
-        self.orginal_id = id
+    def __init__(self, id, lon, lat, route, the_geom = ""):
+        self.original_id = id
         self.lon = lon
         self.lat = lat
         self.route = route
@@ -32,13 +35,13 @@ class Edge(object):
         self.the_geom = the_geom
 
 class PT_Edge(object):
-    def __init__(self, id, source, target, length, start_secs, arrival_secs, mode):
-        self.original_id = id
+    def __init__(self, source, target, length, start_secs, arrival_secs, services, mode):
         self.source = source
         self.target = target
         self.length = length
         self.start_secs = start_secs
         self.arrival_secs = arrival_secs
+        self.services = services
         self.mode = mode
 
 def create_nodes_table(id, metadata):
@@ -50,6 +53,7 @@ def create_nodes_table(id, metadata):
             Column('lat', Float, index = True),
             Column('the_geom', String),
             )
+    metadata.create_all()
     return table
 
 def create_pt_nodes_table(id, metadata):
@@ -61,6 +65,7 @@ def create_pt_nodes_table(id, metadata):
             Column('the_geom', String),
             Column('route', String)
             )
+    metadata.create_all()
     return table
 
 def create_edges_table(id, metadata):
@@ -76,6 +81,7 @@ def create_edges_table(id, metadata):
             Column('foot', Integer),
             Column('the_geom', String),
             )
+    metadata.create_all()
     return table
             
 def create_pt_edges_table(id, metadata):
@@ -87,8 +93,9 @@ def create_pt_edges_table(id, metadata):
             Column('start_secs', Integer),
             Column('arrival_secs', Integer),
             Column('services', String),
-            Column('mode', Integer)
+            Column('mode', Integer),
             )
+    metadata.create_all()
     return table
 
 

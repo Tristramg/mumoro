@@ -3,25 +3,38 @@ import sys
 import transitfeed
 import datetime
 from optparse import OptionParser
+from sqlalchemy.orm import mapper, sessionmaker
 
-def convert(filename, nodes_table, edges_table, start_date, end_date):
+def distance(c1, c2):
+    try:
+        delta = c2[0] - c1[0]
+        a = math.radians(c1[1])
+        b = math.radians(c2[1])
+        C = math.radians(delta)
+        x = math.sin(a) * math.sin(b) + math.cos(a) * math.cos(b) * math.cos(C)
+        distance = math.acos(x) # in radians
+        distance  = math.degrees(distance) # in degrees
+        distance  = distance * 60 # 60 nautical miles / lat degree
+        distance = distance * 1852 # conversion to meters
+        return distance;
+    except:
+        return 0
+
+
+def convert(filename, session, start_date, end_date):
+    map = {}
     s = transitfeed.Schedule()
-    s.Load(gtfs)
+    s.Load(filename)
     
+    start_date = datetime.datetime.strptime(start_date, "%Y%m%d")
+    end_date = datetime.datetime.strptime(end_date, "%Y%m%d")
     
 
     #Start with mapping (route_id, stop_id) to an int
-    map = {}
-    c = sql.cursor()
-    c.execute("SELECT MAX(id) from nodes")
-    row = c.fetchone()
-    if (row != None and row[0] != None):
-        count = int(row[0]) + 1
-    else:
-        count = 0
-    query_nodes = "INSERT INTO nodes (id, original_id, lon, lat, network, route) VALUES(?, ?, ?, ?, ?, ?)"
-    query_edges = "INSERT INTO edges (source, target, start_secs, arrival_secs, services) VALUES(?, ?, ?, ?, ?)" 
+    count = 0
+
     for trip in s.GetTripList():
+        mode = s.GetRoute(trip.route_id).route_type
         service_period = s.GetServicePeriod(trip.service_id)
         services = ""
         delta = datetime.timedelta(days=1)
@@ -41,14 +54,18 @@ def convert(filename, nodes_table, edges_table, start_date, end_date):
         for stop in trip.GetStopTimes():
             if not map[trip.route_id].has_key(stop.stop_id):
                 map[trip.route_id][stop.stop_id] = count
-                sql.execute(query_nodes, (count, stop.stop_id, stop.stop.stop_lon, stop.stop.stop_lat, network_name, trip.route_id))
+                session.add(PT_Node(stop.stop_id, stop.stop.stop_lon, stop.stop.stop_lat, trip.route_id))
                 count +=1
             current_stop = map[trip.route_id][stop.stop_id]
+            current_node = session.query(PT_Node).filter_by(original_id = stop.stop_id).first()
             if prev_stop != None:
-                sql.execute(query_edges, (prev_stop, current_stop, prev_time, stop.arrival_secs, services))
+                length = distance( (current_node.lon, current_node.lat), (prev_node.lon, prev_node.lat))
+                session.add(PT_Edge(prev_stop, current_stop, length * 1.1, prev_time, stop.arrival_secs, services, mode))
+
+            prev_node = current_node 
             prev_stop = current_stop
             prev_time = stop.departure_secs
 
-    sql.commit()
+    session.commit()
 
 
