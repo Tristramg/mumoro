@@ -1,13 +1,13 @@
+from lib.datastructures import *
 import core.mumoro as mumoro
-#import psycopg2 as pg
-import sqlite3
-import elevation
-import math
 
 from sqlalchemy import *
 from sqlalchemy.orm import *
  
 class NotAccessible(Exception):
+    pass
+
+class DataIncoherence(Exception):
     pass
  
 def duration(length, property, mode):
@@ -40,92 +40,43 @@ def duration(length, property, mode):
         raise NotAccessible()
  
 class BaseLayer:
-    class Node(object):
-        def __init__(self, id, lon, lat, the_geom):
-            self.id = id
-            self.lon = lon
-            self.lat = lat
-            self.the_geom = the_geom
-   
-        def __repr__(self):
-            return "<Node('%s','%s', '%s', '%s')>" % (self.id, self.lon, self.lat, self.the_geom)
-
-    class Edge(object):
-        def __init__(self, id, source, target, length, car, car_rev, bike, bike_rev, foot, the_geom):
-            self.id = id
-            self.source = source
-            self.target = target
-            self.length = length
-            self.car = car
-            self.car_rev = car_rev
-            self.bike = bike
-            self.bike_rev = bike_rev
-            self.foot = foot
-            self.the_geom = the_geom
-
-        def __repr__(self):
-            return "<Edge('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')>" % (self.id, self.source, self.target, self.length,self.car, self.car_rev, self.bike, self.bike_rev,self.foot, self.the_geom)
-
-    def __init__(self):
-        self.engine = create_engine('sqlite:///db_test.db', echo=True)
-        self.metadata = MetaData()
-        mapper(Node, self.nodes_table)
-        mapper(Edge, self.edges_table)
-        
 
     def map(self, o_id):
-        Session = sessionmaker(bind=self.engine)
-        self.session = Session()        
-        #c = self.nodes_db.cursor()
-        #c.execute('SELECT id FROM nodes WHERE original_id=?', (original_id,))
-        #row = c.fetchone()
-        try:        
-                row = self.session.query(Node.id).filter_by(original_id=o_id).one()
-                return int(row[0]) + self.offset   
-        except NoResultFound, e:
-                print "Unable to find id {0}".format(o_id)
+        result = self.nodes_table.select(self.nodes_table.c.original_id==o_id).execute().first()
+        if result:
+            return result.id
+        else:
+            print "Unable to find id {0}".format(o_id)
+            raise DataIncoherence()
         
  
     def match(self, ln, lt):
         epsilon = 0.002
-        Session = sessionmaker(bind=self.engine)
-        self.session = Session()        
-        #query = "SELECT id FROM nodes WHERE lon >= ? AND lon <= ? AND lat >= ? AND lat <= ? ORDER BY (lon-?)*(lon-?) + (lat-?) * (lat-?) LIMIT 1"
-        #cur = self.nodes_db.cursor()
-        #cur.execute(query, (float(lon) - epsilon, float(lon) + epsilon, float(lat) - epsilon, float(lat) + epsilon, lon, lon, lat, lat))
-        #row = cur.fetchone()
-        try:        
-                row = self.session.query(Node.id).filter_by(lon>=float(ln)-epsilon).filter_by(lon<=float(ln)+epsilon).filter_by(lat>=float(lt)-epsilon).filter_by(lat<=float(lt)+epsilon).order_by((Node.lon-ln)*(Node.lon-ln)+(Node.lat-lt)*(Node.lat-lt)).one()[1]
-                return int(row[0]) + self.offset   
-        except NoResultFound, e:
-                print "Unable to find id {0}".format(o_id)        
+        ln = float(ln)
+        lt = float(lt)
+        res = self.nodes_table.select(
+                (self.nodes_table.c.lon >= (ln - epsilon)) &
+                (self.nodes_table.c.lon <= (ln + epsilon)) &
+                (self.nodes_table.c.lat >= (lt - epsilon)) &
+                (self.nodes_table.c.lat <= (lt + epsilon)),
+                order_by = ((self.nodes_table.c.lon - ln) * (self.nodes_table.c.lon -ln)) + ((self.nodes_table.c.lat - lt) * (self.nodes_table.c.lat - lt))
+                ).execute().first()
+            
+        if res:
+            return res.id + self.offset
+        else:
+            print "Unable to find id {0}".format(o_id)        
 
  
     def coordinates(self, nd):
-        #query = "SELECT lon, lat, original_id, network FROM nodes WHERE id=?"
-        #cur = self.nodes_db.cursor()
-        #cur.execute(query, (node - self.offset,))
-        #row = cur.fetchone()
-        Session = sessionmaker(bind=self.engine)
-        self.session = Session()
-        res = self.session.query(Node.lon,Node.lat,Node.original_id).filter_by(Node.id=nd)    
-        if res.network == "osm":
-            network = self.name
-        else:
-            network = res.network      
+        res = self.nodes_table.select(self.nodes_table.c.id == nd).execute().first()    
         if res:
-            return (res.lon, res.lat, res.original_id, network)
+            return (res.lon, res.lat, res.original_id, self.name)
         else:
             print "Unknow node {0} on layer {1}".format(nd, self.name)
  
     def nodes(self):
-        #query = "SELECT id, original_id, lon, lat FROM nodes"
-        #cur = self.nodes_db.cursor()
-        #cur.execute(query)
-        Session = sessionmaker(bind=self.engine)
-        self.session = Session()
-               
-        for row in self.session.query(Node.id,Node.original_id,Node.lon,Node.lat):
+        for row in self.nodes_table.select().execute():
             yield {
                     'id': int(row.id) + self.offset,
                     'original_id': row.original_id,
@@ -135,76 +86,42 @@ class BaseLayer:
  
  
 class Layer(BaseLayer):
-    def __init__(self, name, mode, data, c):
+    def __init__(self, name, mode, data, metadata):
         self.mode = mode
         self.data = data
         self.name = name
-        	
-        #try:
-        #    if( c.host != "" and c.dbpassword != ""):
-        #        self.conn = pg.connect("dbname=" + c.dbname + " user=" + c.dbuser  + " password=" + c.dbpassword + " host=" + c.host)
-        #    else:
-        #        self.conn = pg.connect("dbname=" + c.dbname + " user=" + c.dbuser)
-        #except:
-        #    print "I am unable to connect to the database"
-        self.nodes_offset = 0
-	eld = elevation.ElevationData("Eurasia")
-	self.nodes_db = sqlite3.connect(':memory:', check_same_thread = False)
-	self.nodes_db.executescript('''
-CREATE TABLE nodes(
-original_id INTEGER PRIMARY KEY,
-id INTEGER,
-lon REAL,
-lat REAL,
-alt REAL,
-network TEXT
-);
-CREATE INDEX lon_lat_idx ON nodes(lon, lat);
-CREATE INDEX id_idx ON nodes(id);
-CREATE INDEX original_idx ON nodes(original_id);
-''')
-        nodes_cur = self.conn.cursor()
-        ##nodes_cur.execute('SELECT id, st_x(the_geom) as lon, st_y(the_geom) as lat FROM {0}'.format(data['nodes']))
-        nodes_cur.execute('SELECT id, lon, lat FROM {0}'.format(data['nodes']))
-        self.count = 0
-        for n in nodes_cur:
-            alt = eld.altitude(n[2], n[1])
-            self.nodes_db.execute('INSERT into nodes (id, original_id, lon, lat, network, alt) VALUES(?, ?, ?, ?, "osm", ?)', (self.count, n[0], n[1], n[2], alt))
-            self.count += 1
-        print "Layer {0} loaded with {1} nodes".format(name, self.count)
+        self.metadata = metadata
+        self.nodes_table = Table(data['nodes'], metadata, autoload = True)
+        self.edges_table = Table(data['edges'], metadata, autoload = True)
+        self.count = select([func.count(self.nodes_table.c.id)]).execute().first()[0]
+
                
     def edges(self):
-        nodes_cur = self.nodes_db.cursor()
-        edges_cur = self.conn.cursor()
-        edges_cur.execute('SELECT source, target, length, car, car_rev, bike, bike_rev, foot from {0}'.format(self.data['edges']))
-        for edge in edges_cur:
-            nodes_cur.execute('SELECT alt FROM nodes WHERE original_id=?', (edge[0],))
-            source_alt = int(nodes_cur.fetchone()[0])
-            nodes_cur.execute('SELECT alt FROM nodes WHERE original_id=?', (edge[1],))
-            target_alt = int(nodes_cur.fetchone()[0])
+        for edge in self.edges_table.select().execute():
             e = mumoro.Edge()
-            e.length = float(edge[2])
+            e.length = edge.length
             if self.mode == mumoro.Foot:
-                property = int(edge[7])
-                property_rev = int(edge[7])
+                property = edge.foot
+                property_rev = edge.foot
             elif self.mode == mumoro.Bike:
-                property = int(edge[5])
-                property_rev = int(edge[6])
+                property = edge.bike
+                property_rev = edge.bike_rev
             elif self.mode == mumoro.Car:
-                property = int(edge[3])
-                property_rev = int(edge[4])
+                property = edge.car
+                property_rev = edge.car_rev
             else:
                 property = 0
                 property_rev = 0
  
-            node1 = self.map(edge[0])
-            node2 = self.map(edge[1])
+            node1 = self.map(edge.source)
+            node2 = self.map(edge.target)
  
             try:
                 dur = duration(e.length, property, self.mode)
                 e.duration = mumoro.Duration(dur)
-                if self.mode == mumoro.Bike:
-                    e.elevation = max(0, target_alt - source_alt)
+                e.elevation = 0
+              #  if self.mode == mumoro.Bike:
+              #      e.elevation = max(0, target_alt - source_alt)
                 yield {
                     'source': node1,
                     'target': node2,
@@ -216,8 +133,9 @@ CREATE INDEX original_idx ON nodes(original_id);
             try:
                 dur = duration(e.length, property_rev, self.mode)
                 e.duration = mumoro.Duration(dur)
-                if self.mode == mumoro.Bike:
-                    e.elevation = max(0, source_alt - target_alt)
+                e.elevation = 0
+#                if self.mode == mumoro.Bike:
+#                    e.elevation = max(0, source_alt - target_alt)
                 yield {
                     'source': node2,
                     'target': node1,
@@ -291,7 +209,7 @@ class MultimodalGraph:
                     else:
                         if self.graph.public_transport_edge(e['source'], e['target'], e['departure'], e['arrival']):
                             count += 1
-            print "On layer {0}, {1} edges".format(l, count)
+                print "On layer {0}, {1} edges, {2} nodes".format(l.name, count, l.count)
             print "The multimodal graph has been built and has {0} nodes and {1} edges".format(nb_nodes, count)
  
     def save(self, filename):
@@ -319,40 +237,28 @@ class MultimodalGraph:
             if l.name == name:
                 return l.match(lon, lat)
 
-    def distance(self, n1, n2):
-        c1 = self.coordinates(n1)
-        c2 = self.coordinates(n2)
-        try:
-            delta = c2[0] - c1[0]
-            a = math.radians(c1[1])
-            b = math.radians(c2[1])
-            C = math.radians(delta)
-            x = math.sin(a) * math.sin(b) + math.cos(a) * math.cos(b) * math.cos(C)
-            distance = math.acos(x) # in radians
-            distance  = math.degrees(distance) # in degrees
-            distance  = distance * 60 # 60 nautical miles / lat degree
-            distance = distance * 1852 # conversion to meters
-            return distance;
-        except:
-            return 0
-
  
     def connect_same_nodes(self, layer1, layer2, property):
+        count = 0
         for n1 in layer1.nodes():
             n2 = layer2.map(n1['original_id'])
             if n2:
                 self.graph.add_edge(n1['id'], n2, property)
+                count += 1
+        return count
 
     def connect_same_nodes_random(self, layer1, layer2, property, freq):
         count = 0
         for n1 in layer1.nodes():
             n2 = layer2.map(n1['original_id'])
-            count += 1
             if n2 and count % freq == 0:
                 self.graph.add_edge(n1['id'], n2, property)
+                count += 1
+        return count
 
 
     def connect_nodes_from_list(self, layer1, layer2, list, property, property2 = None):
+        count = 0
         if property2 == None:
             property2 = property
         for coord in list:
@@ -361,11 +267,14 @@ class MultimodalGraph:
             if n1 and n2:
                 self.graph.add_edge(n1, n2, property)
                 self.graph.add_edge(n2, n1, property2)
+                count += 2
             else:
                 print "Uho... no connection possible"
+        return count
 
 
     def connect_nearest_nodes(self, layer1, layer2, property, property2 = None):
+        count = 0
         if property2 == None:
             property2 = property
         for n in layer1.nodes():
@@ -373,7 +282,6 @@ class MultimodalGraph:
             if nearest:
                 self.graph.add_edge(n['id'], nearest, property)
                 self.graph.add_edge(nearest, n['id'], property2)
-
-
-
+                count += 2
+        return count
  

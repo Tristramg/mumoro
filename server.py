@@ -5,6 +5,7 @@ from lib import layer
 from lib import bikestations as bikestations
 from web import config
 from web import shorturl
+from sqlalchemy import *
 
 import cherrypy
 import operator
@@ -26,13 +27,16 @@ loader = TemplateLoader(
 
 class Mumoro:
     def __init__(self,data):
+        engine = create_engine('sqlite:///blah.db')
+        metadata = MetaData(bind = engine)
         c = config.Config()
         self.data = data       
-        foot = layer.Layer('foot', mumoro.Foot, {'nodes': c.tableNodes, 'edges': c.tableEdges}, c)
-        foot2 = layer.Layer('foot2', mumoro.Foot, {'nodes': c.tableNodes, 'edges': c.tableEdges}, c)
-        bike = layer.Layer('bike', mumoro.Bike, {'nodes': c.tableNodes, 'edges': c.tableEdges}, c)
-        car = layer.Layer('car', mumoro.Car, {'nodes': c.tableNodes, 'edges': c.tableEdges}, c)
-        self.stations = bikestations.VeloStar(False, c)
+        #foot = layer.Layer('foot', mumoro.Foot, {'nodes': c.tableNodes, 'edges': c.tableEdges}, self.metadata)
+        foot = layer.Layer('foot', mumoro.Foot, {'nodes': "1", 'edges': "2"}, metadata)
+        foot2 = layer.Layer('foot2', mumoro.Foot, {'nodes': "1", 'edges': "2"}, metadata)
+        bike = layer.Layer('bike', mumoro.Bike, {'nodes': "1", 'edges': "2"}, metadata)
+        car = layer.Layer('car', mumoro.Car, {'nodes': "1", 'edges': "2"}, metadata)
+        self.stations = bikestations.VeloStar(False, metadata)
         self.timestamp = time.time()
         e = mumoro.Edge()
         e.mode_change = 1
@@ -41,14 +45,16 @@ class Mumoro:
         e2.mode_change = 0
         e2.duration = mumoro.Duration(30);
 
-        if False:
+        if True:
             self.g = layer.MultimodalGraph([foot, bike, car, foot2])
-            self.g.connect_nodes_from_list(foot, bike, self.stations.stations, e, e2)
+            #self.g = layer.MultimodalGraph([foot, car])
+            print len(self.stations.stations)
+            print "Connected 1", self.g.connect_nodes_from_list(foot, bike, self.stations.stations, e, e2)
             e.mode_change = 0
             e.duration = mumoro.Duration(0)
-            self.g.connect_same_nodes(car, foot2, e)
-            self.g.connect_same_nodes(foot2, car, e)
-            self.g.save("graph_dump")
+            print "Connected 2", self.g.connect_same_nodes(car, foot2, e)
+            print "Connected 3", self.g.connect_same_nodes(foot2, car, e)
+#            self.g.save("graph_dump")
         else:
             self.g = layer.MultimodalGraph([foot, bike, car, foot2], "graph_dump")
 
@@ -60,8 +66,10 @@ class Mumoro:
         car_dest = self.g.match('foot2', float(dlon), float(dlat))
 
         cherrypy.response.headers['Content-Type']= 'application/json'
-        p = mumoro.martins(int(start), int(dest), self.g.graph, 30000, mumoro.mode_change, mumoro.line_change)
-        p_car = mumoro.martins(int(car_start), int(car_dest), self.g.graph, 30000)
+        p = mumoro.martins(start, dest, self.g.graph,0, 30000, mumoro.mode_change, mumoro.line_change)
+        print len(p)
+        p_car = mumoro.martins(car_start, car_dest, self.g.graph,0, 30000)
+        print len(p_car)
         if len(p_car) == 1:
             p_car[0].cost.append(0)
             p_car[0].cost.append(0)
