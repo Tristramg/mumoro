@@ -6,7 +6,6 @@ import time
 
 from sqlalchemy import *
 from sqlalchemy.orm import *
-from sqlalchemy.dialects.postgresql.base import *
 
 def get_text(node):
     return node.childNodes[0].nodeValue
@@ -18,23 +17,20 @@ def get_float(node):
     return float(get_text(node))
 
 class VeloStar:
-    def __init__(self,fromDB, config):
+    def __init__(self,fromDB, metadata):
         self.stations = []
-        self.config = config
-        self.engine = create_engine('sqlite:///db_test.db', echo=True)
-        self.metadata = MetaData()
 
-        self.bike_stations_table = Table('bike_stations', self.metadata,
+        self.bike_stations_table = Table('bike_stations', metadata,
         Column('id_station', Integer, primary_key=True),
         Column('av_bikes', Integer),
         Column('av_slots', Integer),
         Column('name', Text),
         Column('district_name', Text),
-        Column('lon', DOUBLE_PRECISION),
-        Column('lat', DOUBLE_PRECISION),
-        Column('chrone', TIMESTAMP(timezone=False)),
+        Column('lon', Float),
+        Column('lat', Float),
+        Column('chrone', DateTime(timezone=False)),
         )
-        self.metadata.create_all(self.engine)
+        metadata.create_all()
         if( fromDB ):
             self.from_db()
         else:
@@ -64,9 +60,7 @@ class VeloStar:
                 except:
                     print 'At least one tag misses: num, name, state, lat, lon, availableSlots, availableBikes, districtName'
     def from_db(self):
-        Session = sessionmaker(bind=self.engine)
-        self.session = Session()
-        for tmp in session.query(BikeStation)
+        for tmp in self.bike_stations_table.select().execute():
             try:
                 s = {
                  'num': str(tmp.id_sation),
