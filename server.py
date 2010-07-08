@@ -8,8 +8,6 @@ from web import shorturl
 from sqlalchemy import *
 
 import cherrypy
-import operator
-import pickle
 import sys
 import simplejson as json
 import os
@@ -54,7 +52,7 @@ class Mumoro:
             e.duration = mumoro.Duration(0)
             print "Connected 2", self.g.connect_same_nodes(car, foot2, e)
             print "Connected 3", self.g.connect_same_nodes(foot2, car, e)
-#            self.g.save("graph_dump")
+            self.g.save("graph_dump")
         else:
             self.g = layer.MultimodalGraph([foot, bike, car, foot2], "graph_dump")
 
@@ -67,12 +65,11 @@ class Mumoro:
 
         cherrypy.response.headers['Content-Type']= 'application/json'
         p = mumoro.martins(start, dest, self.g.graph,0, 30000, mumoro.mode_change, mumoro.line_change)
-        print len(p)
         p_car = mumoro.martins(car_start, car_dest, self.g.graph,0, 30000)
-        print len(p_car)
         if len(p_car) == 1:
             p_car[0].cost.append(0)
             p_car[0].cost.append(0)
+            print  p_car[0].cost[0]
             p = p + p_car
         if len(p) == 0:
             return json.dumps({'error': 'No route found'}) 
@@ -105,8 +102,6 @@ class Mumoro:
             last_coord = self.g.coordinates(last_node)
             for node in path.nodes:
                 coord = self.g.coordinates(node)
-                if coord == None:
-                    print node
                 if(last_coord[3] != coord[3]):
                     geometry['coordinates'] = coordinates
                     feature['geometry'] = geometry

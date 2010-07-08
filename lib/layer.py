@@ -44,7 +44,7 @@ class BaseLayer:
     def map(self, o_id):
         result = self.nodes_table.select(self.nodes_table.c.original_id==o_id).execute().first()
         if result:
-            return result.id
+            return result.id + self.offset
         else:
             print "Unable to find id {0}".format(o_id)
             raise DataIncoherence()
@@ -69,21 +69,15 @@ class BaseLayer:
 
  
     def coordinates(self, nd):
-        res = self.nodes_table.select(self.nodes_table.c.id == nd).execute().first()    
+        res = self.nodes_table.select(self.nodes_table.c.id == (nd - self.offset)).execute().first()    
         if res:
             return (res.lon, res.lat, res.original_id, self.name)
         else:
-            print "Unknow node {0} on layer {1}".format(nd, self.name)
+            print "Unknow node {0} on layer {1}, offset ".format(nd, self.name, self.offset)
  
     def nodes(self):
         for row in self.nodes_table.select().execute():
-            yield {
-                    'id': int(row.id) + self.offset,
-                    'original_id': row.original_id,
-                    'lon': float(row.lon),
-                    'lat': float(row.lat)
-                    }
- 
+            yield row  
  
 class Layer(BaseLayer):
     def __init__(self, name, mode, data, metadata):
@@ -241,18 +235,18 @@ class MultimodalGraph:
     def connect_same_nodes(self, layer1, layer2, property):
         count = 0
         for n1 in layer1.nodes():
-            n2 = layer2.map(n1['original_id'])
+            n2 = layer2.map(n1.original_id)
             if n2:
-                self.graph.add_edge(n1['id'], n2, property)
+                self.graph.add_edge(n1.id + layer1.offset, n2, property)
                 count += 1
         return count
 
     def connect_same_nodes_random(self, layer1, layer2, property, freq):
         count = 0
         for n1 in layer1.nodes():
-            n2 = layer2.map(n1['original_id'])
+            n2 = layer2.map(n1.original_id)
             if n2 and count % freq == 0:
-                self.graph.add_edge(n1['id'], n2, property)
+                self.graph.add_edge(n1.id + layer.offset, n2, property)
                 count += 1
         return count
 
@@ -278,10 +272,10 @@ class MultimodalGraph:
         if property2 == None:
             property2 = property
         for n in layer1.nodes():
-            nearest = layer2.match(n['lon'], n['lat'])
+            nearest = layer2.match(n.lon, n.lat)
             if nearest:
-                self.graph.add_edge(n['id'], nearest, property)
-                self.graph.add_edge(nearest, n['id'], property2)
+                self.graph.add_edge(n.id + layer1.offset, nearest, property)
+                self.graph.add_edge(nearest, n.id + layer1.offset, property2)
                 count += 2
         return count
  
