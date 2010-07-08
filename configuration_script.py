@@ -1,27 +1,30 @@
 #MUMORO CONFIGURATION BEFORE INSTALLING
 
 #Database type, choose among : 'sqlite', 'mysql', 'postgres', 'oracle', 'mssql', and 'firebird'
-db_type = 'postgres'
+#db_type = 'postgres'
+db_type = 'sqlite'
 
 #Database connexion URL
 #For user oriented databases : 'username:password@host:port/database'
 #Port can be excluded (default one depending on db_type will be used) : 'username:password@host/database'
 #For SQLiTE : 'file_name.db' for relative path or absolute : '/data/guidage/file_name.db'
-db_params = 'postgres:takisthecat@localhost/guidage'
+#db_params = 'postgres:takisthecat@localhost/guidage'
+db_params = '/home/ody/mumoro.ody.db'
 
-
-#Load street data from (compressed or not) osm file(s) and apply or not a filter for a smaller region
-#-----------------------------------------------------------------------------------------------------
-#osm_rennes = import_street_data('/data/guidage/rennes.osm',True,top,left,bottom,right)
-#osm_paris = import_street_data('/data/guidage/paris.osm')
+#Load street data from (compressed or not) osm file(s)
+#-----------------------------------------------------
+import_street_data('/home/ody/Developement/mumoro/greece.osm')
+import_street_data('/home/ody/Developement/mumoro/champagne-ardenne.osm')
 
 #Load bike service from an API URL (Don't forget to add http://) with required valid params (depending on each API)
 #------------------------------------------------------------------------------------------------------------------
-#bike_rennes = import_bike_service('http://service.bike.fr?key=asjhhhghkf&email=odysseas.gabrielides@gmail.com')
+import_bike_service('http://service.bike.fr?key=asjhhhghkf&email=odysseas.gabrielides@gmail.com')
 
-#Load municipal data file (Today supported formats : gtfs and trident.)
-#----------------------------------------------------------------------
-#municipal_rennes = import_municipal_data( '/data/guidage/rennes.gtfs' )
+#Loads muncipal data file 
+#( 3 cases : GTFS format (Call TransitFeed), Trident format (Call Chouette), Other : manual implementation ) and insert muncipal data into database.
+#start_date & end_date in this format : 'YYYYMMDD'
+#---------------------------------------------------------------------------------------------------------------------------------------------------
+import_municipal_data( '/home/ody/Developement/mumoro/bart.zip', '20100701', '20101031', 'San Fransisco BART' )
 
 
 #Create relevant layers from previously imported data
