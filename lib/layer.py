@@ -39,7 +39,15 @@ def duration(length, property, mode):
     else:
         raise NotAccessible()
  
-class BaseLayer:
+class BaseLayer(object):
+    def __init__(self, name, data, metadata):
+        self.data = data
+        self.name = name
+        self.metadata = metadata
+        self.nodes_table = Table(data['nodes'], metadata, autoload = True)
+        self.edges_table = Table(data['edges'], metadata, autoload = True)
+        self.count = select([func.count(self.nodes_table.c.id)]).execute().first()[0]
+
 
     def map(self, o_id):
         result = self.nodes_table.select(self.nodes_table.c.original_id==o_id).execute().first()
@@ -65,7 +73,7 @@ class BaseLayer:
         if res:
             return res.id + self.offset
         else:
-            print "Unable to find id {0}".format(o_id)        
+            return None
 
  
     def coordinates(self, nd):
@@ -81,14 +89,8 @@ class BaseLayer:
  
 class Layer(BaseLayer):
     def __init__(self, name, mode, data, metadata):
+        super(Layer, self).__init__(name, data, metadata)
         self.mode = mode
-        self.data = data
-        self.name = name
-        self.metadata = metadata
-        self.nodes_table = Table(data['nodes'], metadata, autoload = True)
-        self.edges_table = Table(data['edges'], metadata, autoload = True)
-        self.count = select([func.count(self.nodes_table.c.id)]).execute().first()[0]
-
                
     def edges(self):
         for edge in self.edges_table.select().execute():
@@ -141,45 +143,35 @@ class Layer(BaseLayer):
     
  
 class GTFSLayer(BaseLayer):
-    def __init__(self, name, data):
-        Session = sessionmaker(bind=self.engine)
-        self.session = Session()        
-        #self.nodes_db = sqlite3.connect(data, check_same_thread = False)
-        #c = self.nodes_db.cursor()
-        #c.execute("SELECT count(1) FROM nodes")
-        self.count = self.session.query(Node).count()        
-        #self.count = int(c.fetchone()[0])
-        self.offset = 0
-        self.name = name
-        print "Layer {0} loaded with {1} nodes".format(name, self.count)
+    """A layer for public transport described by the General Transit Feed Format"""
  
     def edges(self):
-        Session = sessionmaker(bind=self.engine)
-        self.session = Session()        
-        #c = self.nodes_db.cursor()
-        #c.execute("SELECT source, target, start_secs, arrival_secs FROM edges")
-        for row in self.session.query(Edges.source,Edges.target,Edges.start_secs,Edges.arrival_secs):
+        for row in self.edges_table.select().execute():
             yield {
                     'source': row.source + self.offset,
                     'target': row.target + self.offset,
                     'departure': row.start_secs,
-                    'arrival': row.arrival_secs
+                    'arrival': row.arrival_secs,
+                    'services': row.services
                     }
  
         # Connects every node corresponding to a same stop:
         # if a stop is used by 3 routes, the stop will be represented by 3 nodes
-        #c.execute("SELECT n1.id, n2.id FROM nodes as n1, nodes as n2 WHERE n1.original_id = n2.original_id AND n1.route <> n2.route")
+        n1 = self.nodes_table.alias()
+        n2 = self.nodes_table.alias()
+        res = select([n1,n2], (n1.c.original_id == n2.c.original_id) & (n1.c.route != n2.c.route)).execute()
         e = mumoro.Edge()
         e.line_change = 1
         e.duration = mumoro.Duration(60) # There should be at least a minute between two bus/trains at the same station
-        #for row in self.session.query(Edges.source,Edges.target,Edges.start_secs,Edges.arrival_secs):# Didn't find yet how to name colums in a 
-        #    yield {                                                                                  # query with sqlalchemy
-        #            'source': row[0] + self.offset,    
-        #            'target': row[1] + self.offset,
-        #            'properties': e
-        #            }
+        for r in res:
+            yield {
+                    'source': row[0] + self.offset,    
+                    'target': row[1] + self.offset,
+                    'properties': e
+                    }
  
-class MultimodalGraph:
+
+class MultimodalGraph(object):
     def __init__(self, layers, filename = None):
         nb_nodes = 0
         self.node_to_layer = []
@@ -201,7 +193,7 @@ class MultimodalGraph:
                         self.graph.add_edge(e['source'], e['target'], e['properties'])
                         count += 1
                     else:
-                        if self.graph.public_transport_edge(e['source'], e['target'], e['departure'], e['arrival']):
+                        if self.graph.public_transport_edge(e['source'], e['target'], e['departure'], e['arrival'], str(e['services'])):
                             count += 1
                 print "On layer {0}, {1} edges, {2} nodes".format(l.name, count, l.count)
             print "The multimodal graph has been built and has {0} nodes and {1} edges".format(nb_nodes, count)

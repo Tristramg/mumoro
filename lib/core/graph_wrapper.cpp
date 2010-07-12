@@ -12,17 +12,17 @@ Duration::Duration(float d) : const_duration(d) {}
 
 Duration::Duration() : const_duration(-1) {}
 
-void Duration::append(float start, float arrival, const char * services)
+void Duration::append(float start, float arrival, const std::string & services)
 {
     BOOST_ASSERT(boost::get<1>(timetable.back()) < start);
     BOOST_ASSERT(start < arrival);
-    timetable.push_back(Time(start, arrival, Services(0)));
-
+    timetable.push_back(Time(start, arrival, Services(services)));
 }
 
 float Duration::operator()(float start, int day) const
 {
     float next_day = 0;
+    int run = 0;
     if (const_duration >= 0)
         return start + const_duration;
     else
@@ -35,14 +35,22 @@ float Duration::operator()(float start, int day) const
             Services s;
             boost::tie(tt_start, tt_arrival, s) = *it;
             if (tt_start >= start && s[day])
+            {
+                std::cout << "Found day " << day << " " << start << " " << tt_start << "->" << tt_arrival << " " << run++ << std::endl;
                 return tt_arrival;
+            }
             if (next_day != 0 && s[day+1])
+            {
                 next_day = start + 24*3600;
+            }
         }
         if(next_day > 0)
             return next_day;
         else 
+        {
+            std::cout << "No traffic on day " << day << " " << start <<std::endl;
             throw No_traffic();
+        }
     }
 }
 
@@ -60,7 +68,7 @@ void Graph::add_edge(int source, int target, const Edge & e)
     boost::add_edge(source, target, e, g);
 }
 
-bool Graph::public_transport_edge(int source, int target, float start, float arrival)
+bool Graph::public_transport_edge(int source, int target, float start, float arrival, const std::string & services)
 {
     edge_t e;
     bool b;
@@ -70,7 +78,7 @@ bool Graph::public_transport_edge(int source, int target, float start, float arr
         bool c;
         tie(e, c) = boost::add_edge(source, target, g);
     }
-    g[e].duration.append(start, arrival);
+    g[e].duration.append(start, arrival, services);
     return !b;
 }
     struct found_goal

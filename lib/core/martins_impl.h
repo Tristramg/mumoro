@@ -235,24 +235,29 @@ vector<Path> martins(int start_node, int dest_node, Graph & g, int start_time, i
             l2.node = boost::target(*ei,g.g);
             l2.pred_idx = P[l.node].size() - 1;
 
-            l2.cost[0] = g.g[*ei].duration(l.cost[0], day);
-            for(size_t i=1; i < N; i++)
-                l2.cost[i] = l.cost[i] + g.g[*ei].*objectives[i-1];
+            try{
+                l2.cost[0] = g.g[*ei].duration(l.cost[0], day);
+                for(size_t i=1; i < N; i++)
+                    l2.cost[i] = l.cost[i] + g.g[*ei].*objectives[i-1];
 
-            if(!is_dominated_by_any(Q, l2, std_comp) && !is_dominated_by_any(P[l2.node],l2, std_comp) && (dest_node == invalid_node || !is_dominated_by_any(P[dest_node],l2, std_comp)))
-            {
-                typename my_queue<N>::nodes_it it, end;
-                tie(it, end) = node_q.equal_range(l2.node);
-                while(it != end)
+                if(!is_dominated_by_any(Q, l2, std_comp) && !is_dominated_by_any(P[l2.node],l2, std_comp) && (dest_node == invalid_node || !is_dominated_by_any(P[dest_node],l2, std_comp)))
                 {
-                    if(std_comp(l2, *it))
-                        it = Q.get<1>().erase(it);
-                    else
+                    typename my_queue<N>::nodes_it it, end;
+                    tie(it, end) = node_q.equal_range(l2.node);
+                    while(it != end)
                     {
-                        it++;
+                        if(std_comp(l2, *it))
+                            it = Q.get<1>().erase(it);
+                        else
+                        {
+                            it++;
+                        }
                     }
+                    Q.insert(l2);
                 }
-                Q.insert(l2);
+            }
+            catch(No_traffic)
+            {
             }
         }
     }

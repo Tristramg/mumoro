@@ -32,7 +32,7 @@ void load(Archive &ar, Time &t, const unsigned int version)
 {
     ar >> boost::get<0>(t);
     ar >> boost::get<1>(t);
-    std::string s;;
+    std::string s;
     ar >> s;
     boost::get<2>(t) = Services(s);
 }
@@ -52,7 +52,7 @@ class Duration
 public:
     Duration();
     Duration(float const_duration);
-    void append(float start, float arrival, const char * services = "0");
+    void append(float start, float arrival, const std::string & services);
     float operator()(float start_time, int day) const;
 
     template<class Archive>
@@ -99,7 +99,7 @@ struct Graph
     Graph(int nb_nodes);
     Graph(const std::string & filename);
     void add_edge(int source, int target, const Edge & e);
-    bool public_transport_edge(int source, int target, float start, float arrival);
+    bool public_transport_edge(int source, int target, float start, float arrival, const std::string & services);
     bool dijkstra(int source, int target);
     void save(const std::string & filename) const;
     void load(const std::string & filename);

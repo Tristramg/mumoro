@@ -29,7 +29,8 @@ class Mumoro:
         metadata = MetaData(bind = engine)
         c = config.Config()
         self.data = data       
-        #foot = layer.Layer('foot', mumoro.Foot, {'nodes': c.tableNodes, 'edges': c.tableEdges}, self.metadata)
+        gtfs = layer.GTFSLayer('gtfs', {'nodes': "3", 'edges': "4"}, metadata)
+        sf = layer.Layer('foot_sf', mumoro.Foot, {'nodes': "5", 'edges' : "6"}, metadata)
         foot = layer.Layer('foot', mumoro.Foot, {'nodes': "1", 'edges': "2"}, metadata)
         foot2 = layer.Layer('foot2', mumoro.Foot, {'nodes': "1", 'edges': "2"}, metadata)
         bike = layer.Layer('bike', mumoro.Bike, {'nodes': "1", 'edges': "2"}, metadata)
@@ -44,28 +45,29 @@ class Mumoro:
         e2.duration = mumoro.Duration(30);
 
         if True:
-            self.g = layer.MultimodalGraph([foot, bike, car, foot2])
-            #self.g = layer.MultimodalGraph([foot, car])
-            print len(self.stations.stations)
-            print "Connected 1", self.g.connect_nodes_from_list(foot, bike, self.stations.stations, e, e2)
-            e.mode_change = 0
-            e.duration = mumoro.Duration(0)
-            print "Connected 2", self.g.connect_same_nodes(car, foot2, e)
-            print "Connected 3", self.g.connect_same_nodes(foot2, car, e)
+#            self.g = layer.MultimodalGraph([gtfs, foot, bike, car, foot2])
+            self.g = layer.MultimodalGraph([gtfs, sf])
+#            print "Connected 1", self.g.connect_nodes_from_list(foot, bike, self.stations.stations, e, e2)
+            e.mode_change = 1
+            e.duration = mumoro.Duration(120)
+            self.g.connect_nearest_nodes(gtfs, sf, e)
+#            print "Connected 2", self.g.connect_same_nodes(car, foot2, e)
+ #           print "Connected 3", self.g.connect_same_nodes(foot2, car, e)
             self.g.save("graph_dump")
         else:
-            self.g = layer.MultimodalGraph([foot, bike, car, foot2], "graph_dump")
+            self.g = layer.MultimodalGraph([gtfs, sf], "graph_dump")
+            #self.g = layer.MultimodalGraph([foot, bike, car, foot2], "graph_dump")
 
     @cherrypy.expose
     def path(self, slon, slat, dlon, dlat):
-        start = self.g.match('foot', float(slon), float(slat))
-        car_start = self.g.match('foot2', float(slon), float(slat))
-        dest = self.g.match('foot', float(dlon), float(dlat))
-        car_dest = self.g.match('foot2', float(dlon), float(dlat))
+        start = self.g.match('foot_sf', float(slon), float(slat))
+#        car_start = self.g.match('foot2', float(slon), float(slat))
+        dest = self.g.match('foot_sf', float(dlon), float(dlat))
+ #       car_dest = self.g.match('foot2', float(dlon), float(dlat))
 
         cherrypy.response.headers['Content-Type']= 'application/json'
-        p = mumoro.martins(start, dest, self.g.graph,0, 30000, mumoro.mode_change, mumoro.line_change)
-        p_car = mumoro.martins(car_start, car_dest, self.g.graph,0, 30000)
+        p = mumoro.martins(start, dest, self.g.graph,30000, 7, mumoro.mode_change, mumoro.line_change)
+        p_car = []#mumoro.martins(car_start, car_dest, self.g.graph,0, 30000)
         if len(p_car) == 1:
             p_car[0].cost.append(0)
             p_car[0].cost.append(0)
@@ -134,7 +136,7 @@ class Mumoro:
     
     @cherrypy.expose
     def match(self, lon, lat):
-        return self.g.match('foot', lon, lat)
+        return self.g.match('foot_sf', lon, lat)
 
     @cherrypy.expose
     def bikes(self):
@@ -149,15 +151,16 @@ class Mumoro:
     @cherrypy.expose
     def addhash(self,mlon,mlat,zoom,slon,slat,dlon,dlat,saddress,daddress,snode,dnode):
         cherrypy.response.headers['Content-Type']= 'application/json'
-        hashAdd = shorturl.shortURL()
-        hmd5 =hashAdd.addRouteToDatabase(mlon,mlat,zoom,slon,slat,dlon,dlat,saddress,daddress,snode,dnode)
-        if( len(hmd5) > 0 ):
-            ret = {
-                'h': hmd5
-            }
-            return json.dumps(ret)
-        else:
-            return '{"error": "Add to DB failed"}'
+        return '{"error" : "Not implemented"}'
+        #hashAdd = shorturl.shortURL()
+        #hmd5 =hashAdd.addRouteToDatabase(mlon,mlat,zoom,slon,slat,dlon,dlat,saddress,daddress,snode,dnode)
+        #if( len(hmd5) > 0 ):
+        #    ret = {
+        #        'h': hmd5
+        #    }
+        #    return json.dumps(ret)
+        #else:
+        #    return '{"error": "Add to DB failed"}'
 
     @cherrypy.expose
     def h(self,id):
@@ -276,6 +279,7 @@ class Mumoro:
         return json.dumps(data)
 
     def arecovered(self,lon,lat):
+        return True
         #Coverage area of Rennes. Hardcored for simplicity      
         if( lon <= -1.73113 or lon >= -1.56359 or lat <= 48.07448 or lat >= 48.14532 ):
             return False        
