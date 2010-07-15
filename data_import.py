@@ -1,4 +1,5 @@
 import osm4routing
+from lib import bikestations
 from lib import gtfs_reader
 import os.path
 from lib.datastructures import *
@@ -41,7 +42,7 @@ class Importer():
             print "No municipal data is imported"
         if bike_service_array:
             for b in bike_service_array:
-                self.import_bike( b )
+                self.import_bike( b['url_api'], b['service_name'] )
         else:
             print "No bike serivce is imported"
 
@@ -76,11 +77,12 @@ class Importer():
         self.init_mappers()
         print "Done importing municipal data from " + filename
 
-    def import_bike(self, url):
-        print "Adding bike service from " + url
-        bike_service = Metadata("Public Bike Service", "Bike", url )
+    def import_bike(self, url, name):
+        print "Adding public bike service from " + url
+        bike_service = Metadata(name, "Bike", url )
         self.session.add(bike_service)
         self.session.commit()
+        i = bikestations.BikeStationImporter( url, self.db_string, str(bike_service.id) )
         self.init_mappers()
         print "Done importing bike service from " + url
 
@@ -103,10 +105,10 @@ def import_municipal_data( filename, start_date, end_date, network_name = "GTFS"
     municipal_data_array.append( {'file': filename, 'sdate': start_date, 'edate': end_date, 'network': network_name } )
 
 #Loads a bike service API ( from already formatted URL ). Insert bike stations in database and enables schedulded re-check.
-def import_bike_service( url ):
+def import_bike_service( url, name ):
     if not url:
         raise NameError('Enter an url')
-    bike_service_array.append( url )
+    bike_service_array.append( {'url_api': url, 'service_name': name } )
 
 #Loads data from previous inserted data and creates a layer used in multi-modal graph
 def load_layer( data, layer_name, layer_mode ):

@@ -9,7 +9,7 @@ db_type = 'sqlite'
 #Port can be excluded (default one depending on db_type will be used) : 'username:password@host/database'
 #For SQLiTE : 'file_name.db' for relative path or absolute : '/data/guidage/file_name.db'
 #db_params = 'postgres:takisthecat@localhost/guidage'
-db_params = '/home/ody/mumoro.ody.db'
+db_params = '/home/ody/mumoro.ody.latest.db'
 
 #Load street data from (compressed or not) osm file(s)
 #-----------------------------------------------------
@@ -18,7 +18,7 @@ import_street_data('/home/ody/Developement/mumoro/champagne-ardenne.osm')
 
 #Load bike service from an API URL (Don't forget to add http://) with required valid params (depending on each API)
 #------------------------------------------------------------------------------------------------------------------
-import_bike_service('http://service.bike.fr?key=asjhhhghkf&email=odysseas.gabrielides@gmail.com')
+import_bike_service('http://data.keolis-rennes.com/xml/?version=1.0&key=UAYPAP0MHD482NR&cmd=getstation&param[request]=all', 'VeloStar')
 
 #Loads muncipal data file 
 #( 3 cases : GTFS format (Call TransitFeed), Trident format (Call Chouette), Other : manual implementation ) and insert muncipal data into database.

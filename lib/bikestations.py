@@ -17,14 +17,14 @@ def get_float(node):
     return float(get_text(node))
 
 class BikeStationImporter():
-    def __init__(self, url, db_string):
+    def __init__(self, url, db_string, name):
         if not url:
             raise NameError('URL Bike service is empty')
         if not db_string:
             raise NameError('Database connection string is empty')
         self.engine = create_engine(db_string)
         self.metadata = MetaData(bind = self.engine)
-        self.bike_stations_table = Table('bike_stations', self.metadata,
+        self.bike_stations_table = Table(name, self.metadata,
                 Column('id_station', Integer, primary_key=True),
                 Column('av_bikes', Integer),
                 Column('av_slots', Integer),
@@ -60,13 +60,13 @@ class BikeStationImporter():
 
 
 class BikeStationUpdater():
-    def __init__(self, db_string):
+    def __init__(self, db_string, table_name):
         self.stations = []
         if not db_string:
             raise NameError('Database connection parameters are empty')
         self.engine = create_engine(db_string)
         self.metadata = MetaData(bind = self.engine)
-        self.bike_stations_table = Table('bike_stations', self.metadata,
+        self.bike_stations_table = Table(table_name, self.metadata,
                 Column('id_station', Integer, primary_key=True),
                 Column('av_bikes', Integer),
                 Column('av_slots', Integer),
@@ -81,7 +81,6 @@ class BikeStationUpdater():
         Session = sessionmaker(bind=self.engine)
         self.session = Session()
         for tmp in self.session.query( BikeStation ).all():
-            #print tmp.district_name.encode("utf-8") + " : " + tmp.name.encode("utf-8") + " : " + tmp.chrone.strftime("%H:%M") + " : " + str(tmp.id_station)
             try:
                 s = {
                  'num': str(tmp.id_station),
@@ -94,7 +93,6 @@ class BikeStationUpdater():
                  'districtName': tmp.district_name.encode("utf-8"),
                  'chrone': tmp.chrone.strftime("%H:%M")
                 }
-                #print s
                 self.stations.append(s)
             except:
                 print 'At least one tag misses: num, name, lat, lon, availableSlots, availableBikes, districtName, chrone'
@@ -148,8 +146,8 @@ class BikeStation(object):
 
 
 if __name__ == "__main__":
-    u = "http://data.keolis-rennes.com/xml/?version=1.0&key=UAYPAP0MHD482NR&cmd=getstation&param[request]=all"
+    #u = "http://data.keolis-rennes.com/xml/?version=1.0&key=UAYPAP0MHD482NR&cmd=getstation&param[request]=all"
     #v = BikeStationImporter( u, 'sqlite:////home/ody/bikes.db')
-    v = BikeStationUpdater( 'sqlite:////home/ody/bikes.db' )
+    v = BikeStationUpdater( 'sqlite:////home/ody/mumoro.ody.latest.db', '7' )
     print v.to_string()
     print "Done!"
