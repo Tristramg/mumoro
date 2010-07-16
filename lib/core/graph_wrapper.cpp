@@ -14,7 +14,6 @@ Duration::Duration() : const_duration(-1) {}
 
 void Duration::append(float start, float arrival, const std::string & services)
 {
-    BOOST_ASSERT(boost::get<1>(timetable.back()) < start);
     BOOST_ASSERT(start < arrival);
     timetable.push_back(Time(start, arrival, Services(services)));
 }
