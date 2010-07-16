@@ -3,7 +3,6 @@
 from lib.core import mumoro
 from lib import layer 
 from lib import bikestations as bikestations
-from web import config
 from web import shorturl
 from sqlalchemy import *
 
@@ -27,7 +26,6 @@ class Mumoro:
     def __init__(self,data):
         engine = create_engine('sqlite:///blah.db')
         metadata = MetaData(bind = engine)
-        c = config.Config()
         self.data = data       
         gtfs = layer.GTFSLayer('gtfs', {'nodes': "3", 'edges': "4"}, metadata)
         sf = layer.Layer('foot_sf', mumoro.Foot, {'nodes': "5", 'edges' : "6"}, metadata)
@@ -173,12 +171,11 @@ class Mumoro:
 
     @cherrypy.expose
     def index(self,fromHash=False,hashData=[]):
-        c = config.Config()        
         tmpl = loader.load('index.html')
         if( not fromHash ):
-            return tmpl.generate(fromHash='false',lonMap=-1.68038,latMap=48.11094,zoom=15,lonStart=0.0,latStart=0.0,lonDest=0.0,latDest=0.0,addressStart='',addressDest='',s_node=1,d_node=1,hashUrl=c.urlHash).render('html', doctype='html')
+            return tmpl.generate(fromHash='false',lonMap=-1.68038,latMap=48.11094,zoom=15,lonStart=0.0,latStart=0.0,lonDest=0.0,latDest=0.0,addressStart='',addressDest='',s_node=1,d_node=1,hashUrl="").render('html', doctype='html')
         else:
-            return tmpl.generate(fromHash='true',lonMap=hashData[2],latMap=hashData[3],zoom=hashData[1],lonStart=hashData[4],latStart=hashData[5],lonDest=hashData[6],latDest=hashData[7],addressStart=hashData[8].decode('utf-8'),addressDest=hashData[9].decode('utf-8'),s_node=hashData[11],d_node=hashData[12],hashUrl=c.urlHash).render('html', doctype='html')
+            return tmpl.generate(fromHash='true',lonMap=hashData[2],latMap=hashData[3],zoom=hashData[1],lonStart=hashData[4],latStart=hashData[5],lonDest=hashData[6],latDest=hashData[7],addressStart=hashData[8].decode('utf-8'),addressDest=hashData[9].decode('utf-8'),s_node=hashData[11],d_node=hashData[12],hashUrl="").render('html', doctype='html')
 
     @cherrypy.expose
     def info(self):
@@ -287,7 +284,6 @@ class Mumoro:
             return True   
         
 if __name__ == '__main__':
-    c = config.Config()
     data = {} # We'll replace this later
     cherrypy.config.update({
         'tools.encode.on': True,
@@ -295,7 +291,7 @@ if __name__ == '__main__':
         'tools.decode.on': True,
         'tools.trailing_slash.on': True,
         'tools.staticdir.root': os.path.abspath(os.path.dirname(__file__)) + "/web/",
-        'server.socket_port': c.cpPort,
+        'server.socket_port': 3000,
         'server.socket_host': '0.0.0.0'
 
     })
