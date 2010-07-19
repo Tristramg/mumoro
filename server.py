@@ -2,10 +2,12 @@
 
 from lib.core import mumoro
 from lib import layer 
-from lib import bikestations as bikestations
-from web import config
-from web import shorturl
+from lib import bikestations
+
+#from web import shorturl
 from sqlalchemy import *
+from sqlalchemy import *
+from sqlalchemy.orm import mapper, sessionmaker, clear_mappers
 
 import cherrypy
 import sys
@@ -14,6 +16,7 @@ import os
 import time
 import urllib
 import httplib
+import hashlib
 
 from cherrypy import request
 from genshi.template import TemplateLoader
@@ -23,41 +26,183 @@ loader = TemplateLoader(
     auto_reload=True
 )
 
-class Mumoro:
-    def __init__(self,data):
-        engine = create_engine('sqlite:///blah.db')
-        metadata = MetaData(bind = engine)
-        c = config.Config()
-        self.data = data       
-        gtfs = layer.GTFSLayer('gtfs', {'nodes': "3", 'edges': "4"}, metadata)
-        sf = layer.Layer('foot_sf', mumoro.Foot, {'nodes': "5", 'edges' : "6"}, metadata)
-        foot = layer.Layer('foot', mumoro.Foot, {'nodes': "1", 'edges': "2"}, metadata)
-        foot2 = layer.Layer('foot2', mumoro.Foot, {'nodes': "1", 'edges': "2"}, metadata)
-        bike = layer.Layer('bike', mumoro.Bike, {'nodes': "1", 'edges': "2"}, metadata)
-        car = layer.Layer('car', mumoro.Car, {'nodes': "1", 'edges': "2"}, metadata)
-        self.stations = bikestations.VeloStar(False, metadata)
-        self.timestamp = time.time()
-        e = mumoro.Edge()
+layer_array = []
+bike_stations_array = []
+same_nodes_connection_array = []
+nearest_nodes_connection_array = []
+nodes_list_connection_array = []
+
+def md5_of_file(filename):
+    block_size=2**20
+    md5 = hashlib.md5()
+    while True:
+        data = filename.read(block_size)
+        if not data:
+            break
+        md5.update(data)
+    filename.close()
+    return md5.hexdigest()
+
+def get_stored_md5(filename):
+    res = filename.read(32)
+    filename.close()
+    return res
+
+
+
+#Loads an osm (compressed of not) file and insert data into database
+def import_street_data( filename ):
+    engine = create_engine( db_type + ":///" + db_params )
+    metadata = MetaData(bind = engine)
+    mumoro_metadata = Table('metadata', metadata, autoload = True)
+    s = mumoro_metadata.select((mumoro_metadata.c.origin == filename) & (mumoro_metadata.c.node_or_edge == 'Nodes'))
+    rs = s.execute()
+    for row in rs:
+         nd = row[0]
+    s = mumoro_metadata.select((mumoro_metadata.c.origin == filename) & (mumoro_metadata.c.node_or_edge == 'Edges'))
+    rs = s.execute()
+    for row in rs:
+         ed = row[0]
+    return {'nodes': str(nd), 'edges' : str(ed)}
+
+#Loads muncipal data file 
+#( 3 cases : GTFS format (Call TransitFeed), Trident format (Call Chouette), Other : manual implementation ) and insert muncipal data into database.
+#start_date & end_date in this format : 'YYYYMMDD'
+def import_municipal_data( filename, start_date, end_date, network_name = "GTFS"):
+    engine = create_engine(db_type + ":///" + db_params)
+    metadata = MetaData(bind = engine)
+    mumoro_metadata = Table('metadata', metadata, autoload = True)
+    s = mumoro_metadata.select((mumoro_metadata.c.origin == filename) & (mumoro_metadata.c.node_or_edge == 'Nodes'))
+    rs = s.execute()
+    for row in rs:
+         nd = row[0]
+    s = mumoro_metadata.select((mumoro_metadata.c.origin == filename) & (mumoro_metadata.c.node_or_edge == 'Edges'))
+    rs = s.execute()
+    for row in rs:
+         ed = row[0]
+    return {'nodes': str(nd), 'edges' : str(ed)}
+
+#Loads a bike service API ( from already formatted URL ). Insert bike stations in database and enables schedulded re-check.
+def import_bike_service( url, name ):
+    engine = create_engine(db_type + ":///" + db_params)
+    metadata = MetaData(bind = engine)
+    mumoro_metadata = Table('metadata', metadata, autoload = True)
+    s = mumoro_metadata.select((mumoro_metadata.c.origin == url) & (mumoro_metadata.c.node_or_edge == 'bike_stations'))
+    rs = s.execute()
+    for row in rs:
+         bt = row[0]
+    bike_stations_array.append( {'url_api': url,'table': str(bt)} )
+    return {'bike_stations': str(bt)}
+
+#Loads data from previous inserted data and creates a layer used in multi-modal graph
+def load_layer( data, layer_name, layer_mode = None ):
+    if not data or not layer_name:
+        raise NameError('One or more parameters are missing')
+    if layer_mode != mumoro.Foot and layer_mode != mumoro.Bike and layer_mode != mumoro.Car and layer_mode != None:
+        raise NameError('Wrong layer mode paramater')
+    engine = create_engine(db_type + ":///" + db_params)
+    metadata = MetaData(bind = engine)
+    if layer_mode == mumoro.Foot:
+        res = layer.Layer(layer_name, mumoro.Foot,  data, metadata)
+    elif layer_mode == mumoro.Bike:
+        res = layer.Layer(layer_name, mumoro.Bike, data, metadata)
+    elif layer_mode == mumoro.Car:
+        res = layer.Layer(layer_name, mumoro.Car, data, metadata)
+    else:
+        res = layer.GTFSLayer(layer_name, data, metadata)
+    layer_array.append( res )
+    return res
+
+#Creates a transit cost variable, including the duration in seconds of the transit and if the mode is changed
+def cost( duration, mode_changed ):
+    e = mumoro.Edge()
+    if mode_changed:
         e.mode_change = 1
-        e.duration = mumoro.Duration(60);
-        e2 = mumoro.Edge()
-        e2.mode_change = 0
-        e2.duration = mumoro.Duration(30);
+    else:
+        e.mode_change = 0
+    e.duration = mumoro.Duration( duration );   
+    return e
 
-        if True:
-#            self.g = layer.MultimodalGraph([gtfs, foot, bike, car, foot2])
-            self.g = layer.MultimodalGraph([gtfs, sf])
-#            print "Connected 1", self.g.connect_nodes_from_list(foot, bike, self.stations.stations, e, e2)
-            e.mode_change = 1
-            e.duration = mumoro.Duration(120)
-            self.g.connect_nearest_nodes(gtfs, sf, e)
-#            print "Connected 2", self.g.connect_same_nodes(car, foot2, e)
- #           print "Connected 3", self.g.connect_same_nodes(foot2, car, e)
-            self.g.save("graph_dump")
+#Connects 2 given layers on same nodes with the given cost(s)
+def connect_layers_same_nodes( layer1, layer2, cost ):
+    if not layer1 or not layer2 or not cost:
+        raise NameError('One or more paramaters are empty')
+    same_nodes_connection_array.append( { 'layer1':layer1, 'layer2':layer2, 'cost':cost } )
+
+#Connect 2 given layers on a node list (arg 3 which should be the returned data from import_municipal_data or import_bike_service) with the given cost(s)
+def connect_layers_from_node_list( layer1, layer2, node_list, cost, cost2 = None ):
+    if not layer1 or not layer2 or not node_list or not cost:
+        raise NameError('One or more paramaters are empty')
+    if not cost2:
+        nodes_list_connection_array.append( { 'layer1':layer1, 'layer2':layer2, 'node_list':node_list, 'cost1':cost, 'cost2':cost } )
+    else:
+        nodes_list_connection_array.append( { 'layer1':layer1, 'layer2':layer2, 'node_list':node_list, 'cost1':cost, 'cost2':cost2 } )
+
+#Connect 2 given layers on nearest nodes
+def connect_layers_on_nearest_nodes( layer1 , layer2, cost ):
+    if not layer1 or not layer2 or not cost:
+        raise NameError('One or more paramaters are empty')
+    nearest_nodes_connection_array.append( { 'layer1':layer1, 'layer2':layer2, 'cost':cost } )
+
+class Mumoro:
+    def __init__(self,db_string):
+        self.engine = create_engine(db_string)
+        self.metadata = MetaData(bind = self.engine)
+        Session = sessionmaker(bind=self.engine)
+        self.session = Session()
+        self.total_bike_stations = len( bike_stations_array )
+        self.bike_stations = []
+        if self.total_bike_stations > 0:
+             for i in range( self.total_bike_stations ):
+                  self.bike_stations.append( bikestations.BikeStationImporter(bike_stations_array[i]['url_api'],
+                                                                           bike_stations_array[i]['table'],
+                                                                           self.metadata,
+                                                                           self.session) )
+        self.timestamp = time.time()
+        if not layer_array:
+                raise NameError('Can not create multimodal graph beceause there are no layers')
+        if os.path.exists( os.getcwd() + "/config.md5") and get_stored_md5( file( 'config.md5' ) )== md5_of_file( file( 'configuration_script.py' ) ) and os.path.exists( os.getcwd() + "/graph_dump" ):
+            print "No need to rebuilt graph : configuration didn't change so loading from binary file"
+            self.g = layer.MultimodalGraph(layer_array, "graph_dump")
         else:
-            self.g = layer.MultimodalGraph([gtfs, sf], "graph_dump")
-            #self.g = layer.MultimodalGraph([foot, bike, car, foot2], "graph_dump")
-
+            if not os.path.exists( os.getcwd() + "/config.md5"):
+                print "This is the first time of launch: creating multimodal graph from scratch"
+            elif get_stored_md5( file( 'config.md5' ) ) != md5_of_file( file( 'configuration_script.py' ) ):
+                print "Configuration has changed since last launch. Rebuilding multimodal graph"
+                os.remove(os.getcwd() + "/config.md5")
+            elif not os.path.exists( os.getcwd() + "/graph_dump" ) :
+                print "Configuration has not changed since last launch but binary file is missing. Rebuilding multimodal graph"
+                os.remove(os.getcwd() + "/config.md5")
+            else:
+                os.remove(os.getcwd() + "/graph_dump")
+            self.g = layer.MultimodalGraph( layer_array )
+            total_same_nodes_connections = len( same_nodes_connection_array )
+            if total_same_nodes_connections > 0:
+                for i in range( total_same_nodes_connections ):
+                    self.g.connect_same_nodes( same_nodes_connection_array[i]['layer1'],
+                                               same_nodes_connection_array[i]['layer2'],
+                                               same_nodes_connection_array[i]['cost'] )
+            total_nearest_nodes_connections = len( nearest_nodes_connection_array )
+            if total_nearest_nodes_connections > 0:
+                for i in range( total_nearest_nodes_connections ):
+                    self.g.connect_nearest_nodes( nearest_nodes_connection_array[i]['layer1'],
+                                               nearest_nodes_connection_array[i]['layer2'],
+                                               nearest_nodes_connection_array[i]['cost'] )
+            total_nodes_list_connections = len( nodes_list_connection_array )
+            if total_nodes_list_connections > 0:
+                for i in range( total_nodes_list_connections ):
+                    for j in range( total_bike_stations_array ):
+                        if self.bike_stations[j].url == nodes_list_connection_array[i]['node_list']['url_api']:
+                            self.g.connect_nodes_from_list( nodes_list_connection_array[i]['layer1'],
+                                               nodes_list_connection_array[i]['layer2'],
+                                               self.bike_stations[j].stations,
+                                               nodes_list_connection_array[i]['cost1'],
+                                               nodes_list_connection_array[i]['cost2'] )
+                            break
+            self.g.save("graph_dump")
+            f = open('config.md5', 'w')
+            f.write( md5_of_file( file('configuration_script.py') ) )
+            f.close()
     @cherrypy.expose
     def path(self, slon, slat, dlon, dlat):
         start = self.g.match('foot_sf', float(slon), float(slat))
@@ -140,27 +285,35 @@ class Mumoro:
 
     @cherrypy.expose
     def bikes(self):
-        if time.time() > self.timestamp + 60 * 5:
-            print "Updating bikestations"
-            self.stations = bikestations.VeloStar(False, c)
-            print "Done !"
-        str = self.stations.to_string()
-        print "Got string"
-        return str;
+        if self.total_bike_stations > 0:
+            if time.time() > self.timestamp + 60 * 5:
+                print "Updating bikestations"
+                for i in range( self.total_bike_stations ):
+                    self.bike_stations[i].import_data()
+                print "Done !"
+            for i in range( self.total_bike_stations ):
+                self.bike_stations[i].update_from_db()
+            res = 'lat\tlon\ttitle\tdescription\ticon\ticonSize\ticonOffset\n'
+            for i in range( self.total_bike_stations ):
+                res += self.bike_stations[i].to_string()
+            print "Got string"
+            return res;
+        else:
+            print "No bike stations imported so no string available to generate"
+            return None
 
     @cherrypy.expose
     def addhash(self,mlon,mlat,zoom,slon,slat,dlon,dlat,saddress,daddress,snode,dnode):
         cherrypy.response.headers['Content-Type']= 'application/json'
-        return '{"error" : "Not implemented"}'
-        #hashAdd = shorturl.shortURL()
-        #hmd5 =hashAdd.addRouteToDatabase(mlon,mlat,zoom,slon,slat,dlon,dlat,saddress,daddress,snode,dnode)
-        #if( len(hmd5) > 0 ):
-        #    ret = {
-        #        'h': hmd5
-        #    }
-        #    return json.dumps(ret)
-        #else:
-        #    return '{"error": "Add to DB failed"}'
+        hashAdd = shorturl.shortURL(self.metadata,self.session)
+        hmd5 =hashAdd.addRouteToDatabase(mlon,mlat,zoom,slon,slat,dlon,dlat,saddress,daddress,snode,dnode)
+        if( len(hmd5) > 0 ):
+            ret = {
+                'h': hmd5
+            }
+            return json.dumps(ret)
+        else:
+            return '{"error": "Add to DB failed"}'
 
     @cherrypy.expose
     def h(self,id):
@@ -173,12 +326,11 @@ class Mumoro:
 
     @cherrypy.expose
     def index(self,fromHash=False,hashData=[]):
-        c = config.Config()        
         tmpl = loader.load('index.html')
         if( not fromHash ):
-            return tmpl.generate(fromHash='false',lonMap=-1.68038,latMap=48.11094,zoom=15,lonStart=0.0,latStart=0.0,lonDest=0.0,latDest=0.0,addressStart='',addressDest='',s_node=1,d_node=1,hashUrl=c.urlHash).render('html', doctype='html')
+            return tmpl.generate(fromHash='false',lonMap=default_lon,latMap=default_lat,zoom=15,lonStart=0.0,latStart=0.0,lonDest=0.0,latDest=0.0,addressStart='',addressDest='',s_node=1,d_node=1,hashUrl=web_url).render('html', doctype='html')
         else:
-            return tmpl.generate(fromHash='true',lonMap=hashData[2],latMap=hashData[3],zoom=hashData[1],lonStart=hashData[4],latStart=hashData[5],lonDest=hashData[6],latDest=hashData[7],addressStart=hashData[8].decode('utf-8'),addressDest=hashData[9].decode('utf-8'),s_node=hashData[11],d_node=hashData[12],hashUrl=c.urlHash).render('html', doctype='html')
+            return tmpl.generate(fromHash='true',lonMap=hashData[2],latMap=hashData[3],zoom=hashData[1],lonStart=hashData[4],latStart=hashData[5],lonDest=hashData[6],latDest=hashData[7],addressStart=hashData[8].decode('utf-8'),addressDest=hashData[9].decode('utf-8'),s_node=hashData[10],d_node=hashData[11],hashUrl=web_url).render('html', doctype='html')
 
     @cherrypy.expose
     def info(self):
@@ -194,7 +346,7 @@ class Mumoro:
           "format":"json",
           "polygon": 0,
           "addressdetails" : 1,
-          "email" : "odysseas.gabrielides@gmail.com"
+          "email" : admin_email
         })
         conn = httplib.HTTPConnection(url)
         conn.request("GET", "/search?" + params)
@@ -244,7 +396,7 @@ class Mumoro:
           "format":"json",
           "zoom": 18,
           "addressdetails" : 1,
-          "email" : "odysseas.gabrielides@gmail.com"
+          "email" : admin_email
         })
         conn = httplib.HTTPConnection(url)
         conn.request("GET", "/reverse?" + params)
@@ -287,19 +439,18 @@ class Mumoro:
             return True   
         
 if __name__ == '__main__':
-    c = config.Config()
-    data = {} # We'll replace this later
+    exec( file('configuration_script.py') )
     cherrypy.config.update({
         'tools.encode.on': True,
         'tools.encode.encoding': 'utf-8',
         'tools.decode.on': True,
         'tools.trailing_slash.on': True,
         'tools.staticdir.root': os.path.abspath(os.path.dirname(__file__)) + "/web/",
-        'server.socket_port': c.cpPort,
+        'server.socket_port': listening_port,
         'server.socket_host': '0.0.0.0'
 
     })
-    cherrypy.tree.mount(Mumoro(data), '/', config={
+    cherrypy.tree.mount(Mumoro(db_type + ":///" + db_params), '/', config={
         '/': {
                 'tools.staticdir.on': True,
                 'tools.staticdir.dir': 'static'
