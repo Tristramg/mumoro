@@ -66,11 +66,7 @@ function handleClick(coord, mark) {
 // Coordinates in 4326 projection (lon/lat)
 function setMark(lonlat, mark)
 {
-    if(node_markers[mark]) {
-        layerMarkers.removeFeatures(node_markers[mark]);
-        node_markers[mark].destroy();
-        node_markers[mark] = null;
-    }
+    clearArrow(mark);
     node_markers[mark] = new OpenLayers.Feature.Vector(LonLatToPoint(LonLatToM(
                                         new OpenLayers.LonLat(lonlat.lon,lonlat.lat))), 
                                         mark, 
@@ -271,9 +267,12 @@ function clearAll() {
 
 function clearArrow(mark) {
     nodes[mark] = null;
-    layerMarkers.removeFeatures(node_markers[mark]);
-    node_markers[mark].destroy(); 
-    node_markers[mark] = null;
+    if(node_markers[mark])
+    {
+        layerMarkers.removeFeatures(node_markers[mark]);
+        node_markers[mark].destroy(); 
+        node_markers[mark] = null;
+    }
 }
 
 function geocoding(str,mark) {

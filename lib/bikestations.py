@@ -1,7 +1,6 @@
 import os.path
 import urllib
 import datetime
-import time
 
 from sqlalchemy import *
 from sqlalchemy.orm import mapper, sessionmaker, clear_mappers
@@ -17,13 +16,13 @@ def get_float(node):
     return float(get_text(node))
 
 class BikeStationImporter():
-    def __init__(self, url, db_string, name):
+    def __init__(self, url, name, metadata, session):
         if not url:
             raise NameError('URL Bike service is empty')
-        if not db_string:
-            raise NameError('Database connection string is empty')
-        self.engine = create_engine(db_string)
-        self.metadata = MetaData(bind = self.engine)
+        if not not metadata and not session:
+            raise NameError('Database connection parameteres are empty')
+        self.metadata = metadata
+        self.url = url
         self.bike_stations_table = Table(name, self.metadata,
                 Column('id_station', Integer, primary_key=True),
                 Column('av_bikes', Integer),
@@ -35,14 +34,17 @@ class BikeStationImporter():
                 Column('chrone', Time(timezone=False)),
         )
         self.metadata.create_all()
+        self.session = session
         mapper(BikeStation, self.bike_stations_table) 
-        xml = urllib.urlopen(url)
+    def import_data(self):
+        self.bike_stations_table.delete().execute()
+        self.session.commit()
+        xml = urllib.urlopen(self.url)
         doc = parse(xml)
-        Session = sessionmaker(bind=self.engine)
-        self.session = Session()
         for station in doc.documentElement.getElementsByTagName("station"):
             if station.nodeType == station.ELEMENT_NODE:
                 try:
+                    tmp = datetime.datetime.now() 
                     new_bike_station = BikeStation(
                         get_text(station.getElementsByTagName("id")[0]),
                         get_int(station.getElementsByTagName("bikesavailable")[0]),
@@ -51,35 +53,14 @@ class BikeStationImporter():
                         get_text(station.getElementsByTagName("district")[0]),
                         get_float(station.getElementsByTagName("longitude")[0]),
                         get_float(station.getElementsByTagName("latitude")[0]),
-                        datetime.datetime.now()
+                        datetime.time( tmp.hour, tmp.minute )
                     )
                     self.session.add( new_bike_station )
                 except:
                     print 'At least one tag misses: num, name, state, lat, lon, availableSlots, availableBikes, districtName'
         self.session.commit()
-
-
-class BikeStationUpdater():
-    def __init__(self, db_string, table_name):
+    def update_from_db(self):
         self.stations = []
-        if not db_string:
-            raise NameError('Database connection parameters are empty')
-        self.engine = create_engine(db_string)
-        self.metadata = MetaData(bind = self.engine)
-        self.bike_stations_table = Table(table_name, self.metadata,
-                Column('id_station', Integer, primary_key=True),
-                Column('av_bikes', Integer),
-                Column('av_slots', Integer),
-                Column('name', Text),
-                Column('district_name', Text),
-                Column('lon', Float),
-                Column('lat', Float),
-                Column('chrone', Time(timezone=False)),
-        )
-        self.metadata.create_all()
-        mapper(BikeStation, self.bike_stations_table)
-        Session = sessionmaker(bind=self.engine)
-        self.session = Session()
         for tmp in self.session.query( BikeStation ).all():
             try:
                 s = {
@@ -101,7 +82,7 @@ class BikeStationUpdater():
         textRed = '<span class=\'bikeRed\'>'
         textOrange = '<span class=\'bikeOrange\'>'
         tinyText = '<span class=\'tinyText\'>'
-        res = 'lat\tlon\ttitle\tdescription\ticon\ticonSize\ticonOffset\n'
+        res = ''
         for s in self.stations:
             res += '%f\t%f\t' % (s['lat'], s['lon'])
             res += (title + s['name'] + ' (' + s['num'] + ')</span><br/>\t')
@@ -145,9 +126,14 @@ class BikeStation(object):
         
 
 
-if __name__ == "__main__":
-    #u = "http://data.keolis-rennes.com/xml/?version=1.0&key=UAYPAP0MHD482NR&cmd=getstation&param[request]=all"
-    #v = BikeStationImporter( u, 'sqlite:////home/ody/bikes.db')
-    v = BikeStationUpdater( 'sqlite:////home/ody/mumoro.ody.latest.db', '7' )
-    print v.to_string()
-    print "Done!"
+#if __name__ == "__main__":
+#    engine = create_engine('sqlite:////home/ody/takis.db')
+#    metadata = MetaData(bind = engine)
+#    Session = sessionmaker(bind=engine)
+#    session = Session()
+#    u = "http://data.keolis-rennes.com/xml/?version=1.0&key=UAYPAP0MHD482NR&cmd=getstation&param[request]=all"
+#    v = BikeStationImporter( u,'1',metadata,session)
+#    v.import_data()
+#    v.update_from_db()    
+#    print v.to_string()
+#    print "Done!"

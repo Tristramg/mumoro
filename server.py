@@ -2,10 +2,10 @@
 
 from lib.core import mumoro
 from lib import layer 
-from lib import bikestations
 
-#from web import shorturl
-from sqlalchemy import *
+from lib import bikestations as bikestations
+from web import shorturl
+
 from sqlalchemy import *
 from sqlalchemy.orm import mapper, sessionmaker, clear_mappers
 
@@ -332,6 +332,7 @@ class Mumoro:
         else:
             return tmpl.generate(fromHash='true',lonMap=hashData[2],latMap=hashData[3],zoom=hashData[1],lonStart=hashData[4],latStart=hashData[5],lonDest=hashData[6],latDest=hashData[7],addressStart=hashData[8].decode('utf-8'),addressDest=hashData[9].decode('utf-8'),s_node=hashData[10],d_node=hashData[11],hashUrl=web_url).render('html', doctype='html')
 
+
     @cherrypy.expose
     def info(self):
         tmpl = loader.load('info.html')
@@ -439,14 +440,18 @@ class Mumoro:
             return True   
         
 if __name__ == '__main__':
+
     exec( file('configuration_script.py') )
+
     cherrypy.config.update({
         'tools.encode.on': True,
         'tools.encode.encoding': 'utf-8',
         'tools.decode.on': True,
         'tools.trailing_slash.on': True,
         'tools.staticdir.root': os.path.abspath(os.path.dirname(__file__)) + "/web/",
+
         'server.socket_port': listening_port,
+
         'server.socket_host': '0.0.0.0'
 
     })

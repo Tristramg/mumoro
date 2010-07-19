@@ -1,3 +1,4 @@
+from lib.core import mumoro
 import osm4routing
 from lib import bikestations
 from lib import gtfs_reader
@@ -9,6 +10,7 @@ from sqlalchemy.orm import mapper, sessionmaker, clear_mappers
 street_data_array = []
 municipal_data_array = []
 bike_service_array = []
+
 
 class Importer():
     def __init__(self,db_type,db_params):
@@ -57,7 +59,7 @@ class Importer():
         self.session.add(nodes)
         self.session.add(edges)
         self.session.commit()
-        osm4routing.parse(filename, self.db_string, str(nodes.id), str(edges.id)) 
+        osm4routing.parse(filename, self.db_string, str(edges.id), str(nodes.id) ) 
         self.init_mappers()
         print "Done importing street data from " + filename
 
@@ -79,25 +81,26 @@ class Importer():
 
     def import_bike(self, url, name):
         print "Adding public bike service from " + url
-        bike_service = Metadata(name, "Bike", url )
+        bike_service = Metadata(name, "bike_stations", url )
         self.session.add(bike_service)
         self.session.commit()
-        i = bikestations.BikeStationImporter( url, self.db_string, str(bike_service.id) )
+        i = bikestations.BikeStationImporter( url, str(bike_service.id), self.metadata, self.session )
+        i.import_data()
         self.init_mappers()
         print "Done importing bike service from " + url
 
 #Loads an osm (compressed of not) file and insert data into database
 def import_street_data( filename ):
-    #if not os.path.exists( file( filename ) ):
-    #    raise NameError('File does not exist')
+    if not os.path.exists( filename ):
+        raise NameError('File does not exist')
     street_data_array.append( filename )
 
 #Loads muncipal data file 
 #( 3 cases : GTFS format (Call TransitFeed), Trident format (Call Chouette), Other : manual implementation ) and insert muncipal data into database.
 #start_date & end_date in this format : 'YYYYMMDD'
 def import_municipal_data( filename, start_date, end_date, network_name = "GTFS"):
-    #if not os.path.exists( file( filename ) ):
-    #    raise NameError('File does not exist')
+    if not os.path.exists( filename ):
+        raise NameError('File does not exist')
     if not start_date:
         raise NameError('Enter a starting date')
     if not end_date:
@@ -111,7 +114,7 @@ def import_bike_service( url, name ):
     bike_service_array.append( {'url_api': url, 'service_name': name } )
 
 #Loads data from previous inserted data and creates a layer used in multi-modal graph
-def load_layer( data, layer_name, layer_mode ):
+def load_layer( data, layer_name, layer_mode = None):
     pass
 
 #Creates a transit cost variable, including the duration in seconds of the transit and if the mode is changed
@@ -119,11 +122,15 @@ def cost( duration, mode_changed ):
     pass
 
 #Connects 2 given layers on same nodes with the given cost(s)
-def connect_layers_same_nodes( layer1, layer2, cost, cost2 = 0 ):
+def connect_layers_same_nodes( layer1, layer2, cost ):
     pass
 
 #Connect 2 given layers on a node list (arg 3 which should be the returned data from import_municipal_data or import_bike_service) with the given cost(s)
-def connect_layers_from_node_list( layer1, layer2, node_list, cost, cost2 = 0 ):
+def connect_layers_from_node_list( layer1, layer2, node_list, cost, cost2 = None ):
+    pass
+
+#Connect 2 given layers on nearest nodes
+def connect_layers_on_nearest_nodes( layer1 , layer2, cost ):
     pass
 
 if __name__ == "__main__":

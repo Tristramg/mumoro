@@ -14,7 +14,6 @@ Duration::Duration() : const_duration(-1) {}
 
 void Duration::append(float start, float arrival, const std::string & services)
 {
-    BOOST_ASSERT(boost::get<1>(timetable.back()) < start);
     BOOST_ASSERT(start < arrival);
     timetable.push_back(Time(start, arrival, Services(services)));
 }
@@ -36,7 +35,6 @@ float Duration::operator()(float start, int day) const
             boost::tie(tt_start, tt_arrival, s) = *it;
             if (tt_start >= start && s[day])
             {
-                std::cout << "Found day " << day << " " << start << " " << tt_start << "->" << tt_arrival << " " << run++ << std::endl;
                 return tt_arrival;
             }
             if (next_day != 0 && s[day+1])
@@ -48,7 +46,6 @@ float Duration::operator()(float start, int day) const
             return next_day;
         else 
         {
-            std::cout << "No traffic on day " << day << " " << start <<std::endl;
             throw No_traffic();
         }
     }

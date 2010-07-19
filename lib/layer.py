@@ -47,12 +47,18 @@ class BaseLayer(object):
         self.nodes_table = Table(data['nodes'], metadata, autoload = True)
         self.edges_table = Table(data['edges'], metadata, autoload = True)
         self.count = select([func.count(self.nodes_table.c.id)]).execute().first()[0]
-
+        #s = select([func.count(self.nodes_table.c.id)])
+        #rs = s.execute()
+        #for row in rs:
+        #    self.count = row[0]
 
     def map(self, o_id):
-        result = self.nodes_table.select(self.nodes_table.c.original_id==o_id).execute().first()
+        s = self.nodes_table.select(self.nodes_table.c.original_id==o_id)
+        rs = s.execute()
+        for row in rs:
+            result = row
         if result:
-            return result.id + self.offset
+            return result[0] + self.offset
         else:
             print "Unable to find id {0}".format(o_id)
             raise DataIncoherence()
@@ -111,7 +117,6 @@ class Layer(BaseLayer):
  
             node1 = self.map(edge.source)
             node2 = self.map(edge.target)
- 
             try:
                 dur = duration(e.length, property, self.mode)
                 e.duration = mumoro.Duration(dur)
@@ -186,6 +191,7 @@ class MultimodalGraph(object):
         if filename:
             self.graph = mumoro.Graph(filename)
         else:
+            print layers
             count = 0
             for l in layers:
                 for e in l.edges():
