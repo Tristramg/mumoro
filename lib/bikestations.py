@@ -3,7 +3,6 @@ import urllib
 import datetime
 
 from sqlalchemy import *
-from sqlalchemy.orm import mapper, sessionmaker, clear_mappers
 from xml.dom.minidom import parse
 
 def get_text(node):
@@ -16,10 +15,10 @@ def get_float(node):
     return float(get_text(node))
 
 class BikeStationImporter():
-    def __init__(self, url, name, metadata, session):
+    def __init__(self, url, name, metadata):
         if not url:
             raise NameError('URL Bike service is empty')
-        if not not metadata and not session:
+        if not metadata:
             raise NameError('Database connection parameteres are empty')
         self.metadata = metadata
         self.url = url
@@ -34,34 +33,31 @@ class BikeStationImporter():
                 Column('chrone', Time(timezone=False)),
         )
         self.metadata.create_all()
-        self.session = session
-        mapper(BikeStation, self.bike_stations_table) 
     def import_data(self):
         self.bike_stations_table.delete().execute()
-        self.session.commit()
         xml = urllib.urlopen(self.url)
         doc = parse(xml)
         for station in doc.documentElement.getElementsByTagName("station"):
             if station.nodeType == station.ELEMENT_NODE:
                 try:
                     tmp = datetime.datetime.now() 
-                    new_bike_station = BikeStation(
-                        get_text(station.getElementsByTagName("id")[0]),
-                        get_int(station.getElementsByTagName("bikesavailable")[0]),
-                        get_int(station.getElementsByTagName("slotsavailable")[0]),
-                        get_text(station.getElementsByTagName("name")[0]),
-                        get_text(station.getElementsByTagName("district")[0]),
-                        get_float(station.getElementsByTagName("longitude")[0]),
-                        get_float(station.getElementsByTagName("latitude")[0]),
-                        datetime.time( tmp.hour, tmp.minute )
+                    i = self.bike_stations_table.insert()
+                    i.execute({'id_station': get_text(station.getElementsByTagName("id")[0]),
+                               'av_bikes': get_int(station.getElementsByTagName("bikesavailable")[0]),
+                               'av_slots': get_int(station.getElementsByTagName("slotsavailable")[0]),
+                               'name': get_text(station.getElementsByTagName("name")[0]),
+                               'district_name': get_text(station.getElementsByTagName("district")[0]),
+                               'lon': get_float(station.getElementsByTagName("longitude")[0]),
+                               'lat': get_float(station.getElementsByTagName("latitude")[0]),
+                               'chrone': datetime.time( tmp.hour, tmp.minute ) }
                     )
-                    self.session.add( new_bike_station )
                 except:
                     print 'At least one tag misses: num, name, state, lat, lon, availableSlots, availableBikes, districtName'
-        self.session.commit()
     def update_from_db(self):
         self.stations = []
-        for tmp in self.session.query( BikeStation ).all():
+        s = self.bike_stations_table.select()
+        rs = s.execute()
+        for tmp in rs:
             try:
                 s = {
                  'num': str(tmp.id_station),
@@ -109,22 +105,6 @@ class BikeStationImporter():
             else:
                 res += ('img/bike.station.green.png\t18,25\t-8,-25\n')
         return res
-
-class BikeStation(object):
-    def __init__(self, id_station, av_bikes, av_slots, name, district_name, lon, lat, chrone): 
-        self.id_station = id_station
-        self.av_bikes = av_bikes
-        self.av_slots = av_slots
-        self.name = name
-        self.district_name = district_name
-        self.lon = lon
-        self.lat = lat
-        self.chrone = chrone
-   
-    def __repr__(self):
-        return "<BikeStation('%s','%s','%s','%s','%s','%s','%s','%s')>" % (self.id_station, self.av_bikes, self.av_slots, self.name,self.district_name, self.lon, self.lat, self.chrone)
-        
-
 
 #if __name__ == "__main__":
 #    engine = create_engine('sqlite:////home/ody/takis.db')

@@ -152,8 +152,7 @@ class Mumoro:
             for i in range( self.total_bike_stations ):
                   self.bike_stations.append( bikestations.BikeStationImporter(bike_stations_array[i]['url_api'],
                                                                            bike_stations_array[i]['table'],
-                                                                           self.metadata,
-                                                                           self.session) )
+                                                                           self.metadata) )
             for i in range( self.total_bike_stations ):
                 self.bike_stations[i].update_from_db()
         self.timestamp = time.time()
@@ -315,7 +314,7 @@ class Mumoro:
     @cherrypy.expose
     def addhash(self,mlon,mlat,zoom,slon,slat,dlon,dlat,saddress,daddress,snode,dnode):
         cherrypy.response.headers['Content-Type']= 'application/json'
-        hashAdd = shorturl.shortURL(self.metadata,self.session)
+        hashAdd = shorturl.shortURL(self.metadata)
         hmd5 =hashAdd.addRouteToDatabase(mlon,mlat,zoom,slon,slat,dlon,dlat,saddress,daddress,snode,dnode)
         if( len(hmd5) > 0 ):
             ret = {
@@ -327,7 +326,7 @@ class Mumoro:
 
     @cherrypy.expose
     def h(self,id):
-        hashCheck = shorturl.shortURL(self.metadata,self.session)
+        hashCheck = shorturl.shortURL(self.metadata)
         res = hashCheck.getDataFromHash(id)
         if( len(res) > 0 ):
             return self.index(True,res)
@@ -417,6 +416,7 @@ class Mumoro:
         if ret:
                 cord_error = ""
                 display_name = ret['display_name']
+                print str( lon ) + " >>>> " + str( lat )
                 #if self.arecovered(float(lon),float(lat)):
                 if True:
                         id_node = self.match(float(lon),float(lat))
@@ -440,6 +440,8 @@ class Mumoro:
                 'cord_error': cord_error,
                 'is_covered': is_covered
         }
+        print "RETURN :"
+        print data
         return json.dumps(data)
 
     def arecovered(self,lon,lat):
