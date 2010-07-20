@@ -1,3 +1,4 @@
+import sys
 from lib.core import mumoro
 import osm4routing
 from lib import bikestations
@@ -134,8 +135,12 @@ def connect_layers_on_nearest_nodes( layer1 , layer2, cost ):
     pass
 
 if __name__ == "__main__":
-    exec( file('configuration_script.py') )
-    i = Importer(db_type,db_params)
-    
+    total = len( sys.argv )
+    if total != 2:
+        sys.exit("Usage: python data_import.py {config_file.py}")
+    if not os.path.exists( os.getcwd() + "/" + sys.argv[1] ):
+        raise NameError('Configuration file does not exist')
+    exec( file( sys.argv[1] ) )
+    Importer(db_type,db_params)
 
 

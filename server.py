@@ -32,6 +32,9 @@ same_nodes_connection_array = []
 nearest_nodes_connection_array = []
 nodes_list_connection_array = []
 
+dbtype = ""
+dbparams = ""
+
 def md5_of_file(filename):
     block_size=2**20
     md5 = hashlib.md5()
@@ -42,13 +45,6 @@ def md5_of_file(filename):
         md5.update(data)
     filename.close()
     return md5.hexdigest()
-
-def get_stored_md5(filename):
-    res = filename.read(32)
-    filename.close()
-    return res
-
-
 
 #Loads an osm (compressed of not) file and insert data into database
 def import_street_data( filename ):
@@ -92,7 +88,7 @@ def import_bike_service( url, name ):
     for row in rs:
          bt = row[0]
     bike_stations_array.append( {'url_api': url,'table': str(bt)} )
-    return {'bike_stations': str(bt)}
+    return {'url_api': url,'table': str(bt)}
 
 #Loads data from previous inserted data and creates a layer used in multi-modal graph
 def load_layer( data, layer_name, layer_mode = None ):
@@ -145,7 +141,7 @@ def connect_layers_on_nearest_nodes( layer1 , layer2, cost ):
     nearest_nodes_connection_array.append( { 'layer1':layer1, 'layer2':layer2, 'cost':cost } )
 
 class Mumoro:
-    def __init__(self,db_string):
+    def __init__(self,db_string,config_file):
         self.engine = create_engine(db_string)
         self.metadata = MetaData(bind = self.engine)
         Session = sessionmaker(bind=self.engine)
@@ -153,28 +149,41 @@ class Mumoro:
         self.total_bike_stations = len( bike_stations_array )
         self.bike_stations = []
         if self.total_bike_stations > 0:
-             for i in range( self.total_bike_stations ):
+            for i in range( self.total_bike_stations ):
                   self.bike_stations.append( bikestations.BikeStationImporter(bike_stations_array[i]['url_api'],
                                                                            bike_stations_array[i]['table'],
                                                                            self.metadata,
                                                                            self.session) )
+            for i in range( self.total_bike_stations ):
+                self.bike_stations[i].update_from_db()
         self.timestamp = time.time()
+        self.config_table = Table('config', self.metadata, 
+            Column('config_file', String, primary_key = True),
+            Column('binary_file', String, primary_key = True),
+            Column('md5', String, index = True)
+            )
+        self.metadata.create_all()
+        s = self.config_table.select()
+        rs = s.execute()
+        row = rs.fetchone()
         if not layer_array:
                 raise NameError('Can not create multimodal graph beceause there are no layers')
-        if os.path.exists( os.getcwd() + "/config.md5") and get_stored_md5( file( 'config.md5' ) )== md5_of_file( file( 'configuration_script.py' ) ) and os.path.exists( os.getcwd() + "/graph_dump" ):
-            print "No need to rebuilt graph : configuration didn't change so loading from binary file"
-            self.g = layer.MultimodalGraph(layer_array, "graph_dump")
+        if row and row['md5']== md5_of_file( file( config_file ) ) and os.path.exists( os.getcwd() + "/" + row['binary_file'] ):
+                print "No need to rebuilt graph : configuration didn't change so loading from binary file"
+                self.g = layer.MultimodalGraph(layer_array, str(row['binary_file']))
         else:
-            if not os.path.exists( os.getcwd() + "/config.md5"):
+            if not row:
                 print "This is the first time of launch: creating multimodal graph from scratch"
-            elif get_stored_md5( file( 'config.md5' ) ) != md5_of_file( file( 'configuration_script.py' ) ):
+            elif row['md5'] != md5_of_file( file( config_file ) ):
                 print "Configuration has changed since last launch. Rebuilding multimodal graph"
-                os.remove(os.getcwd() + "/config.md5")
-            elif not os.path.exists( os.getcwd() + "/graph_dump" ) :
+                self.config_table.delete().execute()
+                self.session.commit()
+            elif not os.path.exists( os.getcwd() + "/" + row['binary_file'] ) :
                 print "Configuration has not changed since last launch but binary file is missing. Rebuilding multimodal graph"
-                os.remove(os.getcwd() + "/config.md5")
+                self.config_table.delete().execute()
+                self.session.commit()
             else:
-                os.remove(os.getcwd() + "/graph_dump")
+                os.remove(os.getcwd() + "/" + row['binary_file'])
             self.g = layer.MultimodalGraph( layer_array )
             total_same_nodes_connections = len( same_nodes_connection_array )
             if total_same_nodes_connections > 0:
@@ -191,18 +200,19 @@ class Mumoro:
             total_nodes_list_connections = len( nodes_list_connection_array )
             if total_nodes_list_connections > 0:
                 for i in range( total_nodes_list_connections ):
-                    for j in range( total_bike_stations_array ):
-                        if self.bike_stations[j].url == nodes_list_connection_array[i]['node_list']['url_api']:
-                            self.g.connect_nodes_from_list( nodes_list_connection_array[i]['layer1'],
-                                               nodes_list_connection_array[i]['layer2'],
-                                               self.bike_stations[j].stations,
-                                               nodes_list_connection_array[i]['cost1'],
-                                               nodes_list_connection_array[i]['cost2'] )
-                            break
-            self.g.save("graph_dump")
-            f = open('config.md5', 'w')
-            f.write( md5_of_file( file('configuration_script.py') ) )
-            f.close()
+                   for j in range( self.total_bike_stations ):
+                       if self.bike_stations[j].url == nodes_list_connection_array[i]['node_list']['url_api']:
+                           self.g.connect_nodes_from_list( nodes_list_connection_array[i]['layer1'],
+                                              nodes_list_connection_array[i]['layer2'],
+                                              self.bike_stations[j].stations,
+                                              nodes_list_connection_array[i]['cost1'],
+                                              nodes_list_connection_array[i]['cost2'] )
+                           break
+            md5_config_checksum = md5_of_file( file( config_file ) )
+            self.g.save( md5_config_checksum + '.dump' )
+            i = self.config_table.insert()
+            i.execute({'config_file': config_file, 'md5': md5_config_checksum, 'binary_file': md5_config_checksum + '.dump'})
+
     @cherrypy.expose
     def path(self, slon, slat, dlon, dlat):
         start = self.g.match('foot_sf', float(slon), float(slat))
@@ -317,7 +327,7 @@ class Mumoro:
 
     @cherrypy.expose
     def h(self,id):
-        hashCheck = shorturl.shortURL()
+        hashCheck = shorturl.shortURL(self.metadata,self.session)
         res = hashCheck.getDataFromHash(id)
         if( len(res) > 0 ):
             return self.index(True,res)
@@ -397,7 +407,7 @@ class Mumoro:
           "format":"json",
           "zoom": 18,
           "addressdetails" : 1,
-          "email" : admin_email
+          "email" : 'odysseas.gabrielides@gmail.com'
         })
         conn = httplib.HTTPConnection(url)
         conn.request("GET", "/reverse?" + params)
@@ -407,7 +417,8 @@ class Mumoro:
         if ret:
                 cord_error = ""
                 display_name = ret['display_name']
-                if self.arecovered(float(lon),float(lat)):
+                #if self.arecovered(float(lon),float(lat)):
+                if True:
                         id_node = self.match(float(lon),float(lat))
                         if id_node:
                                 node_error = ""
@@ -433,33 +444,32 @@ class Mumoro:
 
     def arecovered(self,lon,lat):
         return True
-        #Coverage area of Rennes. Hardcored for simplicity      
-        if( lon <= -1.73113 or lon >= -1.56359 or lat <= 48.07448 or lat >= 48.14532 ):
-            return False        
-        else:
-            return True   
+        
         
 if __name__ == '__main__':
-
-    exec( file('configuration_script.py') )
-
+    total = len( sys.argv )
+    if total != 2:
+        sys.exit("Usage: python data_import.py {config_file.py}")
+    if not os.path.exists( os.getcwd() + "/" + sys.argv[1] ):
+        raise NameError('Configuration file does not exist')
+    exec( file( sys.argv[1] ) )
     cherrypy.config.update({
         'tools.encode.on': True,
         'tools.encode.encoding': 'utf-8',
         'tools.decode.on': True,
         'tools.trailing_slash.on': True,
         'tools.staticdir.root': os.path.abspath(os.path.dirname(__file__)) + "/web/",
-
         'server.socket_port': listening_port,
-
         'server.socket_host': '0.0.0.0'
-
     })
-    cherrypy.tree.mount(Mumoro(db_type + ":///" + db_params), '/', config={
+    cherrypy.tree.mount(Mumoro(db_type + ":///" + db_params,sys.argv[1]), '/', config={
         '/': {
                 'tools.staticdir.on': True,
                 'tools.staticdir.dir': 'static'
            },
     })
     cherrypy.quickstart()
+    
+
+    
 
