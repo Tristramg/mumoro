@@ -73,6 +73,7 @@ class BikeStationImporter():
                 self.stations.append(s)
             except:
                 print 'At least one tag misses: num, name, lat, lon, availableSlots, availableBikes, districtName, chrone'
+    
     def to_string(self):
         title = '<div id=\'bikes\'><span class=\'smallTitle\'>'
         textRed = '<span class=\'bikeRed\'>'
@@ -109,10 +110,8 @@ class BikeStationImporter():
 #if __name__ == "__main__":
 #    engine = create_engine('sqlite:////home/ody/takis.db')
 #    metadata = MetaData(bind = engine)
-#    Session = sessionmaker(bind=engine)
-#    session = Session()
 #    u = "http://data.keolis-rennes.com/xml/?version=1.0&key=UAYPAP0MHD482NR&cmd=getstation&param[request]=all"
-#    v = BikeStationImporter( u,'1',metadata,session)
+#    v = BikeStationImporter( u,'1',metadata)
 #    v.import_data()
 #    v.update_from_db()    
 #    print v.to_string()

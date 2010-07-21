@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
+#  -*- coding: utf-8 -*-
 
 from lib.core import mumoro
-from lib import layer 
+from lib import layer
 
 from lib import bikestations as bikestations
 from web import shorturl
@@ -32,8 +32,8 @@ same_nodes_connection_array = []
 nearest_nodes_connection_array = []
 nodes_list_connection_array = []
 
-dbtype = ""
-dbparams = ""
+start_layer =  []
+dest_layer = []
 
 def md5_of_file(filename):
     block_size=2**20
@@ -61,7 +61,7 @@ def import_street_data( filename ):
          ed = row[0]
     return {'nodes': str(nd), 'edges' : str(ed)}
 
-#Loads muncipal data file 
+#Loads muncipal data file
 #( 3 cases : GTFS format (Call TransitFeed), Trident format (Call Chouette), Other : manual implementation ) and insert muncipal data into database.
 #start_date & end_date in this format : 'YYYYMMDD'
 def import_municipal_data( filename, start_date, end_date, network_name = "GTFS"):
@@ -91,23 +91,33 @@ def import_bike_service( url, name ):
     return {'url_api': url,'table': str(bt)}
 
 #Loads data from previous inserted data and creates a layer used in multi-modal graph
-def load_layer( data, layer_name, layer_mode = None ):
-    if not data or not layer_name:
+def load_layer( origin, name, mode = None ):
+    if not origin or not name:
         raise NameError('One or more parameters are missing')
-    if layer_mode != mumoro.Foot and layer_mode != mumoro.Bike and layer_mode != mumoro.Car and layer_mode != None:
+    if mode != mumoro.Foot and mode != mumoro.Bike and mode != mumoro.Car and mode != None:
         raise NameError('Wrong layer mode paramater')
     engine = create_engine(db_type + ":///" + db_params)
     metadata = MetaData(bind = engine)
-    if layer_mode == mumoro.Foot:
-        res = layer.Layer(layer_name, mumoro.Foot,  data, metadata)
-    elif layer_mode == mumoro.Bike:
-        res = layer.Layer(layer_name, mumoro.Bike, data, metadata)
-    elif layer_mode == mumoro.Car:
-        res = layer.Layer(layer_name, mumoro.Car, data, metadata)
+    if mode == mumoro.Foot:
+        res = layer.Layer(name, mumoro.Foot, origin, metadata)
+    elif mode == mumoro.Bike:
+        res = layer.Layer(name, mumoro.Bike, origin, metadata)
+    elif mode == mumoro.Car:
+        res = layer.Layer(name, mumoro.Car, origin, metadata)
     else:
-        res = layer.GTFSLayer(layer_name, data, metadata)
-    layer_array.append( res )
-    return res
+        res = layer.GTFSLayer(name, origin, metadata)
+    layer_array.append( {'layer':res,'name':name,'mode':mode,'origin':origin} )
+    return {'layer':res,'name':name,'mode':mode,'origin':origin} 
+
+def set_starting_layer( layer ):
+    if not layer:
+        raise NameError('Empty layer')
+    start_layer.append( layer )
+
+def set_destination_layer( layer ):
+    if not layer:
+        raise NameError('Empty layer')
+    dest_layer.append( layer )
 
 #Creates a transit cost variable, including the duration in seconds of the transit and if the mode is changed
 def cost( duration, mode_changed ):
@@ -116,7 +126,7 @@ def cost( duration, mode_changed ):
         e.mode_change = 1
     else:
         e.mode_change = 0
-    e.duration = mumoro.Duration( duration );   
+    e.duration = mumoro.Duration( duration );
     return e
 
 #Connects 2 given layers on same nodes with the given cost(s)
@@ -141,7 +151,27 @@ def connect_layers_on_nearest_nodes( layer1 , layer2, cost ):
     nearest_nodes_connection_array.append( { 'layer1':layer1, 'layer2':layer2, 'cost':cost } )
 
 class Mumoro:
-    def __init__(self,db_string,config_file):
+    def __init__(self,db_string,config_file,admin_email,web_url):
+        if not admin_email:
+            raise NameError('Administrator email is empty')
+        self.admin_email = admin_email
+        if not web_url:
+            raise NameError('Website URL is empty')
+        self.web_url = web_url
+        if not layer_array:
+                raise NameError('Can not create multimodal graph beceause there are no layers')
+        layers = []
+        for i in range( len( layer_array ) ):
+            layers.append( layer_array[i]['layer'] )
+        if not start_layer:
+                raise NameError('There is no starting layer')
+        if not dest_layer:
+                raise NameError('There is no destination layer')
+        for i in range( len( layer_array ) ):
+            for j in range( len( layer_array ) ):
+                if i != j:
+                    if layer_array[i]['name'] == layer_array[j]['name']:
+                        raise NameError('Layers can not have the same name')
         self.engine = create_engine(db_string)
         self.metadata = MetaData(bind = self.engine)
         Session = sessionmaker(bind=self.engine)
@@ -156,20 +186,31 @@ class Mumoro:
             for i in range( self.total_bike_stations ):
                 self.bike_stations[i].update_from_db()
         self.timestamp = time.time()
-        self.config_table = Table('config', self.metadata, 
+        self.config_table = Table('config', self.metadata,
             Column('config_file', String, primary_key = True),
             Column('binary_file', String, primary_key = True),
             Column('md5', String, index = True)
             )
+        self.hash_table = Table('hurl', self.metadata,
+        Column('id', String(length=16), primary_key=True),
+        Column('zoom', Integer),
+        Column('lonMap', Float),
+        Column('latMap', Float),
+        Column('lonStart', Float),
+        Column('latStart', Float),
+        Column('lonDest', Float),
+        Column('latDest', Float),
+        Column('addressStart', Text),
+        Column('addressDest', Text),
+        Column('chrone', DateTime(timezone=False))
+        )
         self.metadata.create_all()
         s = self.config_table.select()
         rs = s.execute()
         row = rs.fetchone()
-        if not layer_array:
-                raise NameError('Can not create multimodal graph beceause there are no layers')
         if row and row['md5']== md5_of_file( file( config_file ) ) and os.path.exists( os.getcwd() + "/" + row['binary_file'] ):
                 print "No need to rebuilt graph : configuration didn't change so loading from binary file"
-                self.g = layer.MultimodalGraph(layer_array, str(row['binary_file']))
+                self.g = layer.MultimodalGraph(layers, str(row['binary_file']))
         else:
             if not row:
                 print "This is the first time of launch: creating multimodal graph from scratch"
@@ -183,26 +224,26 @@ class Mumoro:
                 self.session.commit()
             else:
                 os.remove(os.getcwd() + "/" + row['binary_file'])
-            self.g = layer.MultimodalGraph( layer_array )
+            self.g = layer.MultimodalGraph( layers )
             total_same_nodes_connections = len( same_nodes_connection_array )
             if total_same_nodes_connections > 0:
                 for i in range( total_same_nodes_connections ):
-                    self.g.connect_same_nodes( same_nodes_connection_array[i]['layer1'],
-                                               same_nodes_connection_array[i]['layer2'],
+                    self.g.connect_same_nodes( same_nodes_connection_array[i]['layer1']['layer'],
+                                               same_nodes_connection_array[i]['layer2']['layer'],
                                                same_nodes_connection_array[i]['cost'] )
             total_nearest_nodes_connections = len( nearest_nodes_connection_array )
             if total_nearest_nodes_connections > 0:
                 for i in range( total_nearest_nodes_connections ):
-                    self.g.connect_nearest_nodes( nearest_nodes_connection_array[i]['layer1'],
-                                               nearest_nodes_connection_array[i]['layer2'],
+                    self.g.connect_nearest_nodes( nearest_nodes_connection_array[i]['layer1']['layer'],
+                                               nearest_nodes_connection_array[i]['layer2']['layer'],
                                                nearest_nodes_connection_array[i]['cost'] )
             total_nodes_list_connections = len( nodes_list_connection_array )
             if total_nodes_list_connections > 0:
                 for i in range( total_nodes_list_connections ):
                    for j in range( self.total_bike_stations ):
                        if self.bike_stations[j].url == nodes_list_connection_array[i]['node_list']['url_api']:
-                           self.g.connect_nodes_from_list( nodes_list_connection_array[i]['layer1'],
-                                              nodes_list_connection_array[i]['layer2'],
+                           self.g.connect_nodes_from_list( nodes_list_connection_array[i]['layer1']['layer'],
+                                              nodes_list_connection_array[i]['layer2']['layer'],
                                               self.bike_stations[j].stations,
                                               nodes_list_connection_array[i]['cost1'],
                                               nodes_list_connection_array[i]['cost2'] )
@@ -214,21 +255,18 @@ class Mumoro:
 
     @cherrypy.expose
     def path(self, slon, slat, dlon, dlat):
-        start = self.g.match('foot_sf', float(slon), float(slat))
-#        car_start = self.g.match('foot2', float(slon), float(slat))
-        dest = self.g.match('foot_sf', float(dlon), float(dlat))
- #       car_dest = self.g.match('foot2', float(dlon), float(dlat))
-
+        start = self.g.match(start_layer[0]['name'], float(slon), float(slat))
+        dest = self.g.match(dest_layer[0]['name'], float(dlon), float(dlat))
         cherrypy.response.headers['Content-Type']= 'application/json'
         p = mumoro.martins(start, dest, self.g.graph,30000, 7, mumoro.mode_change, mumoro.line_change)
         p_car = []#mumoro.martins(car_start, car_dest, self.g.graph,0, 30000)
         if len(p_car) == 1:
             p_car[0].cost.append(0)
             p_car[0].cost.append(0)
-            print  p_car[0].cost[0]
+            print p_car[0].cost[0]
             p = p + p_car
         if len(p) == 0:
-            return json.dumps({'error': 'No route found'}) 
+            return json.dumps({'error': 'No route found'})
         
         ret = {
                 'objectives': ['Duration', 'Mode changes', 'Line changes'],
@@ -290,7 +328,7 @@ class Mumoro:
     
     @cherrypy.expose
     def match(self, lon, lat):
-        return self.g.match('foot_sf', lon, lat)
+        return self.g.match('foot', lon, lat)
 
     @cherrypy.expose
     def bikes(self):
@@ -312,10 +350,11 @@ class Mumoro:
             return None
 
     @cherrypy.expose
-    def addhash(self,mlon,mlat,zoom,slon,slat,dlon,dlat,saddress,daddress,snode,dnode):
+    def addhash(self,mlon,mlat,zoom,slon,slat,dlon,dlat,saddress,daddress):
+        print "yeah"
         cherrypy.response.headers['Content-Type']= 'application/json'
         hashAdd = shorturl.shortURL(self.metadata)
-        hmd5 =hashAdd.addRouteToDatabase(mlon,mlat,zoom,slon,slat,dlon,dlat,saddress,daddress,snode,dnode)
+        hmd5 =hashAdd.addRouteToDatabase(mlon,mlat,zoom,slon,slat,dlon,dlat,saddress,daddress)
         if( len(hmd5) > 0 ):
             ret = {
                 'h': hmd5
@@ -337,9 +376,11 @@ class Mumoro:
     def index(self,fromHash=False,hashData=[]):
         tmpl = loader.load('index.html')
         if( not fromHash ):
-            return tmpl.generate(fromHash='false',lonMap=default_lon,latMap=default_lat,zoom=15,lonStart=0.0,latStart=0.0,lonDest=0.0,latDest=0.0,addressStart='',addressDest='',s_node=1,d_node=1,hashUrl=web_url).render('html', doctype='html')
+            a = start_layer[0]['layer'].average()
+            b = start_layer[0]['layer'].borders()
+            return tmpl.generate(fromHash='false',lonMap=a['avg_lon'],latMap=a['avg_lat'],zoom=14,lonStart=b['min_lon'],latStart=b['min_lat'],lonDest=b['max_lon'],latDest=b['max_lat'],addressStart='',addressDest='',hashUrl=self.web_url).render('html', doctype='html')
         else:
-            return tmpl.generate(fromHash='true',lonMap=hashData[2],latMap=hashData[3],zoom=hashData[1],lonStart=hashData[4],latStart=hashData[5],lonDest=hashData[6],latDest=hashData[7],addressStart=hashData[8].decode('utf-8'),addressDest=hashData[9].decode('utf-8'),s_node=hashData[10],d_node=hashData[11],hashUrl=web_url).render('html', doctype='html')
+            return tmpl.generate(fromHash='true',lonMap=hashData[2],latMap=hashData[3],zoom=hashData[1],lonStart=hashData[4],latStart=hashData[5],lonDest=hashData[6],latDest=hashData[7],addressStart=hashData[8].decode('utf-8'),addressDest=hashData[9].decode('utf-8'),hashUrl=self.web_url).render('html', doctype='html')
 
 
     @cherrypy.expose
@@ -356,37 +397,30 @@ class Mumoro:
           "format":"json",
           "polygon": 0,
           "addressdetails" : 1,
-          "email" : admin_email
+          "email" : self.admin_email
         })
         conn = httplib.HTTPConnection(url)
         conn.request("GET", "/search?" + params)
         response = conn.getresponse()
-        ret = json.loads(response.read()) 
-        is_covered = False      
+        ret = json.loads(response.read())
+        is_covered = False
         if ret:
                 cord_error = ""
                 lon = ret[0]['lon']
                 lat = ret[0]['lat']
                 display_name = ret[0]['display_name']
                 if self.arecovered(lon,lat):
-                        id_node = self.match(lon,lat)
-                        if id_node:
-                                node_error = ""
-                                is_covered = True
-                        else:
-                                node_error = "match failed"
+                        node_error = ""
+                        is_covered = True
                 else:
-                        id_node = 0
                         node_error = "not covered area"
         else:
                 cord_error = "geocoding failed"
                 lon = 0
                 lat = 0
                 display_name = ""
-                id_node = 0             
                 node_error = "match failed because geocoding failed"
         data = {
-                'node': id_node,
                 'lon': lon,
                 'lat': lat,
                 'display_name': display_name,
@@ -406,52 +440,44 @@ class Mumoro:
           "format":"json",
           "zoom": 18,
           "addressdetails" : 1,
-          "email" : 'odysseas.gabrielides@gmail.com'
+          "email" : self.admin_email
         })
         conn = httplib.HTTPConnection(url)
         conn.request("GET", "/reverse?" + params)
         response = conn.getresponse()
-        ret = json.loads(response.read()) 
-        is_covered = False      
+        ret = json.loads(response.read())
+        is_covered = False
         if ret:
                 cord_error = ""
                 display_name = ret['display_name']
-                print str( lon ) + " >>>> " + str( lat )
-                #if self.arecovered(float(lon),float(lat)):
-                if True:
-                        id_node = self.match(float(lon),float(lat))
-                        if id_node:
-                                node_error = ""
-                                is_covered = True
-                        else:
-                                node_error = "match failed"
+                if self.arecovered(float(lon),float(lat)):
+                        node_error = ""
+                        is_covered = True
                 else:
-                        id_node = 0
                         node_error = "not covered area"
         else:
                 cord_error = "geocoding failed"
                 display_name = ""
-                id_node = 0             
                 node_error = "match failed because revgeocoding failed"
         data = {
-                'node': id_node,
                 'display_name': display_name,
                 'node_error': node_error,
                 'cord_error': cord_error,
                 'is_covered': is_covered
         }
-        print "RETURN :"
-        print data
         return json.dumps(data)
 
     def arecovered(self,lon,lat):
-        return True
-        
-        
+        for i in range( len( layer_array ) ):
+            b = layer_array[i]['layer'].borders()
+            if lon >= b['min_lon'] and lon <= b['max_lon'] and lat >= b['min_lat'] and lat <= b['max_lat']:
+                return True
+        return False
+
 if __name__ == '__main__':
     total = len( sys.argv )
     if total != 2:
-        sys.exit("Usage: python data_import.py {config_file.py}")
+        sys.exit("Usage: python server.py {config_file.py}")
     if not os.path.exists( os.getcwd() + "/" + sys.argv[1] ):
         raise NameError('Configuration file does not exist')
     exec( file( sys.argv[1] ) )
@@ -464,7 +490,7 @@ if __name__ == '__main__':
         'server.socket_port': listening_port,
         'server.socket_host': '0.0.0.0'
     })
-    cherrypy.tree.mount(Mumoro(db_type + ":///" + db_params,sys.argv[1]), '/', config={
+    cherrypy.tree.mount(Mumoro(db_type + ":///" + db_params,sys.argv[1],admin_email,web_url), '/', config={
         '/': {
                 'tools.staticdir.on': True,
                 'tools.staticdir.dir': 'static'
@@ -472,6 +498,3 @@ if __name__ == '__main__':
     })
     cherrypy.quickstart()
     
-
-    
-

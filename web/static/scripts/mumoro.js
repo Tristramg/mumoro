@@ -17,7 +17,7 @@ function compute() {
         function(data) {
                 if(data.error) {
                     $("#path_costs").html("<span class=\"errorOrange\">No route found</span>");
-                clearAll();
+                clearPath();
                 clearArrow("start");
                 clearArrow("dest");
                 }
@@ -66,7 +66,11 @@ function handleClick(coord, mark) {
 // Coordinates in 4326 projection (lon/lat)
 function setMark(lonlat, mark)
 {
-    clearArrow(mark);
+    if(node_markers[mark]) {
+        layerMarkers.removeFeatures(node_markers[mark]);
+        node_markers[mark].destroy();
+        node_markers[mark] = null;
+    }
     node_markers[mark] = new OpenLayers.Feature.Vector(LonLatToPoint(LonLatToM(
                                         new OpenLayers.LonLat(lonlat.lon,lonlat.lat))), 
                                         mark, 
@@ -78,7 +82,7 @@ function setMark(lonlat, mark)
 } // End of function setMark(lonlat, mark)
 
 function areBothMarked() {
-    return nodes['start'] && nodes['dest']; 
+        return nodes['start'].lon && nodes['dest'].lat && nodes['dest'].lon && nodes['dest'].lat; 
 }
 
 function addToHash() {
@@ -95,9 +99,8 @@ function addToHash() {
                 dlon: nodes['dest'].lon,
                 dlat: nodes['dest'].lat,
                 saddress: document.getElementById('startAdr').value,
-                daddress: document.getElementById('endAdr').value,
-                snode: nodes['start'].node,
-                dnode: nodes['dest'].node},
+                daddress: document.getElementById('endAdr').value
+                },
                 function(data)
                 {
                     if(data.error)
@@ -153,7 +156,7 @@ function init() {
     );
     // Define the map layer
     // Other defined layers are OpenLayers.Layer.OSM.Mapnik, OpenLayers.Layer.OSM.Maplint and OpenLayers.Layer.OSM.CycleMap
-   layerTilesMapnik = new OpenLayers.Layer.OSM.Mapnik("Mapnik");
+    layerTilesMapnik = new OpenLayers.Layer.OSM.Mapnik("Mapnik");
     map.addLayer(layerTilesMapnik);
     var cloudmade = new OpenLayers.Layer.CloudMade("CloudMade", {
     key: 'fff941bc66c34422a2e41a529e34aebc',
@@ -208,18 +211,27 @@ function init() {
         var tmpStart = new OpenLayers.LonLat(lonStart, latStart);
         var tmpDest = new OpenLayers.LonLat(lonDest, latDest);
         nodes['start'] = {
-            'node': s_n,
             'lon': lonStart,
             'lat': latStart
         };
         nodes['dest'] = {
-            'node': d_n,
             'lon': lonDest,
             'lat': latDest
         };
         setMark(tmpStart,"start");
         setMark(tmpDest,"dest");
         compute();
+    }
+    else {
+        s = {
+            'lon': lonStart,
+            'lat': latStart
+        }
+        d = {
+            'lon': lonDest,
+            'lat': latDest
+        }
+        centerToMap(s,d)
     }
     $("#map").contextMenu({
         menu: 'myMenu'
@@ -258,7 +270,7 @@ function hasChanged(mark) {
     }
 }
 
-function clearAll() {
+function clearPath() {
     $("#routing_description").html("");
     $("#path_costs").html("");
     $("#hash_url").html("");
@@ -267,12 +279,9 @@ function clearAll() {
 
 function clearArrow(mark) {
     nodes[mark] = null;
-    if(node_markers[mark])
-    {
-        layerMarkers.removeFeatures(node_markers[mark]);
-        node_markers[mark].destroy(); 
-        node_markers[mark] = null;
-    }
+    layerMarkers.removeFeatures(node_markers[mark]);
+    node_markers[mark].destroy(); 
+    node_markers[mark] = null;
 }
 
 function geocoding(str,mark) {
@@ -283,14 +292,14 @@ function geocoding(str,mark) {
                     if( mark == "start" ) {
                         document.getElementById('startAdr').style.backgroundColor = "#f48b5d";
                         $("#formError_start").html("<span class=\"errorOrange\">Nothing found. Please type again.</span>");
-                        clearAll();
+                        clearPath();
                         clearArrow(mark);
                     
                     }                   
                     else if( mark == "dest" ) {
                         document.getElementById('endAdr').style.backgroundColor = "#f48b5d";
                         $("#formError_dest").html("<span class=\"errorOrange\">Nothing found. Please type again.</span>");
-                        clearAll();
+                        clearPath();
                         clearArrow(mark);
                     }               
                 }
@@ -298,14 +307,14 @@ function geocoding(str,mark) {
                     if( mark == "start" ) {
                         document.getElementById('startAdr').style.backgroundColor = "#f48b5d";
                         $("#formError_start").html("<span class=\"errorOrange\">Not in covered zone.</span>");
-                        clearAll();
+                        clearPath();
                         clearArrow(mark);
                     
                     }                   
                     else if( mark == "dest" ) {
                         document.getElementById('endAdr').style.backgroundColor = "#f48b5d";
                         $("#formError_dest").html("<span class=\"errorOrange\">Not in covered zone.</span>");
-                        clearAll();
+                        clearPath();
                         clearArrow(mark);
                     }               
                 }               
@@ -315,7 +324,7 @@ function geocoding(str,mark) {
                         $("#formError_start").html(
                             "<span class=\"errorOrange\">Can not find a node. Retry with a different address.</span>"
                         );
-                        clearAll();
+                        clearPath();
                         clearArrow(mark);
                     
                     }                   
@@ -324,7 +333,7 @@ function geocoding(str,mark) {
                         $("#formError_dest").html(
                             "<span class=\"errorOrange\">Can not find a node. Retry with a different address.</span>"
                         );
-                        clearAll();
+                        clearPath();
                         clearArrow(mark);
                     }               
                 }
@@ -337,9 +346,8 @@ function geocoding(str,mark) {
                     if( hasChanged(mark) ) {    
                         nodes['fmouse_'+mark] = false;      
                         nodes[mark] = {
-                            'node': data.node,
-                                'lon': data.lon,
-                                'lat': data.lat
+                            'lon': data.lon,
+                            'lat': data.lat
                         };                      
                         setMark(cord,mark);
                         if( areBothMarked() ) { 
@@ -361,7 +369,7 @@ function validateAddresses(f) {
         document.getElementById('startAdr').focus();
         document.getElementById('startAdr').style.backgroundColor = "#f64444";
         $("#formError_start").html("<span class=\"errorRed\">Enter a starting address</span>");
-        clearAll();
+        clearPath();
         clearArrow("start");
     }
     else {
@@ -372,7 +380,7 @@ function validateAddresses(f) {
         document.getElementById('endAdr').focus();
         document.getElementById('endAdr').style.backgroundColor = "#f64444";
         $("#formError_dest").html("<span class=\"errorRed\">Enter a destination</span>");
-        clearAll();
+        clearPath();
         clearArrow("dest");
     }
     else {
@@ -402,14 +410,14 @@ function reverseGeocoding(lonlat,mark) {
                     if( mark == "start" ) {
                         document.getElementById('startAdr').style.backgroundColor = "#f48b5d";
                         $("#formError_start").html("<span class=\"errorOrange\">Nothing found. Please type again.</span>");
-                        clearAll();
+                        clearPath();
                         clearArrow(mark);
                     
                     }                   
                     else if( mark == "dest" ) {
                         document.getElementById('endAdr').style.backgroundColor = "#f48b5d";
                         $("#formError_dest").html("<span class=\"errorOrange\">Nothing found. Please type again.</span>");
-                        clearAll();
+                        clearPath();
                         clearArrow(mark);
                     }               
                 }
@@ -417,14 +425,14 @@ function reverseGeocoding(lonlat,mark) {
                     if( mark == "start" ) {
                         document.getElementById('startAdr').style.backgroundColor = "#f48b5d";
                         $("#formError_start").html("<span class=\"errorOrange\">Not in covered zone.</span>");
-                        clearAll();
+                        clearPath();
                         clearArrow(mark);
                     
                     }                   
                     else if( mark == "dest" ) {
                         document.getElementById('endAdr').style.backgroundColor = "#f48b5d";
                         $("#formError_dest").html("<span class=\"errorOrange\">Not in covered zone.</span>");
-                        clearAll();
+                        clearPath();
                         clearArrow(mark);
                     }               
                 }               
@@ -434,7 +442,7 @@ function reverseGeocoding(lonlat,mark) {
                         $("#formError_start").html(
                             "<span class=\"errorOrange\">Can not find a node. Retry with a different address.</span>"
                         );
-                        clearAll();
+                        clearPath();
                         clearArrow(mark);
                     
                     }                   
@@ -443,7 +451,7 @@ function reverseGeocoding(lonlat,mark) {
                         $("#formError_dest").html(
                             "<span class=\"errorOrange\">Can not find a node. Retry with a different address.</span>"
                         );
-                        clearAll();
+                        clearPath();
                         clearArrow(mark);
                     }               
                 }
@@ -460,12 +468,12 @@ function reverseGeocoding(lonlat,mark) {
                         $("#formError_dest").html("");
                     }
                     nodes[mark] = {
-                        'node': data.node,
                         'lon': lonlat.lon,
                         'lat': lonlat.lat
                     };
                     setMark(cord,mark);                 
-                    if( areBothMarked() ) { 
+                    
+                     if( areBothMarked() ) { 
                         compute();
                     }
                 }

@@ -10,24 +10,10 @@ from sqlalchemy import *
 class shortURL:
     def __init__(self,metadata):
         self.metadata = metadata
-        self.hash_table = Table('hurl', self.metadata,
-        Column('id', String(length=16), primary_key=True),
-        Column('zoom', Integer),
-        Column('lonMap', Float),
-        Column('latMap', Float),
-        Column('lonStart', Float),
-        Column('latStart', Float),
-        Column('lonDest', Float),
-        Column('latDest', Float),
-        Column('addressStart', Text),
-        Column('addressDest', Text),
-        Column('chrone', DateTime(timezone=False)),
-        Column('s_node', Integer),
-        Column('d_node', Integer),
-        )
-        self.metadata.create_all()
+        self.hash_table = Table('hurl', self.metadata,useexisting=True)
+        #self.metadata.create_all(useexisting=True)
 
-    def addRouteToDatabase(self,lonMap,latMap,zoom,lonStart,latStart,lonDest,latDest,addressStart,addressDest,nodeStart,nodeDest):
+    def addRouteToDatabase(self,lonMap,latMap,zoom,lonStart,latStart,lonDest,latDest,addressStart,addressDest):
         h = hashlib.md5()
 	chrone = datetime.datetime.now()
         h.update(addressStart.encode("utf-8"))
@@ -39,9 +25,7 @@ class shortURL:
         h.update(str(lonMap))
         h.update(str(latMap))
         h.update(str(zoom))
-	h.update(str(nodeStart))
-	h.update(str(nodeDest))
-        h.update(str(chrone).encode("utf-8"))
+	h.update(str(chrone).encode("utf-8"))
         i = self.hash_table.insert()
         i.execute({'id': h.hexdigest()[0:16],
                    'zoom': zoom,
@@ -53,9 +37,7 @@ class shortURL:
                    'latDest': latDest,
                    'addressStart': addressStart,
                    'addressDest': addressDest,
-                   'chrone': chrone,
-                   's_node': nodeStart,
-                   'd_node':  nodeDest}
+                   'chrone': chrone}
         )
         return h.hexdigest()[0:16]
 
@@ -72,10 +54,8 @@ class shortURL:
             res.append( u.latStart )
             res.append( u.lonDest )
             res.append( u.latDest )
-            res.append( u.addressStart )
-            res.append( u.addressDest )
-            res.append( u.s_node )
-            res.append( u.d_node )
+            res.append( u.addressStart.encode("utf-8") )
+            res.append( u.addressDest.encode("utf-8") )
             return res
         return res 
 
@@ -84,6 +64,6 @@ class shortURL:
 #    metadata = MetaData(bind = engine)
 #    v = shortURL(metadata)
 #    print v.getDataFromHash('5c03d48b900b614d')
-#    v.addRouteToDatabase(1.46,48.3,15,6.22,65.33,43.21,43.11,'Takis the cat','Toulouse clemence',12,2343)
+#    v.addRouteToDatabase(1.46,48.3,15,6.22,65.33,43.21,43.11,'Takis the cat','Toulouse clemence')
 
 

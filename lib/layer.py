@@ -47,10 +47,6 @@ class BaseLayer(object):
         self.nodes_table = Table(data['nodes'], metadata, autoload = True)
         self.edges_table = Table(data['edges'], metadata, autoload = True)
         self.count = select([func.count(self.nodes_table.c.id)]).execute().first()[0]
-        #s = select([func.count(self.nodes_table.c.id)])
-        #rs = s.execute()
-        #for row in rs:
-        #    self.count = row[0]
 
     def map(self, o_id):
         s = self.nodes_table.select(self.nodes_table.c.original_id==o_id)
@@ -62,7 +58,18 @@ class BaseLayer(object):
         else:
             print "Unable to find id {0}".format(o_id)
             raise DataIncoherence()
-        
+
+    def borders(self):
+        max_lon = select([func.max(self.nodes_table.c.lon, type_=Float )]).execute().first()[0]    
+        min_lon = select([func.min(self.nodes_table.c.lon, type_=Float )]).execute().first()[0]
+        max_lat = select([func.max(self.nodes_table.c.lat, type_=Float )]).execute().first()[0]    
+        min_lat = select([func.min(self.nodes_table.c.lat, type_=Float )]).execute().first()[0]
+        return {'max_lon': max_lon,'min_lon': min_lon,'max_lat':max_lat,'min_lat':min_lat}
+
+    def average(self):
+        avg_lon = select([func.avg(self.nodes_table.c.lon, type_=Float )]).execute().first()[0]    
+        avg_lat = select([func.avg(self.nodes_table.c.lat, type_=Float )]).execute().first()[0]
+        return {'avg_lon':avg_lon, 'avg_lat':avg_lat }
  
     def match(self, ln, lt):
         epsilon = 0.002
@@ -191,7 +198,6 @@ class MultimodalGraph(object):
         if filename:
             self.graph = mumoro.Graph(filename)
         else:
-            print layers
             count = 0
             for l in layers:
                 for e in l.edges():

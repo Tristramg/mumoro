@@ -63,6 +63,7 @@ class Importer():
         osm4routing.parse(filename, self.db_string, str(edges.id), str(nodes.id) ) 
         self.init_mappers()
         print "Done importing street data from " + filename
+        print "---------------------------------------------------------------------"
 
     def import_gtfs(self, filename, start_date, end_date, network_name = "GTFS"):
         print "Adding municipal data from " + filename
@@ -78,17 +79,19 @@ class Importer():
         self.session.commit()
         gtfs_reader.convert(filename, self.session, start_date, end_date)
         self.init_mappers()
-        print "Done importing municipal data from " + filename
+        print "Done importing municipal data from " + filename + " for network '" + network_name + "'"
+        print "---------------------------------------------------------------------"
 
     def import_bike(self, url, name):
         print "Adding public bike service from " + url
         bike_service = Metadata(name, "bike_stations", url )
         self.session.add(bike_service)
         self.session.commit()
-        i = bikestations.BikeStationImporter( url, str(bike_service.id), self.metadata, self.session )
+        i = bikestations.BikeStationImporter( url, str(bike_service.id), self.metadata)
         i.import_data()
         self.init_mappers()
-        print "Done importing bike service from " + url
+        print "Done importing bike service '" + name + "'"
+        print "---------------------------------------------------------------------"
 
 #Loads an osm (compressed of not) file and insert data into database
 def import_street_data( filename ):
@@ -115,7 +118,13 @@ def import_bike_service( url, name ):
     bike_service_array.append( {'url_api': url, 'service_name': name } )
 
 #Loads data from previous inserted data and creates a layer used in multi-modal graph
-def load_layer( data, layer_name, layer_mode = None):
+def load_layer( origin, name, mode = None):
+    pass
+
+def set_starting_layer( layer ):
+    pass
+
+def set_destination_layer( layer ):
     pass
 
 #Creates a transit cost variable, including the duration in seconds of the transit and if the mode is changed
