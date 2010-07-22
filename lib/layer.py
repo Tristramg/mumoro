@@ -72,6 +72,7 @@ class BaseLayer(object):
         return {'avg_lon':avg_lon, 'avg_lat':avg_lat }
  
     def match(self, ln, lt):
+        print "Trying to match {0}, {1}".format(ln, lt)
         epsilon = 0.002
         ln = float(ln)
         lt = float(lt)
@@ -84,8 +85,10 @@ class BaseLayer(object):
                 ).execute().first()
             
         if res:
+            print "Yehaa"
             return res.id + self.offset
         else:
+            print "Oh noez"
             return None
 
  

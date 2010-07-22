@@ -11,7 +11,7 @@ setup(name='Mumoro',
       license = 'GPLv3',
       packages = ['lib', 'lib.core', 'web'],
 
-      install_requires = ['cherrypy', 'genshi', 'simplejson', 'transitfeed', 'setuptools-git', 'osm4routing'],
+      install_requires = ['cherrypy', 'genshi', 'simplejson', 'transitfeed', 'setuptools-git', 'osm4routing', "iso8601"],
       ext_modules = [
           Extension("lib.core._mumoro",
               sources=["lib/core/martins.cpp", "lib/core/graph_wrapper.cpp", "lib/core/mumoro.i"],
