@@ -39,8 +39,10 @@ class Importer():
         else:
             print "No street data is imported"
         if municipal_data_array:
+            if not is_date_valid( starting_date ) or not is_date_valid( end_date ):
+                raise NameError('Invalid date')
             for m in municipal_data_array:
-                self.import_gtfs( m['file'], m['sdate'], m['edate'], m['network'] )
+                self.import_gtfs( m['file'], starting_date, end_date, m['network'] )
         else:
             print "No municipal data is imported"
         if bike_service_array:
@@ -101,15 +103,10 @@ def import_street_data( filename ):
 
 #Loads muncipal data file 
 #( 3 cases : GTFS format (Call TransitFeed), Trident format (Call Chouette), Other : manual implementation ) and insert muncipal data into database.
-#start_date & end_date in this format : 'YYYYMMDD'
-def import_municipal_data( filename, start_date, end_date, network_name = "GTFS"):
+def import_municipal_data( filename, network_name = "GTFS"):
     if not os.path.exists( filename ):
         raise NameError('File does not exist')
-    if not start_date:
-        raise NameError('Enter a starting date')
-    if not end_date:
-        raise NameError('Enter an end date')
-    municipal_data_array.append( {'file': filename, 'sdate': start_date, 'edate': end_date, 'network': network_name } )
+    municipal_data_array.append( {'file': filename, 'network': network_name } )
 
 #Loads a bike service API ( from already formatted URL ). Insert bike stations in database and enables schedulded re-check.
 def import_bike_service( url, name ):
@@ -118,7 +115,7 @@ def import_bike_service( url, name ):
     bike_service_array.append( {'url_api': url, 'service_name': name } )
 
 #Loads data from previous inserted data and creates a layer used in multi-modal graph
-def load_layer( origin, name, mode = None):
+def load_layer( origin, name, color, mode = None):
     pass
 
 def set_starting_layer( layer ):
@@ -142,6 +139,27 @@ def connect_layers_from_node_list( layer1, layer2, node_list, cost, cost2 = None
 #Connect 2 given layers on nearest nodes
 def connect_layers_on_nearest_nodes( layer1 , layer2, cost ):
     pass
+
+def is_date_valid( date ):
+    if len( date ) == 8:
+        try:
+            y = int( date[0:4] )
+            if y > 1950:
+                try:
+                    m = int( date[4:6] )
+                    if m > 0 and m < 13:
+                        try:
+                            d = int( date[6:8] )
+                            if d > 0 and d < 32:
+                                return True
+                        except ValueError:
+                            return False
+                except ValueError:
+                    return False
+        except ValueError:
+            return False
+    return False
+
 
 if __name__ == "__main__":
     total = len( sys.argv )

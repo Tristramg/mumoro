@@ -46,6 +46,27 @@ def md5_of_file(filename):
     filename.close()
     return md5.hexdigest()
 
+def is_color_valid( color ):
+    if len( color ) == 7:
+        if color[0] == '#':
+            try:
+                r = int( color[1:3], 16)
+                if r <= 255 and r >= 0:
+                    try:
+                        g = int( color[3:5], 16)
+                        if g <= 255 and g >= 0:
+                            try:
+                                b = int( color[5:7], 16)
+                                if b <= 255 and b >= 0:
+                                    return True
+                            except ValueError:
+                                return False
+                    except ValueError:
+                        return False
+            except ValueError:
+                return False
+    return False
+
 #Loads an osm (compressed of not) file and insert data into database
 def import_street_data( filename ):
     engine = create_engine( db_type + ":///" + db_params )
@@ -91,9 +112,11 @@ def import_bike_service( url, name ):
     return {'url_api': url,'table': str(bt)}
 
 #Loads data from previous inserted data and creates a layer used in multi-modal graph
-def load_layer( origin, name, mode = None ):
+def load_layer( origin, name, color, mode = None ):
     if not origin or not name:
         raise NameError('One or more parameters are missing')
+    if not is_color_valid( color ):
+        raise NameError('Color for the layer is invalid')
     if mode != mumoro.Foot and mode != mumoro.Bike and mode != mumoro.Car and mode != None:
         raise NameError('Wrong layer mode paramater')
     engine = create_engine(db_type + ":///" + db_params)
@@ -106,8 +129,8 @@ def load_layer( origin, name, mode = None ):
         res = layer.Layer(name, mumoro.Car, origin, metadata)
     else:
         res = layer.GTFSLayer(name, origin, metadata)
-    layer_array.append( {'layer':res,'name':name,'mode':mode,'origin':origin} )
-    return {'layer':res,'name':name,'mode':mode,'origin':origin} 
+    layer_array.append( {'layer':res,'name':name,'mode':mode,'origin':origin,'color':color} )
+    return {'layer':res,'name':name,'mode':mode,'origin':origin,'color':color} 
 
 def set_starting_layer( layer ):
     if not layer:
@@ -216,14 +239,14 @@ class Mumoro:
                 print "This is the first time of launch: creating multimodal graph from scratch"
             elif row['md5'] != md5_of_file( file( config_file ) ):
                 print "Configuration has changed since last launch. Rebuilding multimodal graph"
+                if os.path.exists( os.getcwd() + "/" + row['binary_file'] ) :
+                    os.remove(os.getcwd() + "/" + row['binary_file'])   
                 self.config_table.delete().execute()
                 self.session.commit()
             elif not os.path.exists( os.getcwd() + "/" + row['binary_file'] ) :
                 print "Configuration has not changed since last launch but binary file is missing. Rebuilding multimodal graph"
                 self.config_table.delete().execute()
                 self.session.commit()
-            else:
-                os.remove(os.getcwd() + "/" + row['binary_file'])
             self.g = layer.MultimodalGraph( layers )
             total_same_nodes_connections = len( same_nodes_connection_array )
             if total_same_nodes_connections > 0:
@@ -240,14 +263,28 @@ class Mumoro:
             total_nodes_list_connections = len( nodes_list_connection_array )
             if total_nodes_list_connections > 0:
                 for i in range( total_nodes_list_connections ):
-                   for j in range( self.total_bike_stations ):
-                       if self.bike_stations[j].url == nodes_list_connection_array[i]['node_list']['url_api']:
-                           self.g.connect_nodes_from_list( nodes_list_connection_array[i]['layer1']['layer'],
+                   try:
+                       nodes_list_connection_array[i]['node_list']['url_api']
+                       print 'Assuming that the nodes list are bike stations'
+                       for j in range( self.total_bike_stations ):
+                           if self.bike_stations[j].url == nodes_list_connection_array[i]['node_list']['url_api']:
+                               self.g.connect_nodes_from_list( nodes_list_connection_array[i]['layer1']['layer'],
                                               nodes_list_connection_array[i]['layer2']['layer'],
                                               self.bike_stations[j].stations,
                                               nodes_list_connection_array[i]['cost1'],
                                               nodes_list_connection_array[i]['cost2'] )
-                           break
+                               break
+                   except KeyError:
+                       try:
+                           nodes_list_connection_array[i]['node_list']['layer']
+                           print 'Assuming that the nodes list is a municipal transport layer'
+                           self.g.connect_nodes_from_list( nodes_list_connection_array[i]['layer1']['layer'],
+                                              nodes_list_connection_array[i]['layer2']['layer'],
+                                              nodes_list_connection_array[i]['node_list']['layer'].nodes(),
+                                              nodes_list_connection_array[i]['cost1'],
+                                              nodes_list_connection_array[i]['cost2'] )
+                       except KeyError:
+                           raise NameError('Can not connect layers from the node list')
             md5_config_checksum = md5_of_file( file( config_file ) )
             self.g.save( md5_config_checksum + '.dump' )
             i = self.config_table.insert()
@@ -351,7 +388,6 @@ class Mumoro:
 
     @cherrypy.expose
     def addhash(self,mlon,mlat,zoom,slon,slat,dlon,dlat,saddress,daddress):
-        print "yeah"
         cherrypy.response.headers['Content-Type']= 'application/json'
         hashAdd = shorturl.shortURL(self.metadata)
         hmd5 =hashAdd.addRouteToDatabase(mlon,mlat,zoom,slon,slat,dlon,dlat,saddress,daddress)
@@ -375,12 +411,18 @@ class Mumoro:
     @cherrypy.expose
     def index(self,fromHash=False,hashData=[]):
         tmpl = loader.load('index.html')
+        t = "{"
+        for i in range( len( layer_array ) ):
+            t = t + "\"" + layer_array[i]['name'] + "\": { strokeColor : \"" + layer_array[i]['color'] + "\"}"
+            if i != len( layer_array ) - 1 :
+                t = t + ","
+        t = t + "}"
         if( not fromHash ):
             a = start_layer[0]['layer'].average()
             b = start_layer[0]['layer'].borders()
-            return tmpl.generate(fromHash='false',lonMap=a['avg_lon'],latMap=a['avg_lat'],zoom=14,lonStart=b['min_lon'],latStart=b['min_lat'],lonDest=b['max_lon'],latDest=b['max_lat'],addressStart='',addressDest='',hashUrl=self.web_url).render('html', doctype='html')
+            return tmpl.generate(fromHash='false',lonMap=a['avg_lon'],latMap=a['avg_lat'],zoom=14,lonStart=b['min_lon'],latStart=b['min_lat'],lonDest=b['max_lon'],latDest=b['max_lat'],addressStart='',addressDest='',hashUrl=self.web_url,layers=t).render('html', doctype='html')
         else:
-            return tmpl.generate(fromHash='true',lonMap=hashData[2],latMap=hashData[3],zoom=hashData[1],lonStart=hashData[4],latStart=hashData[5],lonDest=hashData[6],latDest=hashData[7],addressStart=hashData[8].decode('utf-8'),addressDest=hashData[9].decode('utf-8'),hashUrl=self.web_url).render('html', doctype='html')
+            return tmpl.generate(fromHash='true',lonMap=hashData[2],latMap=hashData[3],zoom=hashData[1],lonStart=hashData[4],latStart=hashData[5],lonDest=hashData[6],latDest=hashData[7],addressStart=hashData[8].decode('utf-8'),addressDest=hashData[9].decode('utf-8'),hashUrl=self.web_url,layers=l).render('html', doctype='html')
 
 
     @cherrypy.expose
