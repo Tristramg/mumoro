@@ -1,6 +1,7 @@
 #  -*- coding: utf-8 -*-
 
 from lib.core import mumoro
+from lib.core.mumoro import Bike, Car, Foot, PublicTransport
 from lib import layer
 
 from lib import bikestations as bikestations
@@ -82,22 +83,21 @@ def import_street_data( filename ):
          ed = row[0]
     return {'nodes': str(nd), 'edges' : str(ed)}
 
-#Loads muncipal data file
-#( 3 cases : GTFS format (Call TransitFeed), Trident format (Call Chouette), Other : manual implementation ) and insert muncipal data into database.
-#start_date & end_date in this format : 'YYYYMMDD'
-def import_municipal_data( filename, start_date, end_date, network_name = "GTFS"):
+# Loads the tables corresponding to the public transport layer
+def import_gtfs_data( filename, network_name = "Public Transport"):
     engine = create_engine(db_type + ":///" + db_params)
     metadata = MetaData(bind = engine)
     mumoro_metadata = Table('metadata', metadata, autoload = True)
-    s = mumoro_metadata.select((mumoro_metadata.c.origin == filename) & (mumoro_metadata.c.node_or_edge == 'Nodes'))
-    rs = s.execute()
-    for row in rs:
-         nd = row[0]
-    s = mumoro_metadata.select((mumoro_metadata.c.origin == filename) & (mumoro_metadata.c.node_or_edge == 'Edges'))
-    rs = s.execute()
-    for row in rs:
-         ed = row[0]
-    return {'nodes': str(nd), 'edges' : str(ed)}
+    nd = mumoro_metadata.select((mumoro_metadata.c.origin == filename) & (mumoro_metadata.c.node_or_edge == 'Nodes')).execute().first()[0]
+
+    ed = mumoro_metadata.select((mumoro_metadata.c.origin == filename) & (mumoro_metadata.c.node_or_edge == 'Edges')).execute().first()[0]
+    
+    services = mumoro_metadata.select((mumoro_metadata.c.origin == filename) & (mumoro_metadata.c.node_or_edge == 'Services')).execute().first()[0]
+
+    return {'nodes': str(nd), 'edges' : str(ed), 'services': str(services) }
+
+def import_kalkati_data(filename, network_name = "Public Transport"):
+    return import_gtfs_data(filename, network_name)
 
 #Loads a bike service API ( from already formatted URL ). Insert bike stations in database and enables schedulded re-check.
 def import_bike_service( url, name ):
@@ -112,8 +112,8 @@ def import_bike_service( url, name ):
     return {'url_api': url,'table': str(bt)}
 
 #Loads data from previous inserted data and creates a layer used in multi-modal graph
-def load_layer( origin, name, color, mode = None ):
-    if not origin or not name:
+def street_layer( data, name, color, mode ):
+    if not data or not name:
         raise NameError('One or more parameters are missing')
     if not is_color_valid( color ):
         raise NameError('Color for the layer is invalid')
@@ -121,16 +121,16 @@ def load_layer( origin, name, color, mode = None ):
         raise NameError('Wrong layer mode paramater')
     engine = create_engine(db_type + ":///" + db_params)
     metadata = MetaData(bind = engine)
-    if mode == mumoro.Foot:
-        res = layer.Layer(name, mumoro.Foot, origin, metadata)
-    elif mode == mumoro.Bike:
-        res = layer.Layer(name, mumoro.Bike, origin, metadata)
-    elif mode == mumoro.Car:
-        res = layer.Layer(name, mumoro.Car, origin, metadata)
-    else:
-        res = layer.GTFSLayer(name, origin, metadata)
-    layer_array.append( {'layer':res,'name':name,'mode':mode,'origin':origin,'color':color} )
-    return {'layer':res,'name':name,'mode':mode,'origin':origin,'color':color} 
+    res = layer.Layer(name, mode, data, metadata)
+    layer_array.append( {'layer':res,'name':name,'mode':mode,'origin':data,'color':color} )
+    return {'layer':res,'name':name,'mode':mode,'origin':data,'color':color} 
+    
+def public_transport_layer(data, name, color): 
+    engine = create_engine(db_type + ":///" + db_params)
+    metadata = MetaData(bind = engine)
+    res = layer.GTFSLayer(name, data, metadata)
+    layer_array.append( {'layer':res,'name':name,'mode':PublicTransport,'origin':data,'color':color} )
+    return {'layer':res,'name':name,'mode':PublicTransport,'origin':PublicTransport,'color':color} 
 
 def set_starting_layer( layer ):
     if not layer:
@@ -143,9 +143,9 @@ def set_destination_layer( layer ):
     dest_layer.append( layer )
 
 #Creates a transit cost variable, including the duration in seconds of the transit and if the mode is changed
-def cost( duration, mode_changed ):
+def cost( duration, mode_change ):
     e = mumoro.Edge()
-    if mode_changed:
+    if mode_change:
         e.mode_change = 1
     else:
         e.mode_change = 0
@@ -277,7 +277,7 @@ class Mumoro:
                    except KeyError:
                        try:
                            nodes_list_connection_array[i]['node_list']['layer']
-                           print 'Assuming that the nodes list is a municipal transport layer'
+                           print 'Assuming that the nodes list is a public transport layer'
                            self.g.connect_nodes_from_list( nodes_list_connection_array[i]['layer1']['layer'],
                                               nodes_list_connection_array[i]['layer2']['layer'],
                                               nodes_list_connection_array[i]['node_list']['layer'].nodes(),

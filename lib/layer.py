@@ -160,14 +160,20 @@ class Layer(BaseLayer):
 class GTFSLayer(BaseLayer):
     """A layer for public transport described by the General Transit Feed Format"""
  
+    def __init__(self, name, data, metadata):
+        super(GTFSLayer, self).__init__(name, data, metadata)
+        self.services = Table(data['services'], metadata, autoload = True)
+        self.mode = mumoro.PublicTransport
+ 
     def edges(self):
         for row in self.edges_table.select().execute():
+            services = self.services.select(self.services.c.id == int(row.services)).execute().first().services
             yield {
                     'source': row.source + self.offset,
                     'target': row.target + self.offset,
                     'departure': row.start_secs,
                     'arrival': row.arrival_secs,
-                    'services': row.services
+                    'services': services
                     }
  
         # Connects every node corresponding to a same stop:

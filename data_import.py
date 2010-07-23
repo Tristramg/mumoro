@@ -1,5 +1,5 @@
 import sys
-from lib.core import mumoro
+from lib.core.mumoro import *
 import osm4routing
 from lib import bikestations
 from lib import gtfs_reader
@@ -7,9 +7,12 @@ import os.path
 from lib.datastructures import *
 from sqlalchemy import *
 from sqlalchemy.orm import mapper, sessionmaker, clear_mappers
+from lib import kalkati_reader
+import datetime
 
 street_data_array = []
 municipal_data_array = []
+kalkati_data_array = []
 bike_service_array = []
 
 
@@ -31,25 +34,20 @@ class Importer():
         mapper(Metadata, self.mumoro_metadata)
         Session = sessionmaker(bind=self.engine)
         self.session = Session()
-        if not street_data_array and not municipal_data_array and not bike_service_array:
-            raise NameError('No data is imported')
-        if street_data_array:
-            for f in street_data_array:
+        for f in street_data_array:
                 self.import_osm( f )
-        else:
-            print "No street data is imported"
+
         if municipal_data_array:
-            if not is_date_valid( starting_date ) or not is_date_valid( end_date ):
-                raise NameError('Invalid date')
+            is_date_valid( start_date )
+            is_date_valid( end_date )
             for m in municipal_data_array:
-                self.import_gtfs( m['file'], starting_date, end_date, m['network'] )
-        else:
-            print "No municipal data is imported"
-        if bike_service_array:
-            for b in bike_service_array:
-                self.import_bike( b['url_api'], b['service_name'] )
-        else:
-            print "No bike serivce is imported"
+                self.import_gtfs( m['file'], start_date, end_date, m['network'] )
+
+        for b in bike_service_array:
+            self.import_bike( b['url_api'], b['service_name'] )
+
+        for m in kalkati_data_array:
+            self.import_kalkati( m['file'], m['sdate'], m['edate'], m['network'] )
 
     def init_mappers(self):
         clear_mappers()
@@ -74,12 +72,43 @@ class Importer():
         self.session.add(nodes2)
         self.session.commit()
         mapper(PT_Node, create_pt_nodes_table(str(nodes2.id), self.metadata))
+        
+        services = Metadata(network_name, "Services", filename)
+        self.session.add(services)
+        self.session.commit()
+        mapper(PT_Service, create_services_table(str(services.id), self.metadata))
+
         edges2 = Metadata(network_name, "Edges", filename)
         self.session.add(edges2)
         self.session.commit()
-        mapper(PT_Edge, create_pt_edges_table(str(edges2.id), self.metadata))
+        mapper(PT_Edge, create_pt_edges_table(str(edges2.id), self.metadata, str(services.id)))
         self.session.commit()
+
         gtfs_reader.convert(filename, self.session, start_date, end_date)
+        self.init_mappers()
+        print "Done importing municipal data from " + filename + " for network '" + network_name + "'"
+        print "---------------------------------------------------------------------"
+    
+    def import_kalkati(self, filename, start_date, end_date, network_name = "GTFS"):
+        print "Adding municipal data from " + filename
+        print "From " + start_date + " to " + end_date + " for " + network_name + " network"
+        nodes2 = Metadata(network_name, "Nodes", filename)
+        self.session.add(nodes2)
+        self.session.commit()
+        mapper(PT_Node, create_pt_nodes_table(str(nodes2.id), self.metadata))
+
+        services = Metadata(network_name, "Services", filename)
+        self.session.add(services)
+        self.session.commit()
+        mapper(PT_Service, create_services_table(str(services.id), self.metadata))
+
+        edges2 = Metadata(network_name, "Edges", filename)
+        self.session.add(edges2)
+        self.session.commit()
+        mapper(PT_Edge, create_pt_edges_table(str(edges2.id), self.metadata, str(services.id)))
+        self.session.commit()
+
+        kalkati_reader.convert(filename, self.session, start_date, end_date)
         self.init_mappers()
         print "Done importing municipal data from " + filename + " for network '" + network_name + "'"
         print "---------------------------------------------------------------------"
@@ -101,12 +130,18 @@ def import_street_data( filename ):
         raise NameError('File does not exist')
     street_data_array.append( filename )
 
-#Loads muncipal data file 
-#( 3 cases : GTFS format (Call TransitFeed), Trident format (Call Chouette), Other : manual implementation ) and insert muncipal data into database.
-def import_municipal_data( filename, network_name = "GTFS"):
+# Loads public transport data from GTFS file format
+def import_gtfs_data( filename, network_name = "Public transport"):
     if not os.path.exists( filename ):
         raise NameError('File does not exist')
     municipal_data_array.append( {'file': filename, 'network': network_name } )
+
+# Loads public transport data from Kalkati file format
+def import_kalkati_data( filename, network_name = "Public transport"):
+    if not os.path.exists( filename ):
+        raise NameError('File does not exist')
+    kalkati_data_array.append( {'file': filename, 'network': network_name } )
+
 
 #Loads a bike service API ( from already formatted URL ). Insert bike stations in database and enables schedulded re-check.
 def import_bike_service( url, name ):
@@ -115,7 +150,10 @@ def import_bike_service( url, name ):
     bike_service_array.append( {'url_api': url, 'service_name': name } )
 
 #Loads data from previous inserted data and creates a layer used in multi-modal graph
-def load_layer( origin, name, color, mode = None):
+def street_layer(data, name, color, mode):
+    pass
+
+def public_transport_layer(data, name, color):
     pass
 
 def set_starting_layer( layer ):
@@ -125,7 +163,7 @@ def set_destination_layer( layer ):
     pass
 
 #Creates a transit cost variable, including the duration in seconds of the transit and if the mode is changed
-def cost( duration, mode_changed ):
+def cost( duration, mode_change ):
     pass
 
 #Connects 2 given layers on same nodes with the given cost(s)
@@ -141,25 +179,7 @@ def connect_layers_on_nearest_nodes( layer1 , layer2, cost ):
     pass
 
 def is_date_valid( date ):
-    if len( date ) == 8:
-        try:
-            y = int( date[0:4] )
-            if y > 1950:
-                try:
-                    m = int( date[4:6] )
-                    if m > 0 and m < 13:
-                        try:
-                            d = int( date[6:8] )
-                            if d > 0 and d < 32:
-                                return True
-                        except ValueError:
-                            return False
-                except ValueError:
-                    return False
-        except ValueError:
-            return False
-    return False
-
+   date = datetime.datetime.strptime(start_date, "%Y%m%d")
 
 if __name__ == "__main__":
     total = len( sys.argv )

@@ -23,6 +23,7 @@ def distance(c1, c2):
 
 def convert(filename, session, start_date, end_date):
     map = {}
+    services_map = {}
     s = transitfeed.Schedule()
     s.Load(filename)
     
@@ -46,6 +47,10 @@ def convert(filename, session, start_date, end_date):
                 services = "0" + services
             date += delta
             
+        if not services_map.has_key(services):
+            services_map[services] = len(services_map)
+        service = services_map[services]
+
         if not map.has_key(trip.route_id):
             map[trip.route_id] = {}
         prev_time = None
@@ -60,12 +65,19 @@ def convert(filename, session, start_date, end_date):
             current_node = session.query(PT_Node).filter_by(original_id = stop.stop_id).first()
             if prev_stop != None:
                 length = distance( (current_node.lon, current_node.lat), (prev_node.lon, prev_node.lat))
-                session.add(PT_Edge(prev_stop, current_stop, length * 1.1, prev_time, stop.arrival_secs, services, mode))
+                session.add(PT_Edge(prev_stop, current_stop, length * 1.1, prev_time, stop.arrival_secs, service, mode))
 
             prev_node = current_node 
             prev_stop = current_stop
             prev_time = stop.departure_secs
 
+            if count % 1000 == 0:
+                self.session.flush()
+            if count % 10000 == 0:
+                print "Added {0} timetable elements".format(self.count)
+
+    for k, v in services_map.items():
+        session.add(PT_Service(v, k))
     session.commit()
 
 

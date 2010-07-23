@@ -21,6 +21,11 @@ class PT_Node(object):
         self.route = route
         self.the_geom = the_geom
 
+class PT_Service(object):
+    def __init__(self, id, services):
+        self.id = id
+        self.services = services
+
 class Edge(object):
     def __init__(self, id, source, target, length, car, car_rev, bike, bike_rev, foot, the_geom = ""):
         self.original_id = id
@@ -68,6 +73,14 @@ def create_pt_nodes_table(id, metadata):
     metadata.create_all()
     return table
 
+def create_services_table(id, metadata):
+    table = Table(id, metadata,
+            Column('id', Integer, primary_key = True),
+            Column('services', String)
+            )
+    metadata.create_all()
+    return table
+
 def create_edges_table(id, metadata):
     table = Table(id, metadata,
             Column('id', Integer, primary_key = True),
@@ -84,7 +97,7 @@ def create_edges_table(id, metadata):
     metadata.create_all()
     return table
             
-def create_pt_edges_table(id, metadata):
+def create_pt_edges_table(id, metadata, services_table):
     table = Table(id, metadata,
             Column('id', Integer, primary_key = True),
             Column('source', Integer, index = True),
@@ -92,7 +105,7 @@ def create_pt_edges_table(id, metadata):
             Column('length', Float),
             Column('start_secs', Integer),
             Column('arrival_secs', Integer),
-            Column('services', String),
+            Column('services', Integer,  ForeignKey(services_table + ".id")),
             Column('mode', Integer),
             )
     metadata.create_all()
