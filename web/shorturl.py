@@ -11,7 +11,6 @@ class shortURL:
     def __init__(self,metadata):
         self.metadata = metadata
         self.hash_table = Table('hurl', self.metadata,useexisting=True)
-        #self.metadata.create_all(useexisting=True)
 
     def addRouteToDatabase(self,lonMap,latMap,zoom,lonStart,latStart,lonDest,latDest,addressStart,addressDest):
         h = hashlib.md5()

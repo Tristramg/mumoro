@@ -1,5 +1,4 @@
 function disp_path(id) {    
-    showDescription();  
     routeLayer.destroyFeatures();
     features = geojson_reader.read(paths[id]);
     if(features)
@@ -168,15 +167,8 @@ function init() {
     layerTilesAtHome = new OpenLayers.Layer.OSM.Osmarender("Osmarender");
     map.addLayer(layerTilesAtHome);
     var styleMap = new OpenLayers.StyleMap({strokeWidth: 3});
-    var lookup = {
-        "bike": {strokeColor: '#7373e5'},
-        "foot": {strokeColor: '#f14d4d'},
-        "foot2": {strokeColor: '#f14d4d'},
-        "car": {strokeColor: '#830531'},
-        "star": {strokeColor: '#61bd61'},
-        "connection": {strokeColor: '#830531', strokeDashstyle: 'dashdot', strokeWidth: 2}
-    };
-    styleMap.addUniqueValueRules("default", "layer", lookup);
+    layers[ "connection" ] = {strokeColor: '#830531', strokeDashstyle: 'dashdot', strokeWidth: 2}
+    styleMap.addUniqueValueRules("default", "layer", layers);
     routeLayer = new OpenLayers.Layer.Vector("Route", {
                     styleMap: styleMap
                     });
@@ -243,6 +235,7 @@ function init() {
             };          
             handleClick( tmp, action);
     });
+    showDescription( layers );  
 } //End of function init()
 
 function hasChanged(mark) {
@@ -516,9 +509,13 @@ function MToLonLat(ll) {
     return ll.transform(new OpenLayers.Projection("EPSG:900913"),new OpenLayers.Projection("EPSG:4326"));
 }
 
-function showDescription() {
-    $("#routing_description").html(
-    "<table><caption><span>Routing description:</span></caption><thread><tr><td><span class=\"tinyText\">Transport mean</span></td><td><span class=\"tinyText\">Color<span class=\"tinyText\"></td></tr></thread><tbody><tr><td><span class=\"tinyText\">Foot</span></td><td><img src='img/desc.foot.png'/></td></tr><tr><td><span class=\"tinyText\">Public bike</span></td><td><img src='img/desc.bike.png'/></td></tr><tr><td><span class=\"tinyText\">Car</span></td><td><img src='img/desc.car.png'/></td></tr><tr><td><span class=\"tinyText\">Municipal transports</span></td><td><img src='img/desc.municipal.png'/></td></tr><tr><td><span class=\"tinyText\">Connection</span></td><td><img src='img/desc.connection.png'/></td></tr></tbody></table>"
-);
+function showDescription( l ) {
+    //$("#routing_description").html("<table><caption><span>Routing description:</span></caption><thread><tr><td><span class=\"tinyText\">Transport</span></td><td><span class=\"tinyText\">Color<span class=\"tinyText\"></td></tr></thread><tbody>");
+    $("#routing_description").html("<caption><span>Routing description:</span></caption><thread><tr><td><span class=\"tinyText\">Transport</span></td><td><span class=\"tinyText\">Color<span class=\"tinyText\"></td></tr></thread><tbody>");
+    $.each( l, function(key, val){
+        $("#routing_description").append("<tr><td><span class=\"tinyText\">" + key + "</span></td><td><hr width=\"60\" size=\"4\" color=\"" + val.strokeColor + "\"></td></tr>");
+    });
+    $("#routing_description").append("</tbody>");
+    
 }
 
