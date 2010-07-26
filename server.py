@@ -516,29 +516,29 @@ class Mumoro:
                 return True
         return False
 
+total = len( sys.argv )
+if total != 2:
+    sys.exit("Usage: python server.py {config_file.py}")
+if not os.path.exists( os.getcwd() + "/" + sys.argv[1] ):
+    raise NameError('Configuration file does not exist')
+exec( file( sys.argv[1] ) )
+cherrypy.config.update({
+    'tools.encode.on': True,
+    'tools.encode.encoding': 'utf-8',
+    'tools.decode.on': True,
+    'tools.trailing_slash.on': True,
+    'tools.staticdir.root': os.path.abspath(os.path.dirname(__file__)) + "/web/",
+    'server.socket_port': listening_port,
+    'server.socket_host': '0.0.0.0'
+})
+cherrypy.tree.mount(Mumoro(db_type + ":///" + db_params,sys.argv[1],admin_email,web_url), '/', config={
+    '/': {
+            'tools.staticdir.on': True,
+            'tools.staticdir.dir': 'static'
+       },
+})
+cherrypy.quickstart()
+
 def main():
-    total = len( sys.argv )
-    if total != 2:
-        sys.exit("Usage: python server.py {config_file.py}")
-    if not os.path.exists( os.getcwd() + "/" + sys.argv[1] ):
-        raise NameError('Configuration file does not exist')
-    exec( file( sys.argv[1] ) )
-    cherrypy.config.update({
-        'tools.encode.on': True,
-        'tools.encode.encoding': 'utf-8',
-        'tools.decode.on': True,
-        'tools.trailing_slash.on': True,
-        'tools.staticdir.root': os.path.abspath(os.path.dirname(__file__)) + "/web/",
-        'server.socket_port': listening_port,
-        'server.socket_host': '0.0.0.0'
-    })
-    cherrypy.tree.mount(Mumoro(db_type + ":///" + db_params,sys.argv[1],admin_email,web_url), '/', config={
-        '/': {
-                'tools.staticdir.on': True,
-                'tools.staticdir.dir': 'static'
-           },
-    })
-    cherrypy.quickstart()
+    print "Goodbye!"
     
-if __name__ == '__main__':
-    main()

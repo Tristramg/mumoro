@@ -17,7 +17,7 @@ bike_service_array = []
 
 
 class Importer():
-    def __init__(self,db_type,db_params):
+    def __init__(self,db_type,db_params, start_date, end_date):
         if not db_type or not db_params:
             raise NameError('Database connection parameters are empty')
         self.db_string = db_type + ":///" + db_params
@@ -47,7 +47,7 @@ class Importer():
             self.import_bike( b['url_api'], b['service_name'] )
 
         for m in kalkati_data_array:
-            self.import_kalkati( m['file'], m['sdate'], m['edate'], m['network'] )
+            self.import_kalkati( m['file'], start_date, end_date, m['network'] )
 
     def init_mappers(self):
         clear_mappers()
@@ -188,7 +188,7 @@ def main():
     if not os.path.exists( os.getcwd() + "/" + sys.argv[1] ):
         raise NameError('Configuration file does not exist')
     exec( file( sys.argv[1] ) )
-    Importer(db_type,db_params)
+    Importer(db_type,db_params, start_date, end_date)
 
 if __name__ == "__main__":
     main()

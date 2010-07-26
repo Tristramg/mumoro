@@ -99,7 +99,7 @@ pt = import_kalkati_data( '/home/tristram/mumoro/lib/LVM.xml', 'Helsinki' )
 #car_layer = street_layer(data = streets, name = 'bike', mode = Bike)
 
 # Whe also need to create a layer for every public transport network we use
-pt_layer = public_transport_layer(data = pt, name = "Public Transport")
+pt_layer = public_transport_layer(data = pt, name = "Public Transport", color="#ff0000")
 
 ######################
 # Connect the layers #
