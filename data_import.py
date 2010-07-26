@@ -181,7 +181,7 @@ def connect_layers_on_nearest_nodes( layer1 , layer2, cost ):
 def is_date_valid( date ):
    date = datetime.datetime.strptime(start_date, "%Y%m%d")
 
-if __name__ == "__main__":
+def main():
     total = len( sys.argv )
     if total != 2:
         sys.exit("Usage: python data_import.py {config_file.py}")
@@ -190,4 +190,6 @@ if __name__ == "__main__":
     exec( file( sys.argv[1] ) )
     Importer(db_type,db_params)
 
+if __name__ == "__main__":
+    main()
 
