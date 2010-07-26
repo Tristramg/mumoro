@@ -30,7 +30,7 @@ end_data = '20101001'
 #--------------------------------------------------------------------------------------------------------------------
 foot_layer = street_layer( data = streets, name = 'Foot', color = '#7D0541', mode = Foot )
 car_layer = street_layer( data = streets, name = 'Car', color = '#306EFF', mode = Car )
-bike_hire_layer = street_layer( data = streets, name = 'Velo START', color = '#437C17', mode = Bike )
+bike_hire_layer = street_layer( data = streets, name = 'Velo STAR', color = '#437C17', mode = Bike )
 
 
 #Starting layer is the layer on wich the route begins
