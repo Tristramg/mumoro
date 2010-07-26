@@ -517,7 +517,7 @@ class Mumoro:
                 return True
         return False
 
-if __name__ == '__main__':
+def main():
     total = len( sys.argv )
     if total != 2:
         sys.exit("Usage: python server.py {config_file.py}")
@@ -541,3 +541,5 @@ if __name__ == '__main__':
     })
     cherrypy.quickstart()
     
+if __name__ == '__main__':
+    main()

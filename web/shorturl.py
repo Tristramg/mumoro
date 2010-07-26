@@ -2,7 +2,6 @@
 
 import hashlib
 import string
-import config
 import datetime
 
 from sqlalchemy import *
