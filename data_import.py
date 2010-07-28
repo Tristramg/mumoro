@@ -20,6 +20,7 @@
 
 import sys
 from lib.core.mumoro import *
+from lib.core import mumoro
 import osm4routing
 from lib import bikestations, gtfs_reader, kalkati_reader
 import os.path
@@ -64,8 +65,13 @@ class Importer():
         for b in bike_service_array:
             self.import_bike( b['url_api'], b['service_name'] )
 
-        for m in kalkati_data_array:
-            self.import_kalkati( m['file'], start_date, end_date, m['network'] )
+
+        if kalkati_data_array:
+            is_date_valid( start_date )
+            is_date_valid( end_date )
+            for m in kalkati_data_array:
+                self.import_kalkati( m['file'], start_date, end_date, m['network'] )
+
 
     def init_mappers(self):
         clear_mappers()
@@ -174,6 +180,10 @@ def street_layer(data, name, color, mode):
 def public_transport_layer(data, name, color):
     pass
 
+def paths( starting_layer, destination_layer, objectives ):
+    pass
+
+
 def set_starting_layer( layer ):
     pass
 
@@ -197,7 +207,7 @@ def connect_layers_on_nearest_nodes( layer1 , layer2, cost ):
     pass
 
 def is_date_valid( date ):
-   date = datetime.datetime.strptime(start_date, "%Y%m%d")
+   date = datetime.datetime.strptime(date, "%Y%m%d")
 
 def main():
     total = len( sys.argv )

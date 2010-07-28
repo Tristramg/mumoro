@@ -20,7 +20,7 @@
 
 
 from lib.core import mumoro
-from lib.core.mumoro import Bike, Car, Foot, PublicTransport
+from lib.core.mumoro import Bike, Car, Foot, PublicTransport, cost, co2, dist, elevation, line_change, mode_change, Costs
 from lib import layer
 
 from lib import bikestations as bikestations
@@ -53,8 +53,7 @@ same_nodes_connection_array = []
 nearest_nodes_connection_array = []
 nodes_list_connection_array = []
 
-start_layer =  []
-dest_layer = []
+paths_array = []
 
 def md5_of_file(filename):
     block_size=2**20
@@ -95,13 +94,16 @@ def import_street_data( filename ):
     mumoro_metadata = Table('metadata', metadata, autoload = True)
     s = mumoro_metadata.select((mumoro_metadata.c.origin == filename) & (mumoro_metadata.c.node_or_edge == 'Nodes'))
     rs = s.execute()
+    nd = 0
     for row in rs:
          nd = row[0]
     s = mumoro_metadata.select((mumoro_metadata.c.origin == filename) & (mumoro_metadata.c.node_or_edge == 'Edges'))
     rs = s.execute()
+    ed = 0
     for row in rs:
          ed = row[0]
     return {'nodes': str(nd), 'edges' : str(ed)}
+
 
 # Loads the tables corresponding to the public transport layer
 def import_gtfs_data( filename, network_name = "Public Transport"):
@@ -152,15 +154,13 @@ def public_transport_layer(data, name, color):
     layer_array.append( {'layer':res,'name':name,'mode':PublicTransport,'origin':data,'color':color} )
     return {'layer':res,'name':name,'mode':PublicTransport,'origin':PublicTransport,'color':color} 
 
-def set_starting_layer( layer ):
-    if not layer:
-        raise NameError('Empty layer')
-    start_layer.append( layer )
-
-def set_destination_layer( layer ):
-    if not layer:
-        raise NameError('Empty layer')
-    dest_layer.append( layer )
+def paths( starting_layer, destination_layer, objectives ):
+    if not starting_layer or not destination_layer:
+        raise NameError('Empty layer(s)')
+    for i in range( len( objectives ) ):
+        if objectives[i] != mumoro.dist and objectives[i] != mumoro.cost and objectives[i] != mumoro.elevation and objectives[i] != mumoro.co2 and objectives[i] != mumoro.mode_change and objectives[i] != mumoro.line_change:
+            raise NameError('Wrong objective parameter')
+    paths_array.append( {'starting_layer':starting_layer,'destination_layer':destination_layer,'objectives':objectives} )
 
 #Creates a transit cost variable, including the duration in seconds of the transit and if the mode is changed
 def cost( duration, mode_change ):
@@ -204,30 +204,24 @@ class Mumoro:
         if not layer_array:
                 raise NameError('Can not create multimodal graph beceause there are no layers')
         layers = []
-        for i in range( len( layer_array ) ):
-            layers.append( layer_array[i]['layer'] )
-        if not start_layer:
-                raise NameError('There is no starting layer')
-        if not dest_layer:
-                raise NameError('There is no destination layer')
+        for i in layer_array:
+            layers.append( i['layer'] )
         for i in range( len( layer_array ) ):
             for j in range( len( layer_array ) ):
                 if i != j:
                     if layer_array[i]['name'] == layer_array[j]['name']:
                         raise NameError('Layers can not have the same name')
+        if len( paths_array ) == 0:
+            print 'Warning: there are no defined paths !'
         self.engine = create_engine(db_string)
         self.metadata = MetaData(bind = self.engine)
         Session = sessionmaker(bind=self.engine)
         self.session = Session()
-        self.total_bike_stations = len( bike_stations_array )
         self.bike_stations = []
-        if self.total_bike_stations > 0:
-            for i in range( self.total_bike_stations ):
-                  self.bike_stations.append( bikestations.BikeStationImporter(bike_stations_array[i]['url_api'],
-                                                                           bike_stations_array[i]['table'],
-                                                                           self.metadata) )
-            for i in range( self.total_bike_stations ):
-                self.bike_stations[i].update_from_db()
+        for i in bike_stations_array:
+            self.bike_stations.append( bikestations.BikeStationImporter(i['url_api'],i['table'],self.metadata) )
+        for i in self.bike_stations:
+            i.update_from_db()
         self.timestamp = time.time()
         self.config_table = Table('config', self.metadata,
             Column('config_file', String, primary_key = True),
@@ -268,43 +262,25 @@ class Mumoro:
                 self.config_table.delete().execute()
                 self.session.commit()
             self.g = layer.MultimodalGraph( layers )
-            total_same_nodes_connections = len( same_nodes_connection_array )
-            if total_same_nodes_connections > 0:
-                for i in range( total_same_nodes_connections ):
-                    self.g.connect_same_nodes( same_nodes_connection_array[i]['layer1']['layer'],
-                                               same_nodes_connection_array[i]['layer2']['layer'],
-                                               same_nodes_connection_array[i]['cost'] )
-            total_nearest_nodes_connections = len( nearest_nodes_connection_array )
-            if total_nearest_nodes_connections > 0:
-                for i in range( total_nearest_nodes_connections ):
-                    self.g.connect_nearest_nodes( nearest_nodes_connection_array[i]['layer1']['layer'],
-                                               nearest_nodes_connection_array[i]['layer2']['layer'],
-                                               nearest_nodes_connection_array[i]['cost'] )
-            total_nodes_list_connections = len( nodes_list_connection_array )
-            if total_nodes_list_connections > 0:
-                for i in range( total_nodes_list_connections ):
+            for i in same_nodes_connection_array:
+                self.g.connect_same_nodes( i['layer1']['layer'],i['layer2']['layer'],i['cost'] )
+            for i in nearest_nodes_connection_array:
+                self.g.connect_nearest_nodes( i['layer1']['layer'],i['layer2']['layer'],i['cost'] )
+            for i in nodes_list_connection_array:
+               try:
+                   i['node_list']['url_api']
+                   print 'Assuming that the nodes list are bike stations'
+                   for j in self.bike_stations:
+                       if j.url == i['node_list']['url_api']:
+                            self.g.connect_nodes_from_list( i['layer1']['layer'],i['layer2']['layer'],j.stations,i['cost1'],i['cost2'] )
+                            break
+               except KeyError:
                    try:
-                       nodes_list_connection_array[i]['node_list']['url_api']
-                       print 'Assuming that the nodes list are bike stations'
-                       for j in range( self.total_bike_stations ):
-                           if self.bike_stations[j].url == nodes_list_connection_array[i]['node_list']['url_api']:
-                               self.g.connect_nodes_from_list( nodes_list_connection_array[i]['layer1']['layer'],
-                                              nodes_list_connection_array[i]['layer2']['layer'],
-                                              self.bike_stations[j].stations,
-                                              nodes_list_connection_array[i]['cost1'],
-                                              nodes_list_connection_array[i]['cost2'] )
-                               break
+                       i['node_list']['layer']
+                       print 'Assuming that the nodes list is a public transport layer'
+                       self.g.connect_nodes_from_list( i['layer1']['layer'],i['layer2']['layer'],i['node_list']['layer'].nodes(),i['cost1'],i['cost2'] )
                    except KeyError:
-                       try:
-                           nodes_list_connection_array[i]['node_list']['layer']
-                           print 'Assuming that the nodes list is a public transport layer'
-                           self.g.connect_nodes_from_list( nodes_list_connection_array[i]['layer1']['layer'],
-                                              nodes_list_connection_array[i]['layer2']['layer'],
-                                              nodes_list_connection_array[i]['node_list']['layer'].nodes(),
-                                              nodes_list_connection_array[i]['cost1'],
-                                              nodes_list_connection_array[i]['cost2'] )
-                       except KeyError:
-                           raise NameError('Can not connect layers from the node list')
+                       raise NameError('Can not connect layers from the node list')
             md5_config_checksum = md5_of_file( file( config_file ) )
             self.g.save( md5_config_checksum + '.dump' )
             i = self.config_table.insert()
@@ -312,24 +288,53 @@ class Mumoro:
 
     @cherrypy.expose
     def path(self, slon, slat, dlon, dlat, time):
-        start = self.g.match(start_layer[0]['name'], float(slon), float(slat))
-        dest = self.g.match(dest_layer[0]['name'], float(dlon), float(dlat))
+        u_obj = []
+        #Creates the union of all used objectives
+        for p in paths_array:
+            for o in p['objectives'] :
+                if not o in u_obj:
+                    u_obj.append( o )
+        u_obj = self.sort_objectives( u_obj )
+        p = tuple()
+        c = self.analyse_date( time )
+        #Call martins with the sorted objectives
+        for y in paths_array:
+            s = self.g.match( y['starting_layer']['name'], float(slon), float(slat))
+            d = self.g.match( y['destination_layer']['name'], float(dlon), float(dlat))
+            tmp = y['objectives']
+            tmp = self.sort_objectives( tmp )
+            t = len( tmp )
+            if t == 0:
+                p = p + self.normalise_paths( mumoro.martins(s, d, self.g.graph,c['seconds'], c['days']),[],u_obj )
+            elif t == 1:
+                p = p + self.normalise_paths( mumoro.martins(s, d, self.g.graph,c['seconds'], c['days'], tmp[0] ), [ tmp[0] ], u_obj )
+            elif t == 2:
+                p = p + self.normalise_paths( mumoro.martins(s, d, self.g.graph,c['seconds'], c['days'], tmp[0], tmp[1] ), [ tmp[0], tmp[1] ], u_obj )
+            elif t >= 3:
+                p = p + self.normalise_paths( mumoro.martins(s, d, self.g.graph,c['seconds'], c['days'], tmp[0], tmp[1], tmp[2] ), [ tmp[0], tmp[1], tmp[2] ], u_obj )
+        #Creates the array containing the user-oriented string for each objective
+        str_obj = ['Duration']
+        for j in u_obj:
+            if j == mumoro.dist:
+                str_obj.append( 'Distance' )
+            elif j == mumoro.cost:
+                str_obj.append( 'Cost' )
+            elif j == mumoro.elevation:
+                str_obj.append( 'Elevation ' )
+            elif j == mumoro.co2:
+                str_obj.append( 'CO2 Emission' )
+            elif j == mumoro.mode_change:
+                str_obj.append( 'Mode Change' )
+            elif j == mumoro.line_change:
+                str_obj.append( 'Line Change' )
         cherrypy.response.headers['Content-Type']= 'application/json'
-        p = mumoro.martins(start, dest, self.g.graph,30000, 7, mumoro.mode_change, mumoro.line_change)
-        p_car = []#mumoro.martins(car_start, car_dest, self.g.graph,0, 30000)
-        if len(p_car) == 1:
-            p_car[0].cost.append(0)
-            p_car[0].cost.append(0)
-            print p_car[0].cost[0]
-            p = p + p_car
         if len(p) == 0:
             return json.dumps({'error': 'No route found'})
-        
+        print "Len of routes " + str( len( p ) )
         ret = {
-                'objectives': ['Duration', 'Mode changes', 'Line changes'],
+                'objectives': str_obj,
                 'paths': []
                 }
-
         for path in p:
             p_str = {
                     'cost': [],
@@ -384,22 +389,18 @@ class Mumoro:
         return json.dumps(ret)
     
     @cherrypy.expose
-    def match(self, lon, lat):
-        return self.g.match('foot', lon, lat)
-
-    @cherrypy.expose
     def bikes(self):
-        if self.total_bike_stations > 0:
+        if len( self.bike_stations ) > 0:
             if time.time() > self.timestamp + 60 * 5:
                 print "Updating bikestations"
-                for i in range( self.total_bike_stations ):
-                    self.bike_stations[i].import_data()
+                for i in self.bike_stations:
+                    i.import_data()
                 print "Done !"
-            for i in range( self.total_bike_stations ):
-                self.bike_stations[i].update_from_db()
+            for i in self.bike_stations:
+                i.update_from_db()
             res = 'lat\tlon\ttitle\tdescription\ticon\ticonSize\ticonOffset\n'
-            for i in range( self.total_bike_stations ):
-                res += self.bike_stations[i].to_string()
+            for i in self.bike_stations:
+                res += i.to_string()
             print "Got string"
             return res;
         else:
@@ -438,12 +439,11 @@ class Mumoro:
                 t = t + ","
         t = t + "}"
         if( not fromHash ):
-            a = start_layer[0]['layer'].average()
-            b = start_layer[0]['layer'].borders()
+            a = paths_array[0]['starting_layer']['layer'].average()
+            b = paths_array[0]['starting_layer']['layer'].borders()
             return tmpl.generate(fromHash='false',lonMap=a['avg_lon'],latMap=a['avg_lat'],zoom=14,lonStart=b['min_lon'],latStart=b['min_lat'],lonDest=b['max_lon'],latDest=b['max_lat'],addressStart='',addressDest='',hashUrl=self.web_url,layers=t, date=datetime.datetime.today().strftime("%d/%m/%Y %H:%M")).render('html', doctype='html')
         else:
             return tmpl.generate(fromHash='true',lonMap=hashData[2],latMap=hashData[3],zoom=hashData[1],lonStart=hashData[4],latStart=hashData[5],lonDest=hashData[6],latDest=hashData[7],addressStart=hashData[8].decode('utf-8'),addressDest=hashData[9].decode('utf-8'),hashUrl=self.web_url,layers=t,date=hashData[10]).render('html', doctype='html')
-
 
     @cherrypy.expose
     def info(self):
@@ -530,11 +530,52 @@ class Mumoro:
         return json.dumps(data)
 
     def arecovered(self,lon,lat):
-        for i in range( len( layer_array ) ):
-            b = layer_array[i]['layer'].borders()
+        for i in layer_array:
+            b = i['layer'].borders()
             if lon >= b['min_lon'] and lon <= b['max_lon'] and lat >= b['min_lat'] and lat <= b['max_lat']:
                 return True
         return False
+
+    def sort_objectives(self,obj):
+        res = []
+        #Sorts the objective array in a unique way
+        if mumoro.cost in obj:
+            res.append( mumoro.cost )
+        if mumoro.co2 in obj:
+            res.append( mumoro.co2 )
+        if mumoro.dist in obj:
+            res.append( mumoro.dist )
+        if mumoro.elevation in obj and len( res ) < 3:
+            res.append( mumoro.elevation )
+        if mumoro.line_change in obj and len( res ) < 3:
+            res.append( mumoro.line_change )  
+        if mumoro.mode_change in obj and len( res ) < 3:
+            res.append( mumoro.mode_change )
+        return res
+
+    def normalise_paths(self,route,used_objectives,union_objectives):
+        for i in route:
+            if len( union_objectives ) + 1 != len( i.cost ):
+                tmp = Costs()
+                tmp.append( i.cost[0] )
+                for j in range( len( union_objectives ) ):
+                    if j < len( used_objectives ):
+                        if used_objectives[j] == union_objectives[j]:
+                            tmp.append( i.cost[j + 1] )
+                        else:
+                            tmp.append( 0.0 )
+                    else:
+                         tmp.append( 0.0 )
+                i.cost = tmp
+        return route
+
+    def analyse_date(self,date):
+        now_chrone = datetime.datetime.strptime(date, "%d/%m/%Y %H:%M")
+        start_chrone = datetime.datetime.strptime(start_date, "%Y%m%d")
+        past_seconds = now_chrone.hour * 60 * 60 + now_chrone.minute * 60 + now_chrone.second
+        delta = now_chrone - start_chrone
+        return {'seconds':past_seconds,'days':delta.days} 
+        
 
 total = len( sys.argv )
 if total != 2:
@@ -562,3 +603,4 @@ cherrypy.quickstart()
 def main():
     print "Goodbye!"
     
+

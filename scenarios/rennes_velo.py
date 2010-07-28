@@ -7,11 +7,11 @@ db_type = 'sqlite'
 #For user oriented databases : 'username:password@host:port/database'
 #Port can be excluded (default one depending on db_type will be used) : 'username:password@host/database'
 #For SQLiTE : 'file_name.db' for relative path or absolute : '/data/guidage/file_name.db'
-db_params = 'mumoro.scenario.bretagne.db'
+db_params = 'rennes.db'
 
 #Load street data from (compressed or not) osm file(s)
 #-----------------------------------------------------
-streets = import_street_data('/home/tristram/bretagne.osm.bzip.bz2')
+streets = import_street_data('/home/ody/Developement/mumoro/bretagne.osm.bz2')
 
 #Load bike service from an API URL (Don't forget to add http://) with required valid params (depending on each API)
 #------------------------------------------------------------------------------------------------------------------
@@ -21,8 +21,8 @@ bike_rennes = import_bike_service('http://data.keolis-rennes.com/xml/?version=1.
 #starting_date & end_date in this format : 'YYYYMMDD' Y for year's digists, M for month's and D for day's
 #starting_date and end_date MUST be defined if municipal data is imported
 #------------------------------------------------------------------------------------------------------------------
-starting_date = '20100101'
-end_data = '20101001'
+start_date = '20100101'
+end_date = '20101001'
 
 #Create relevant layers from previously imported data (origin paramater) with a name, a color and the mode.
 #Color in the html format : '#RRGGBB' with R, G and B respetcly reg, green and blue values in hex
@@ -30,15 +30,10 @@ end_data = '20101001'
 #--------------------------------------------------------------------------------------------------------------------
 foot_layer = street_layer( data = streets, name = 'Foot', color = '#7D0541', mode = Foot )
 car_layer = street_layer( data = streets, name = 'Car', color = '#306EFF', mode = Car )
-bike_hire_layer = street_layer( data = streets, name = 'Velo START', color = '#437C17', mode = Bike )
+bike_hire_layer = street_layer( data = streets, name = 'Velo STAR', color = '#437C17', mode = Bike )
 
-
-#Starting layer is the layer on wich the route begins
-#Destination layer is the layer on wich the route finishes
-#Starting & destination layers MUST be selected, otherwise the server could not start
-#If by mistake you select more than one starting/destination layers, the affectation will go on the last one
-set_starting_layer( foot_layer )
-set_destination_layer( foot_layer )
+paths( foot_layer, foot_layer, [ mode_change, elevation ] )
+paths( car_layer, car_layer, [ dist ] )
 
 #Creates a transit cost variable, including the duration in seconds of the transit and if the mode is changed (True or False)
 #------------------------------------------------------------------------------------------------------------
