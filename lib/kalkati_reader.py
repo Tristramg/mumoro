@@ -58,6 +58,7 @@ def normalize_service(start, end, services, service_start):
 
     if len(services) != (end - start).days:
         print "Crapp!!!! {0} {1} {2} {3} {4} {5}".format(services, start_delta, end_delta, service_start, original, start)
+    return services
 
 class KalkatiHandler(ContentHandler): 
     def __init__(self, session, start_date, end_date):

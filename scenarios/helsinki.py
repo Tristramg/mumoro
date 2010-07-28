@@ -47,6 +47,8 @@ start_date = "20100701"
 # Example: end_date = "20100701"
 end_date = "20101001"
 
+set_starting_layer( "foot" )
+set_destination_layer( "foot" )
 
 ################
 # Data sources #

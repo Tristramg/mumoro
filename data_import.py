@@ -21,13 +21,11 @@
 import sys
 from lib.core.mumoro import *
 import osm4routing
-from lib import bikestations
-from lib import gtfs_reader
+from lib import bikestations, gtfs_reader, kalkati_reader
 import os.path
 from lib.datastructures import *
 from sqlalchemy import *
 from sqlalchemy.orm import mapper, sessionmaker, clear_mappers
-from lib import kalkati_reader
 import datetime
 
 street_data_array = []
