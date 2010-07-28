@@ -1,5 +1,6 @@
 import sys
 from lib.core.mumoro import *
+from lib.core import mumoro
 import osm4routing
 from lib import bikestations
 from lib import gtfs_reader
@@ -17,7 +18,7 @@ bike_service_array = []
 
 
 class Importer():
-    def __init__(self,db_type,db_params):
+    def __init__(self,db_type,db_params,start_date,end_date):
         if not db_type or not db_params:
             raise NameError('Database connection parameters are empty')
         self.db_string = db_type + ":///" + db_params
@@ -46,8 +47,11 @@ class Importer():
         for b in bike_service_array:
             self.import_bike( b['url_api'], b['service_name'] )
 
-        for m in kalkati_data_array:
-            self.import_kalkati( m['file'], m['sdate'], m['edate'], m['network'] )
+        if kalkati_data_array:
+            is_date_valid( start_date )
+            is_date_valid( end_date )
+            for m in kalkati_data_array:
+                self.import_kalkati( m['file'], start_date, end_date, m['network'] )
 
     def init_mappers(self):
         clear_mappers()
@@ -156,6 +160,10 @@ def street_layer(data, name, color, mode):
 def public_transport_layer(data, name, color):
     pass
 
+def paths( starting_layer, destination_layer, objectives ):
+    pass
+
+
 def set_starting_layer( layer ):
     pass
 
@@ -179,7 +187,7 @@ def connect_layers_on_nearest_nodes( layer1 , layer2, cost ):
     pass
 
 def is_date_valid( date ):
-   date = datetime.datetime.strptime(start_date, "%Y%m%d")
+   date = datetime.datetime.strptime(date, "%Y%m%d")
 
 def main():
     total = len( sys.argv )
@@ -188,7 +196,7 @@ def main():
     if not os.path.exists( os.getcwd() + "/" + sys.argv[1] ):
         raise NameError('Configuration file does not exist')
     exec( file( sys.argv[1] ) )
-    Importer(db_type,db_params)
+    Importer(db_type,db_params,start_date,end_date)
 
 if __name__ == "__main__":
     main()
