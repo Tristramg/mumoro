@@ -296,6 +296,7 @@ class Mumoro:
                     u_obj.append( o )
         u_obj = self.sort_objectives( u_obj )
         p = tuple()
+        c = self.analyse_date( time )
         #Call martins with the sorted objectives
         for y in paths_array:
             s = self.g.match( y['starting_layer']['name'], float(slon), float(slat))
@@ -304,13 +305,13 @@ class Mumoro:
             tmp = self.sort_objectives( tmp )
             t = len( tmp )
             if t == 0:
-                p = p + self.normalise_paths( mumoro.martins(s, d, self.g.graph,30000, 7),[],u_obj )
+                p = p + self.normalise_paths( mumoro.martins(s, d, self.g.graph,c['seconds'], c['days']),[],u_obj )
             elif t == 1:
-                p = p + self.normalise_paths( mumoro.martins(s, d, self.g.graph,30000, 7, tmp[0] ), [ tmp[0] ], u_obj )
+                p = p + self.normalise_paths( mumoro.martins(s, d, self.g.graph,c['seconds'], c['days'], tmp[0] ), [ tmp[0] ], u_obj )
             elif t == 2:
-                p = p + self.normalise_paths( mumoro.martins(s, d, self.g.graph,30000, 7, tmp[0], tmp[1] ), [ tmp[0], tmp[1] ], u_obj )
+                p = p + self.normalise_paths( mumoro.martins(s, d, self.g.graph,c['seconds'], c['days'], tmp[0], tmp[1] ), [ tmp[0], tmp[1] ], u_obj )
             elif t >= 3:
-                p = p + self.normalise_paths( mumoro.martins(s, d, self.g.graph,30000, 7, tmp[0], tmp[1], tmp[2] ), [ tmp[0], tmp[1], tmp[2] ], u_obj )
+                p = p + self.normalise_paths( mumoro.martins(s, d, self.g.graph,c['seconds'], c['days'], tmp[0], tmp[1], tmp[2] ), [ tmp[0], tmp[1], tmp[2] ], u_obj )
         #Creates the array containing the user-oriented string for each objective
         str_obj = ['Duration']
         for j in u_obj:
@@ -568,6 +569,13 @@ class Mumoro:
                 i.cost = tmp
         return route
 
+    def analyse_date(self,date):
+        now_chrone = datetime.datetime.strptime(date, "%d/%m/%Y %H:%M")
+        start_chrone = datetime.datetime.strptime(start_date, "%Y%m%d")
+        past_seconds = now_chrone.hour * 60 * 60 + now_chrone.minute * 60 + now_chrone.second
+        delta = now_chrone - start_chrone
+        return {'seconds':past_seconds,'days':delta.days} 
+        
 
 total = len( sys.argv )
 if total != 2:
