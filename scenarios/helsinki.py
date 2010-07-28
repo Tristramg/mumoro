@@ -81,7 +81,7 @@ streets = import_street_data('/home/tristram/finland.osm.bz2')
 # We currently support two file formats:
 #    * General Transitfeed Feed Specification (also know as the Google format)
 #    * Kalkati used in Helsinki
-pt = import_kalkati_data( '/home/tristram/mumoro/helsinki_small.xml', 'Helsinki' )
+pt = import_kalkati_data( '/home/tristram/mumoro/lib/LVM.xml', 'Helsinki' )
 
 ###################
 # Describe layers #

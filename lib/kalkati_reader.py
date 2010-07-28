@@ -177,7 +177,7 @@ class KalkatiHandler(ContentHandler):
             self.prev_lon = self.stations[station]["x"]
             self.prev_lat = self.stations[station]["y"]
 
-            if self.count % 1000 == 0:
+            if self.count % 100 == 0:
                 self.session.flush()
             if self.count % 10000 == 0:
                 print "Added {0} timetable elements".format(self.count)

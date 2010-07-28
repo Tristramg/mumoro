@@ -11,7 +11,8 @@ function compute() {
         $.getJSON("path", {slon: nodes['start'].lon, 
                 slat: nodes['start'].lat,
                 dlon: nodes['dest'].lon,
-                dlat: nodes['dest'].lat
+                dlat: nodes['dest'].lat,
+                time: $("#datepicker").val()
                 },
         function(data) {
                 if(data.error) {
@@ -97,6 +98,7 @@ function addToHash() {
                 slat: nodes['start'].lat,
                 dlon: nodes['dest'].lon,
                 dlat: nodes['dest'].lat,
+                time: $("#datepicker").val(),
                 saddress: document.getElementById('startAdr').value,
                 daddress: document.getElementById('endAdr').value
                 },
@@ -131,6 +133,8 @@ function transformToDurationString(v) {
 
 //Initialise the 'map' object
 function init() {
+    AnyTime.picker( "datepicker", { format: "%e/%m/%Y %H:%i", firstDOW: 1 } );
+    $("#datepicker").val(now);
     document.getElementById('startAdr').value = initialStartText;
     document.getElementById('endAdr').value = initialDestText;
     cacheStart = "";

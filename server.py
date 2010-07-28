@@ -37,6 +37,7 @@ import time
 import urllib
 import httplib
 import hashlib
+import datetime
 
 from cherrypy import request
 from genshi.template import TemplateLoader
@@ -310,7 +311,7 @@ class Mumoro:
             i.execute({'config_file': config_file, 'md5': md5_config_checksum, 'binary_file': md5_config_checksum + '.dump'})
 
     @cherrypy.expose
-    def path(self, slon, slat, dlon, dlat):
+    def path(self, slon, slat, dlon, dlat, time):
         start = self.g.match(start_layer[0]['name'], float(slon), float(slat))
         dest = self.g.match(dest_layer[0]['name'], float(dlon), float(dlat))
         cherrypy.response.headers['Content-Type']= 'application/json'
@@ -406,10 +407,10 @@ class Mumoro:
             return None
 
     @cherrypy.expose
-    def addhash(self,mlon,mlat,zoom,slon,slat,dlon,dlat,saddress,daddress):
+    def addhash(self,mlon,mlat,zoom,slon,slat,dlon,dlat,saddress,daddress,time):
         cherrypy.response.headers['Content-Type']= 'application/json'
         hashAdd = shorturl.shortURL(self.metadata)
-        hmd5 =hashAdd.addRouteToDatabase(mlon,mlat,zoom,slon,slat,dlon,dlat,saddress,daddress)
+        hmd5 =hashAdd.addRouteToDatabase(mlon,mlat,zoom,slon,slat,dlon,dlat,saddress,daddress, time)
         if( len(hmd5) > 0 ):
             ret = {
                 'h': hmd5
@@ -439,9 +440,9 @@ class Mumoro:
         if( not fromHash ):
             a = start_layer[0]['layer'].average()
             b = start_layer[0]['layer'].borders()
-            return tmpl.generate(fromHash='false',lonMap=a['avg_lon'],latMap=a['avg_lat'],zoom=14,lonStart=b['min_lon'],latStart=b['min_lat'],lonDest=b['max_lon'],latDest=b['max_lat'],addressStart='',addressDest='',hashUrl=self.web_url,layers=t).render('html', doctype='html')
+            return tmpl.generate(fromHash='false',lonMap=a['avg_lon'],latMap=a['avg_lat'],zoom=14,lonStart=b['min_lon'],latStart=b['min_lat'],lonDest=b['max_lon'],latDest=b['max_lat'],addressStart='',addressDest='',hashUrl=self.web_url,layers=t, date=datetime.datetime.today().strftime("%d/%m/%Y %H:%M")).render('html', doctype='html')
         else:
-            return tmpl.generate(fromHash='true',lonMap=hashData[2],latMap=hashData[3],zoom=hashData[1],lonStart=hashData[4],latStart=hashData[5],lonDest=hashData[6],latDest=hashData[7],addressStart=hashData[8].decode('utf-8'),addressDest=hashData[9].decode('utf-8'),hashUrl=self.web_url,layers=l).render('html', doctype='html')
+            return tmpl.generate(fromHash='true',lonMap=hashData[2],latMap=hashData[3],zoom=hashData[1],lonStart=hashData[4],latStart=hashData[5],lonDest=hashData[6],latDest=hashData[7],addressStart=hashData[8].decode('utf-8'),addressDest=hashData[9].decode('utf-8'),hashUrl=self.web_url,layers=t,date=hashData[10]).render('html', doctype='html')
 
 
     @cherrypy.expose
