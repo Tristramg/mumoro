@@ -92,7 +92,7 @@ def convert(filename, session, start_date, end_date):
             prev_time = stop.departure_secs
 
             if count % 1000 == 0:
-                self.session.flush()
+                session.flush()
             if count % 10000 == 0:
                 print "Added {0} timetable elements".format(self.count)
 
