@@ -1,3 +1,23 @@
+# -*- coding: utf-8 -*-
+
+#    This file is part of Mumoro.
+#
+#    Mumoro is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    Mumoro is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with Mumoro.  If not, see <http://www.gnu.org/licenses/>.
+#
+#    © Université de Toulouse 1 2010
+#    Author: Tristram Gräbener
+
 from datastructures import *
 import sys
 import datetime
@@ -106,8 +126,11 @@ class KalkatiHandler(ContentHandler):
             self.service = attrs["ServiceId"]
             self.prev_stop = None
             self.prev_time = None
-            self.map = {}
-            
+
+        elif name == "ServiceNbr": #[1..1] in Service
+            self.trip = attrs["ServiceNbr"]
+            if not self.map.has_key(self.trip):
+                self.map[self.trip] = {}
 
         elif name == "ServiceValidity": # in Service
             self.footnote = attrs["FootnoteId"]
@@ -120,11 +143,11 @@ class KalkatiHandler(ContentHandler):
 
         elif name == "Stop": #[1..*] in Service
             station = attrs["StationId"]
-            if not self.map.has_key(station):
-                self.map[station] = self.count
+            if not self.map[self.trip].has_key(station):
+                self.map[self.trip][station] = self.count
                 self.count += 1
-
-            current_stop = self.map[attrs["StationId"]]
+                self.session.add(PT_Node(station, self.stations[station]["x"],self.stations[station]["y"], self.trip))
+            current_stop = self.map[self.trip][station]
             if attrs.has_key("Arrival"):
                 arrival = int(attrs["Arrival"]) * 60
             else:
@@ -136,7 +159,7 @@ class KalkatiHandler(ContentHandler):
 
 
             if self.prev_stop:
-                length = distance( (self.stations[station]["x"],self.stations[station]["x"]), (self.prev_lon, self.prev_lat))
+                length = distance( (self.stations[station]["x"],self.stations[station]["y"]), (self.prev_lon, self.prev_lat))
 
                 
                 self.session.add(PT_Edge(
@@ -154,7 +177,7 @@ class KalkatiHandler(ContentHandler):
             self.prev_lon = self.stations[station]["x"]
             self.prev_lat = self.stations[station]["y"]
 
-            if self.count % 1000 == 0:
+            if self.count % 100 == 0:
                 self.session.flush()
             if self.count % 10000 == 0:
                 print "Added {0} timetable elements".format(self.count)
@@ -171,6 +194,9 @@ class KalkatiHandler(ContentHandler):
     def endElement(self, name):
         if name == "Synonym":
             self.synonym = False
+
+    def endDocument(self):
+        self.session.commit()
 
 def convert(filename, session, start_date, end_date):
     handler = KalkatiHandler(session, start_date, end_date)

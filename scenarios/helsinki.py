@@ -63,7 +63,7 @@ end_date = "20101001"
 #
 # Uncompressed or compressed with bzip2 or gzip files are accepted
 # Example: streets = import_street_data('/home/ody/Developement/mumoro/greece.osm')
-#streets = import_street_data('/home/tristram/finland.osm.bz2')
+streets = import_street_data('/home/tristram/finland.osm.bz2')
 
 
 # Bike Rental Scheme
@@ -94,12 +94,12 @@ pt = import_kalkati_data( '/home/tristram/mumoro/lib/LVM.xml', 'Helsinki' )
 # data was defined in the data sources. It must be the result of import_street_data
 # name is whatever you want
 # mode is one of : Foot, Car, Bike. It will define what streets can be used and at what speed
-#foot_layer = street_layer(data = streets, name = 'foot', mode = Foot)
+foot_layer = street_layer(data = streets, name = 'foot', mode = Foot, color="#00FF00")
 #bike_layer = street_layer(data = streets, name = 'car', mode = Car)
 #car_layer = street_layer(data = streets, name = 'bike', mode = Bike)
 
 # Whe also need to create a layer for every public transport network we use
-pt_layer = public_transport_layer(data = pt, name = "Public Transport")
+pt_layer = public_transport_layer(data = pt, name = "Public Transport", color="#ff0000")
 
 ######################
 # Connect the layers #
@@ -132,6 +132,6 @@ pt_layer = public_transport_layer(data = pt, name = "Public Transport")
 # If we want to connect every node from the first layer to the closest node of the second layer
 # If the second cost is ommited, it will be equal to the first
 # Example: public transport
-#connect_layers_on_nearest_nodes(pt_layer, foot_layer, cost(duration=120, mode_change=True))
+connect_layers_on_nearest_nodes(pt_layer, foot_layer, cost(duration=120, mode_change=True))
 
 

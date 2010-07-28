@@ -1,3 +1,23 @@
+# -*- coding: utf-8 -*-
+
+#    This file is part of Mumoro.
+#
+#    Mumoro is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    Mumoro is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with Mumoro.  If not, see <http://www.gnu.org/licenses/>.
+#
+#    © Université de Toulouse 1 2010
+#    Author: Tristram Gräbener, Odysseas Gabrielides
+
 import sys
 from lib.core.mumoro import *
 from lib.core import mumoro
@@ -18,7 +38,7 @@ bike_service_array = []
 
 
 class Importer():
-    def __init__(self,db_type,db_params,start_date,end_date):
+    def __init__(self,db_type,db_params, start_date, end_date):
         if not db_type or not db_params:
             raise NameError('Database connection parameters are empty')
         self.db_string = db_type + ":///" + db_params
@@ -47,11 +67,13 @@ class Importer():
         for b in bike_service_array:
             self.import_bike( b['url_api'], b['service_name'] )
 
+
         if kalkati_data_array:
             is_date_valid( start_date )
             is_date_valid( end_date )
             for m in kalkati_data_array:
                 self.import_kalkati( m['file'], start_date, end_date, m['network'] )
+
 
     def init_mappers(self):
         clear_mappers()
@@ -196,7 +218,7 @@ def main():
     if not os.path.exists( os.getcwd() + "/" + sys.argv[1] ):
         raise NameError('Configuration file does not exist')
     exec( file( sys.argv[1] ) )
-    Importer(db_type,db_params,start_date,end_date)
+    Importer(db_type,db_params, start_date, end_date)
 
 if __name__ == "__main__":
     main()
