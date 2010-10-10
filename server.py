@@ -531,10 +531,13 @@ class Mumoro:
         return json.dumps(data)
 
     def arecovered(self,lon,lat):
+        return True
         for i in layer_array:
             b = i['layer'].borders()
             if lon >= b['min_lon'] and lon <= b['max_lon'] and lat >= b['min_lat'] and lat <= b['max_lat']:
                 return True
+            else:
+                print lon,lat, b
         return False
 
     def sort_objectives(self,obj):
@@ -571,7 +574,7 @@ class Mumoro:
         return route
 
     def analyse_date(self,date):
-        now_chrone = datetime.datetime.strptime(date, "%d/%m/%Y %H:%M")
+        now_chrone = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
         start_chrone = datetime.datetime.strptime(start_date, "%Y%m%d")
         past_seconds = now_chrone.hour * 60 * 60 + now_chrone.minute * 60 + now_chrone.second
         delta = now_chrone - start_chrone
