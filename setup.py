@@ -3,7 +3,7 @@ use_setuptools()
 
 from setuptools import setup, find_packages, Extension
 setup(name='Mumoro',
-      version='0.0.2',
+      version='0.0.2a',
       author= 'Tristram Graebener',
       author_email = 'tristramg@gmail.com',
       url = 'http://github.com/Tristramg/mumoro/',

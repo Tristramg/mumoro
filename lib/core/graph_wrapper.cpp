@@ -21,6 +21,7 @@
 #include <fstream>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 #include <boost/graph/adj_list_serialize.hpp>
+#include <boost/foreach.hpp>
 
 Edge::Edge() : distance(0), elevation(0), mode_change(0), cost(0), line_change(0), co2(0)
 {
@@ -34,6 +35,19 @@ void Duration::append(float start, float arrival, const std::string & services)
 {
     BOOST_ASSERT(start < arrival);
     timetable.push_back(Time(start, arrival, Services(services)));
+}
+
+bool compare_times(const Time & a, const Time & b)
+{
+    return get<0>(a) < get<0>(b);
+}
+
+void Duration::sort()
+{
+    if(const_duration == -1)
+    {
+        std::sort(timetable.begin(), timetable.end(), compare_times);
+    }
 }
 
 float Duration::operator()(float start, int day) const
@@ -51,8 +65,10 @@ float Duration::operator()(float start, int day) const
             float tt_start, tt_arrival;
             Services s;
             boost::tie(tt_start, tt_arrival, s) = *it;
+//            std::cout << s << " " << tt_start << " " << tt_arrival << std::endl;
             if (tt_start >= start && s[day])
             {
+//                std::cout << "Ret : " << tt_arrival << std::endl;
                 return tt_arrival;
             }
             if (next_day != 0 && s[day+1])
@@ -61,9 +77,13 @@ float Duration::operator()(float start, int day) const
             }
         }
         if(next_day > 0)
+        {
+//            std::cout << "Next day: " << next_day << std::endl;
             return next_day;
+        }
         else 
         {
+//            std::cout << "No traffic on day " << day << std::endl;
             throw No_traffic();
         }
     }
@@ -154,6 +174,13 @@ bool Graph::dijkstra(int source, int target)
 
 }
     
+void Graph::sort()
+{
+    BOOST_FOREACH(edge_t e, boost::edges(g))
+    {
+        g[e].duration.sort();
+    }
+}
 
 void Graph::load(const std::string & filename)
 {

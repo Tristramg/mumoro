@@ -33,6 +33,7 @@ typedef enum {Foot, Bike, Car, PublicTransport} Mode;
 typedef std::bitset<128> Services;
 typedef boost::tuple<float, float, Services> Time;
 
+
 struct No_traffic{};
 
 namespace boost { namespace serialization {
@@ -71,6 +72,7 @@ public:
     Duration();
     Duration(float const_duration);
     void append(float start, float arrival, const std::string & services);
+    void sort();
     float operator()(float start_time, int day) const;
 
     template<class Archive>
@@ -121,6 +123,7 @@ struct Graph
     bool dijkstra(int source, int target);
     void save(const std::string & filename) const;
     void load(const std::string & filename);
+    void sort();
 };
 
 const int invalid_node = -1;

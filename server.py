@@ -188,10 +188,10 @@ def connect_layers_from_node_list( layer1, layer2, node_list, cost, cost2 = None
         nodes_list_connection_array.append( { 'layer1':layer1, 'layer2':layer2, 'node_list':node_list, 'cost1':cost, 'cost2':cost2 } )
 
 #Connect 2 given layers on nearest nodes
-def connect_layers_on_nearest_nodes( layer1 , layer2, cost ):
+def connect_layers_on_nearest_nodes( layer1 , layer2, cost, cost2 = None):
     if not layer1 or not layer2 or not cost:
         raise NameError('One or more paramaters are empty')
-    nearest_nodes_connection_array.append( { 'layer1':layer1, 'layer2':layer2, 'cost':cost } )
+    nearest_nodes_connection_array.append( { 'layer1':layer1, 'layer2':layer2, 'cost':cost, 'cost2':cost2 } )
 
 class Mumoro:
     def __init__(self,db_string,config_file,admin_email,web_url):
@@ -265,7 +265,7 @@ class Mumoro:
             for i in same_nodes_connection_array:
                 self.g.connect_same_nodes( i['layer1']['layer'],i['layer2']['layer'],i['cost'] )
             for i in nearest_nodes_connection_array:
-                self.g.connect_nearest_nodes( i['layer1']['layer'],i['layer2']['layer'],i['cost'] )
+                self.g.connect_nearest_nodes( i['layer1']['layer'],i['layer2']['layer'],i['cost'], i['cost2'] )
             for i in nodes_list_connection_array:
                try:
                    i['node_list']['url_api']
@@ -304,6 +304,7 @@ class Mumoro:
             tmp = y['objectives']
             tmp = self.sort_objectives( tmp )
             t = len( tmp )
+            print c['seconds'], c['days']
             if t == 0:
                 p = p + self.normalise_paths( mumoro.martins(s, d, self.g.graph,c['seconds'], c['days']),[],u_obj )
             elif t == 1:

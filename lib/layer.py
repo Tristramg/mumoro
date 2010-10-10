@@ -105,10 +105,8 @@ class BaseLayer(object):
                 ).execute().first()
             
         if res:
-            print "Yehaa"
             return res.id + self.offset
         else:
-            print "Oh noez"
             return None
 
  
@@ -237,6 +235,7 @@ class MultimodalGraph(object):
                         if self.graph.public_transport_edge(e['source'], e['target'], e['departure'], e['arrival'], str(e['services'])):
                             count += 1
                 print "On layer {0}, {1} edges, {2} nodes".format(l.name, count, l.count)
+            self.graph.sort()
             print "The multimodal graph has been built and has {0} nodes and {1} edges".format(nb_nodes, count)
  
     def save(self, filename):

@@ -47,8 +47,6 @@ start_date = "20100701"
 # Example: end_date = "20100701"
 end_date = "20101001"
 
-set_starting_layer( "foot" )
-set_destination_layer( "foot" )
 
 ################
 # Data sources #
@@ -136,4 +134,5 @@ pt_layer = public_transport_layer(data = pt, name = "Public Transport", color="#
 # Example: public transport
 connect_layers_on_nearest_nodes(pt_layer, foot_layer, cost(duration=120, mode_change=True))
 
+paths( foot_layer, foot_layer, [ mode_change, line_change ] )
 

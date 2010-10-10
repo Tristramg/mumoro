@@ -203,7 +203,7 @@ def connect_layers_from_node_list( layer1, layer2, node_list, cost, cost2 = None
     pass
 
 #Connect 2 given layers on nearest nodes
-def connect_layers_on_nearest_nodes( layer1 , layer2, cost ):
+def connect_layers_on_nearest_nodes( layer1 , layer2, cost, cost2 ):
     pass
 
 def is_date_valid( date ):
