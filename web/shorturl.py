@@ -65,5 +65,5 @@ class shortURL:
         return [u.id, u.zoom, u.lonMap, u.latMap,
                 u.lonStart, u.latStart, u.lonDest, u.latDest,
                 u.addressStart.encode("utf-8"), u.addressDest.encode("utf-8"),
-                u.chrone]
+                u.chrone.strftime("%d/%m/%Y %H:%M")]
 
