@@ -34,6 +34,7 @@ import cherrypy
 import sys
 import simplejson as json
 import os
+import re
 import time
 import urllib
 import httplib
@@ -67,26 +68,8 @@ def md5_of_file(filename):
     filename.close()
     return md5.hexdigest()
 
-def is_color_valid( color ):
-    if len( color ) == 7:
-        if color[0] == '#':
-            try:
-                r = int( color[1:3], 16)
-                if r <= 255 and r >= 0:
-                    try:
-                        g = int( color[3:5], 16)
-                        if g <= 255 and g >= 0:
-                            try:
-                                b = int( color[5:7], 16)
-                                if b <= 255 and b >= 0:
-                                    return True
-                            except ValueError:
-                                return False
-                    except ValueError:
-                        return False
-            except ValueError:
-                return False
-    return False
+def valid_color_p( color ):
+    return re.search("^#([0-9]|[a-f]|[A-F]){6}$", color)
 
 #Loads an osm (compressed of not) file and insert data into database
 def import_street_data( filename ):
@@ -97,12 +80,12 @@ def import_street_data( filename ):
     rs = s.execute()
     nd = 0
     for row in rs:
-         nd = row[0]
+         nd = nd+1
     s = mumoro_metadata.select((mumoro_metadata.c.origin == filename) & (mumoro_metadata.c.node_or_edge == 'Edges'))
     rs = s.execute()
     ed = 0
     for row in rs:
-         ed = row[0]
+         ed = ed+1
     return {'nodes': str(nd), 'edges' : str(ed)}
 
 
@@ -141,7 +124,7 @@ def import_bike_service( url, name ):
 def street_layer( data, name, color, mode ):
     if not data or not name:
         raise NameError('One or more parameters are missing')
-    if not is_color_valid( color ):
+    if not valid_color_p( color ):
         raise NameError('Color for the layer is invalid')
     if mode != mumoro.Foot and mode != mumoro.Bike and mode != mumoro.Car and mode != None:
         raise NameError('Wrong layer mode paramater')
@@ -418,10 +401,7 @@ class Mumoro:
         hashAdd = shorturl.shortURL(self.metadata)
         hmd5 =hashAdd.addRouteToDatabase(mlon,mlat,zoom,slon,slat,dlon,dlat,saddress,daddress, time)
         if( len(hmd5) > 0 ):
-            ret = {
-                'h': hmd5
-            }
-            return json.dumps(ret)
+            return json.dumps({ 'h': hmd5 })
         else:
             return '{"error": "Add to DB failed"}'
 

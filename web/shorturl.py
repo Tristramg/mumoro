@@ -23,6 +23,7 @@ import string
 import datetime
 
 from sqlalchemy import *
+from sqlalchemy.exceptions import IntegrityError
 
 class shortURL:
     def __init__(self,metadata):
@@ -42,18 +43,20 @@ class shortURL:
         h.update(str(zoom))
         h.update(str(time))
         i = self.hash_table.insert()
-        i.execute({'id': h.hexdigest()[0:16],
-                   'zoom': zoom,
-                   'lonMap': lonMap,
-                   'latMap': latMap,
-                   'lonStart': lonStart,
-                   'latStart': latStart,
-                   'lonDest': lonDest,
-                   'latDest': latDest,
-                   'addressStart': addressStart,
-                   'addressDest': addressDest,
-                   'chrone': datetime.datetime.strptime(time, "%d/%m/%Y %H:%M")}
-        )
+        try: 
+            i.execute({'id': h.hexdigest()[0:16],
+                       'zoom': zoom,
+                       'lonMap': lonMap,
+                       'latMap': latMap,
+                       'lonStart': lonStart,
+                       'latStart': latStart,
+                       'lonDest': lonDest,
+                       'latDest': latDest,
+                       'addressStart': addressStart,
+                       'addressDest': addressDest,
+                       'chrone': datetime.datetime.strptime(time, "%d/%m/%Y %H:%M")})
+        except IntegrityError:
+            pass
         return h.hexdigest()[0:16]
 
     def getDataFromHash(self,value):
