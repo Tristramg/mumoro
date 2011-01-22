@@ -575,7 +575,7 @@ class Mumoro:
         return route
 
     def analyse_date(self,date):
-        now_chrone = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
+        now_chrone = datetime.datetime.strptime(date, "%d/%m/%Y %H:%M")
         start_chrone = datetime.datetime.strptime(start_date, "%Y%m%d")
         past_seconds = now_chrone.hour * 60 * 60 + now_chrone.minute * 60 + now_chrone.second
         delta = now_chrone - start_chrone
