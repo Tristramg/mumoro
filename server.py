@@ -25,6 +25,7 @@ from lib.core.mumoro import Bike, Car, Foot, PublicTransport, cost, co2, dist, e
 from lib import layer
 
 from lib import bikestations as bikestations
+from lib import utils
 from web import shorturl
 
 from sqlalchemy import *
@@ -34,7 +35,6 @@ import cherrypy
 import sys
 import simplejson as json
 import os
-import re
 import time
 import urllib
 import httplib
@@ -56,20 +56,6 @@ nearest_nodes_connection_array = []
 nodes_list_connection_array = []
 
 paths_array = []
-
-def md5_of_file(filename):
-    block_size=2**20
-    md5 = hashlib.md5()
-    while True:
-        data = filename.read(block_size)
-        if not data:
-            break
-        md5.update(data)
-    filename.close()
-    return md5.hexdigest()
-
-def valid_color_p( color ):
-    return re.search("^#([0-9]|[a-f]|[A-F]){6}$", color)
 
 #Loads an osm (compressed of not) file and insert data into database
 def import_street_data( filename ):
@@ -121,7 +107,7 @@ def import_bike_service( url, name ):
 def street_layer( data, name, color, mode ):
     if not data or not name:
         raise NameError('One or more parameters are missing')
-    if not valid_color_p( color ):
+    if not utils.valid_color_p( color ):
         raise NameError('Color for the layer is invalid')
     if mode != mumoro.Foot and mode != mumoro.Bike and mode != mumoro.Car and mode != None:
         raise NameError('Wrong layer mode paramater')
@@ -229,13 +215,13 @@ class Mumoro:
         s = self.config_table.select()
         rs = s.execute()
         row = rs.fetchone()
-        if row and row['md5']== md5_of_file( file( config_file ) ) and os.path.exists( os.getcwd() + "/" + row['binary_file'] ):
+        if row and row['md5']== utils.md5_of_file( file( config_file ) ) and os.path.exists( os.getcwd() + "/" + row['binary_file'] ):
                 print "No need to rebuilt graph : configuration didn't change so loading from binary file"
                 self.g = layer.MultimodalGraph(layers, str(row['binary_file']))
         else:
             if not row:
                 print "This is the first time of launch: creating multimodal graph from scratch"
-            elif row['md5'] != md5_of_file( file( config_file ) ):
+            elif row['md5'] != utils.md5_of_file( file( config_file ) ):
                 print "Configuration has changed since last launch. Rebuilding multimodal graph"
                 if os.path.exists( os.getcwd() + "/" + row['binary_file'] ) :
                     os.remove(os.getcwd() + "/" + row['binary_file'])   
@@ -265,7 +251,7 @@ class Mumoro:
                        self.g.connect_nodes_from_list( i['layer1']['layer'],i['layer2']['layer'],i['node_list']['layer'].nodes(),i['cost1'],i['cost2'] )
                    except KeyError:
                        raise NameError('Can not connect layers from the node list')
-            md5_config_checksum = md5_of_file( file( config_file ) )
+            md5_config_checksum = utils.md5_of_file( file( config_file ) )
             self.g.save( md5_config_checksum + '.dump' )
             i = self.config_table.insert()
             i.execute({'config_file': config_file, 'md5': md5_config_checksum, 'binary_file': md5_config_checksum + '.dump'})
