@@ -38,8 +38,8 @@ foot_layer = street_layer( data=osm_data , name='Foot', color='#7E2217', mode=mu
 bike_layer = street_layer( data=osm_data, name='Bike', color='#652AF7', mode=mumoro.Bike )
 star_layer = public_transport_layer(data=star_data ,name='STAR', color='#4CC417' )
 
-paths( foot_layer, foot_layer, [ mode_change, elevation ] )
-paths( star_layer, star_layer, [ dist, mode_change ] )
+paths( foot_layer, foot_layer, [ mode_change, line_change ] )
+# paths( star_layer, star_layer, [ dist, mode_change ] )
 
 #Starting layer is the layer on wich the route begins
 #Destination layer is the layer on wich the route finishes
@@ -60,13 +60,13 @@ cost2 = cost( duration = 60, mode_change = False )
 #Connect 2 given layers on nodes imported from a list (Returned value from import_bike_service or import_municipal_data) with the given cost(s)
 #----------------------------------------------------------------------------------------------------------------------------------------------
 #connect_layers_from_node_list( layer1, layer2, list, cost1, cost2 )
-connect_layers_on_nearest_nodes(star_layer, foot_layer, cost1 , cost2)
-
 #Connect 2 given layers on nearest nodes
 #----------------------------------------
 #connect_layers_on_nearest_nodes( layer1, layer2, cost )
 
-connect_layers_from_node_list( foot_layer, bike_layer, cost1, cost2 )
+connect_layers_from_node_list( foot_layer, bike_layer, data_bike,cost1, cost2 )
+connect_layers_on_nearest_nodes(star_layer, foot_layer, cost1 , cost2)
+
 
 #Administrator valid email
 #REQUIRED for geocoding services, if empty the service will NOT work
