@@ -1,0 +1,64 @@
+Environnement de dev pour mumoro
+================================
+
+Paquets à installer (ubuntu)
+----------------------------
+
+  aptitude install gcc libboost-dev libboost-serialization-dev python-dev swig
+
+
+Dépôt de source
+---------------
+
+Forker https://github.com/Tristramg/mumoro.git , puis faire un clone
+en local.
+
+  git clone URL_DU_FORK
+
+Puis entrer dans le dossier
+
+  cd mumoro
+
+Données
+-------
+
+wget http://dl.demotera.com/rennes.osm.bz2
+
+wget http://data.keolis-rennes.com/fileadmin/OpenDataFiles/GTFS/GTFS-20110118.zip
+
+
+
+Compilation
+-----------
+
+python virtualenv.py env
+source env/bin/activate
+python setup.py install
+
+
+Importer les données
+--------------------
+
+Utiliser la bdd préparée :
+
+  wget -qO- http://dl.demotera.com/mumoro_db.sqlite.bz2 | bunzip2 > db.sqlite
+
+
+Ou la constituer (long)
+
+  ./env/bin/mumoro_import_data scenarios/rennes.py
+
+
+
+Préparer l'environnement
+------------------------
+
+TODO : vérifier et expliquer
+
+  ./setup.py develop
+
+
+Démarrer le serveur
+-------------------
+
+  ./env/bin/mumoro_server scenarios/rennes.py
