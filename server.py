@@ -423,14 +423,14 @@ class Mumoro:
         if( not fromHash ):
             a = paths_array[0]['starting_layer']['layer'].average()
             b = paths_array[0]['starting_layer']['layer'].borders()
-            return tmpl.generate(fromHash='false',lonMap=a['avg_lon'],latMap=a['avg_lat'],zoom=14,lonStart=b['min_lon'],latStart=b['min_lat'],lonDest=b['max_lon'],latDest=b['max_lat'],addressStart='',addressDest='',hashUrl=self.web_url,layers=t, date=datetime.datetime.today().strftime("%d/%m/%Y %H:%M")).render('html', doctype='html')
+            return tmpl.generate(fromHash='false',lonMap=a['avg_lon'],latMap=a['avg_lat'],zoom=14,lonStart=b['min_lon'],latStart=b['min_lat'],lonDest=b['max_lon'],latDest=b['max_lat'],addressStart='',addressDest='',hashUrl=self.web_url,layers=t, date=datetime.datetime.today().strftime("%d/%m/%Y %H:%M")).render('html', doctype='html5')
         else:
-            return tmpl.generate(fromHash='true',lonMap=hashData[2],latMap=hashData[3],zoom=hashData[1],lonStart=hashData[4],latStart=hashData[5],lonDest=hashData[6],latDest=hashData[7],addressStart=hashData[8].decode('utf-8'),addressDest=hashData[9].decode('utf-8'),hashUrl=self.web_url,layers=t,date=hashData[10]).render('html', doctype='html')
+            return tmpl.generate(fromHash='true',lonMap=hashData[2],latMap=hashData[3],zoom=hashData[1],lonStart=hashData[4],latStart=hashData[5],lonDest=hashData[6],latDest=hashData[7],addressStart=hashData[8].decode('utf-8'),addressDest=hashData[9].decode('utf-8'),hashUrl=self.web_url,layers=t,date=hashData[10]).render('html', doctype='html5')
 
     @cherrypy.expose
     def info(self):
         tmpl = loader.load('info.html')
-        return tmpl.generate().render('html', doctype='html')
+        return tmpl.generate().render('html', doctype='html5')
     
     @cherrypy.expose
     def geo(self,q):
