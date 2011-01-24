@@ -15,7 +15,8 @@
 #    You should have received a copy of the GNU General Public License
 #    along with Mumoro.  If not, see <http://www.gnu.org/licenses/>.
 #
-#    © Université de Toulouse 1 2010
+#    © Université Toulouse 1 Capitole 2010
+#    © Tristram Gräbener 2011
 #    Author: Tristram Gräbener, Odysseas Gabrielides
 
 import sys
@@ -92,20 +93,31 @@ class Importer():
     def import_gtfs(self, filename, start_date, end_date, network_name = "GTFS"):
         print "Adding municipal data from " + filename
         print "From " + start_date + " to " + end_date + " for " + network_name + " network"
+
+        stop_areas = Metadata(network_name, "StopAreas", filename)
+        self.session.add(stop_areas)
+        self.session.commit()
+        mapper(PT_StopArea, create_pt_stop_areas_table(str(stop_areas.id), self.metadata))
+
         nodes2 = Metadata(network_name, "Nodes", filename)
         self.session.add(nodes2)
         self.session.commit()
-        mapper(PT_Node, create_pt_nodes_table(str(nodes2.id), self.metadata))
+        mapper(PT_Node, create_pt_nodes_table(str(nodes2.id), self.metadata, str(stop_areas.id)))
         
         services = Metadata(network_name, "Services", filename)
         self.session.add(services)
         self.session.commit()
         mapper(PT_Service, create_services_table(str(services.id), self.metadata))
 
+        lines = Metadata(network_name, "Lines", filename)
+        self.session.add(lines)
+        self.session.commit()
+        mapper(PT_Line, create_pt_lines_table(str(lines.id), self.metadata))
+
         edges2 = Metadata(network_name, "Edges", filename)
         self.session.add(edges2)
         self.session.commit()
-        mapper(PT_Edge, create_pt_edges_table(str(edges2.id), self.metadata, str(services.id)))
+        mapper(PT_Edge, create_pt_edges_table(str(edges2.id), self.metadata, str(services.id), str(lines.id)))
         self.session.commit()
 
         gtfs_reader.convert(filename, self.session, start_date, end_date)

@@ -15,7 +15,8 @@
 #    You should have received a copy of the GNU General Public License
 #    along with Mumoro.  If not, see <http://www.gnu.org/licenses/>.
 #
-#    © Université de Toulouse 1 2010
+#    © Université Toulouse 1 Capitole 2010
+#    © Tristram Gräbener 2011
 #    Author: Tristram Gräbener
 
 from datastructures import *
@@ -53,9 +54,25 @@ def convert(filename, session, start_date, end_date):
 
     #Start with mapping (route_id, stop_id) to an int
     count = 0
+    routes_count = 0
+    routes_map = {}
+
+    for route in s.GetRouteList():
+        session.add(PT_Line(route.route_id, route.route_short_name, route.route_long_name, route.route_color, route.route_text_color, route.route_desc))
+        routes_map[route.route_id] = routes_count
+        routes_count += 1
+
+    stop_areas_count = 0
+    stop_areas_map = {}
+    for stop in s.GetStopList():
+        if stop.parent_station == '':
+            session.add(PT_StopArea(stop.stop_id, stop.stop_name))
+            stop_areas_map[stop.stop_id] = stop_areas_count
+            stop_areas_count += 1
 
     for trip in s.GetTripList():
-        mode = s.GetRoute(trip.route_id).route_type
+        route =  s.GetRoute(trip.route_id)
+        mode = route.route_type
         service_period = s.GetServicePeriod(trip.service_id)
         services = ""
         delta = datetime.timedelta(days=1)
@@ -79,13 +96,13 @@ def convert(filename, session, start_date, end_date):
         for stop in trip.GetStopTimes():
             if not map[trip.route_id].has_key(stop.stop_id):
                 map[trip.route_id][stop.stop_id] = count
-                session.add(PT_Node(stop.stop_id, stop.stop.stop_lon, stop.stop.stop_lat, trip.route_id))
+                session.add(PT_Node(stop.stop_id, stop.stop.stop_lon, stop.stop.stop_lat, trip.route_id, stop_areas_map[stop.stop_id]))
                 count +=1
             current_stop = map[trip.route_id][stop.stop_id]
             current_node = session.query(PT_Node).filter_by(original_id = stop.stop_id).first()
             if prev_stop != None:
                 length = distance( (current_node.lon, current_node.lat), (prev_node.lon, prev_node.lat))
-                session.add(PT_Edge(prev_stop, current_stop, length * 1.1, prev_time, stop.arrival_secs, service, mode))
+                session.add(PT_Edge(prev_stop, current_stop, length * 1.1, prev_time, stop.arrival_secs, service, mode, routes_map[route.route_id]))
 
             prev_node = current_node 
             prev_stop = current_stop
