@@ -29,7 +29,7 @@ from lib.datastructures import *
 from sqlalchemy import *
 from sqlalchemy.orm import mapper, sessionmaker, clear_mappers
 import datetime
-import CSV
+import csv
 
 street_data_array = []
 municipal_data_array = []
@@ -76,7 +76,7 @@ class Importer():
                 self.import_kalkati( m['file'], start_date, end_date, m['network'] )
 
         for f in freq_data_array:
-            self.import_freq(f['line_name'], f['nodesf'], f['linesf'], start_date, end_date):
+            self.import_freq(f['line_name'], f['nodesf'], f['linesf'], start_date, end_date)
 
 
 
