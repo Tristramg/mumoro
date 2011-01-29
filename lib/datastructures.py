@@ -15,7 +15,8 @@
 #    You should have received a copy of the GNU General Public License
 #    along with Mumoro.  If not, see <http://www.gnu.org/licenses/>.
 #
-#    © Université de Toulouse 1 2010
+#    © Université Toulouse 1 Capitole 2010
+#    © Tristram Gräbener 2011
 #    Author: Tristram Gräbener, Odysseas Gabrielides
 
 from sqlalchemy import *
@@ -34,12 +35,13 @@ class Node(object):
         self.the_geom = the_geom
 
 class PT_Node(object):
-    def __init__(self, id, lon, lat, route, the_geom = ""):
+    def __init__(self, id, lon, lat, route, stop_area, the_geom = ""):
         self.original_id = id
         self.lon = lon
         self.lat = lat
         self.route = route
         self.the_geom = the_geom
+        self.stop_area = stop_area
 
 class PT_Service(object):
     def __init__(self, id, services):
@@ -60,7 +62,7 @@ class Edge(object):
         self.the_geom = the_geom
 
 class PT_Edge(object):
-    def __init__(self, source, target, length, start_secs, arrival_secs, services, mode):
+    def __init__(self, source, target, length, start_secs, arrival_secs, services, mode, line):
         self.source = source
         self.target = target
         self.length = length
@@ -68,6 +70,21 @@ class PT_Edge(object):
         self.arrival_secs = arrival_secs
         self.services = services
         self.mode = mode
+        self.line = line
+
+class PT_Line(object):
+    def __init__(self, code, short_name, long_name, color, text_color, desc):
+        self.code = code
+        self.short_name = short_name
+        self.long_name = long_name
+        self.color = color
+        self.text_color = text_color
+        self.desc = desc
+
+class PT_StopArea(object):
+    def __init__(self, code, name):
+        self.code = code
+        self.name = name
 
 def create_nodes_table(id, metadata):
     table = Table(id, metadata, 
@@ -81,14 +98,15 @@ def create_nodes_table(id, metadata):
     metadata.create_all()
     return table
 
-def create_pt_nodes_table(id, metadata):
+def create_pt_nodes_table(id, metadata, stop_areas_table):
     table = Table(id, metadata, 
             Column('id', Integer, primary_key = True),
             Column('original_id', String, index = True),
             Column('lon', Float, index = True),
             Column('lat', Float),
             Column('the_geom', String),
-            Column('route', String)
+            Column('route', String),
+            Column('stop_area', Integer, ForeignKey(stop_areas_table + ".id"))
             )
     metadata.create_all()
     return table
@@ -117,7 +135,7 @@ def create_edges_table(id, metadata):
     metadata.create_all()
     return table
             
-def create_pt_edges_table(id, metadata, services_table):
+def create_pt_edges_table(id, metadata, services_table, lines_table):
     table = Table(id, metadata,
             Column('id', Integer, primary_key = True),
             Column('source', Integer, index = True),
@@ -127,8 +145,29 @@ def create_pt_edges_table(id, metadata, services_table):
             Column('arrival_secs', Integer),
             Column('services', Integer,  ForeignKey(services_table + ".id")),
             Column('mode', Integer),
+            Column('line', Integer, ForeignKey(lines_table + ".id"))
             )
     metadata.create_all()
     return table
 
+def create_pt_lines_table(id, metadata):
+    table = Table(id, metadata,
+            Column('id', Integer, primary_key = True),
+            Column('code', String),
+            Column('short_name', String),
+            Column('long_name', String),
+            Column('color', String),
+            Column('text_color', String),
+            Column('desc', String)
+            )
+    metadata.create_all()
+    return table
 
+def create_pt_stop_areas_table(id, metadata):
+    table = Table(id, metadata,
+            Column('id', Integer, primary_key = True),
+            Column('code', String, index = True),
+            Column('name', String)
+            )
+    metadata.create_all()
+    return table

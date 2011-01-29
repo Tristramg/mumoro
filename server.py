@@ -91,6 +91,9 @@ def import_gtfs_data( filename, network_name = "Public Transport"):
 def import_kalkati_data(filename, network_name = "Public Transport"):
     return import_gtfs_data(filename, network_name)
 
+def import_freq(self, line_name, nodesf, linesf):
+    return import_gtfs_data(line_name)
+
 #Loads a bike service API ( from already formatted URL ). Insert bike stations in database and enables schedulded re-check.
 def import_bike_service( url, name ):
     engine = create_engine(db_type + ":///" + db_params)
