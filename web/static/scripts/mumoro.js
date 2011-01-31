@@ -1,3 +1,46 @@
+OpenLayers.ImgPath = "/img/openlayers/";
+var map; //complex object of type OpenLayers.Map
+var routeLayer;
+var proj4326 = new OpenLayers.Projection("EPSG:4326"); // longitude/latitude in decimal degrees
+var proj900913 = new OpenLayers.Projection("EPSG:900913"); // Google projection
+var nodes = {
+    'start': null,
+    'dest': null,
+    'fmouse_start': false,
+    'fmouse_dest': false            
+};
+var disableClickEvent = false;
+var icon_standard;
+var icon = {
+    'start': null,
+    'dest': null
+};
+var controlDrag = null;
+var bikeLayer = null;
+var layerMarkers = new OpenLayers.Layer.Vector("Markers");
+icon_standard = OpenLayers.Util.extend({}, OpenLayers.Feature.Vector.style['default']);
+icon_standard.graphicWidth = 26;
+icon_standard.graphicHeight = 41;
+icon_standard.graphicXOffset = -icon_standard.graphicWidth/2;
+icon_standard.graphicYOffset = -icon_standard.graphicHeight;
+icon_standard.graphicOpacity = 1.0;
+icon_standard.pointRadius = 6;
+icon['start'] = OpenLayers.Util.extend({}, icon_standard);
+icon['start'] .externalGraphic = "/img/pin-d.png";
+icon['dest']  = OpenLayers.Util.extend({}, icon_standard);
+icon['dest'] .externalGraphic = "/img/pin-a.png";  
+var node_markers = {
+    'start': null,
+    'dest': null
+};
+var in_options = {'internalProjection': proj900913,'externalProjection': proj4326};  
+var geojson_reader = new OpenLayers.Format.GeoJSON(in_options);
+var features;
+var paths;
+var cacheStart;
+var cacheDest;
+
+
 function disp_path(id) {    
     routeLayer.destroyFeatures();
     features = geojson_reader.read(paths[id]);
@@ -82,7 +125,7 @@ function setMark(lonlat, mark)
 } // End of function setMark(lonlat, mark)
 
 function areBothMarked() {
-    return nodes['start'].lon && nodes['dest'].lat && nodes['dest'].lon && nodes['dest'].lat; 
+    return nodes['start'] && nodes['dest'] && nodes['start'].lon && nodes['dest'].lat && nodes['dest'].lon && nodes['dest'].lat; 
 }
 
 function addToHash() {
@@ -152,7 +195,8 @@ function init() {
 				 controls: [
 				     new OpenLayers.Control.Navigation({zoomWheelEnabled: true}),
 				     new OpenLayers.Control.PanZoomBar(),
-				     new OpenLayers.Control.LayerSwitcher(),
+				     // new OpenLayers.Control.LayerSwitcher(),
+				     new OpenLayers.Control.MobileDragPan(),
 				     new OpenLayers.Control.ScaleLine()
 				 ]
 			     }
@@ -164,26 +208,20 @@ function init() {
 						       styleId: 997
 						   });
     map.addLayer(cloudmade);
-    layerTilesMapnik = new OpenLayers.Layer.OSM.Mapnik("Mapnik");
-    map.addLayer(layerTilesMapnik);
-    layerTilesCycle = new OpenLayers.Layer.OSM.CycleMap("CycleMap");
-    map.addLayer(layerTilesCycle);
-    layerTilesAtHome = new OpenLayers.Layer.OSM.Osmarender("Osmarender");
-    map.addLayer(layerTilesAtHome);
     var styleMap = new OpenLayers.StyleMap({strokeWidth: 3});
     layers[ "connection" ] = {strokeColor: '#830531', strokeDashstyle: 'dashdot', 
 			      strokeWidth: 2};
     styleMap.addUniqueValueRules("default", "layer", layers);
     routeLayer = new OpenLayers.Layer.Vector("Route", {styleMap: styleMap});
     map.addLayer(routeLayer);
-    bikeLayer = new OpenLayers.Layer.Text( "Bike Stations",{
-					       location:"./bikes",
-					       visibility: false,
-					       projection: map.displayProjection
-					   });
+    // bikeLayer = new OpenLayers.Layer.Text( "Bike Stations",{
+    // 					       location:"./bikes",
+    // 					       visibility: false,
+    // 					       projection: map.displayProjection
+    // 					   });
     map.addLayer(layerMarkers);
-    map.addLayer(bikeLayer);
-    bikeLayer.setZIndex(730);
+    // map.addLayer(bikeLayer);
+    // bikeLayer.setZIndex(730);
     if( ! map.getCenter() ){
         var lonLat = new OpenLayers.LonLat(lon, lat).transform(new OpenLayers.Projection("EPSG:4326"), map.getProjectionObject());
         map.setCenter (lonLat, zoom);
@@ -232,7 +270,6 @@ function init() {
 			      handleClick( tmp, action);
 			  });
     // showDescription( layers );
-    new TouchHandler( map, 4 );  
 } //End of function init()
 
 function hasChanged(mark) {

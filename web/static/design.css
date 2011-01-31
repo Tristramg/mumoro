@@ -252,3 +252,6 @@ div#footer {
 .contextMenu LI.dest A { background-image: url(img/context-arrow-finish.png); }
 
 
+.olControlLayerSwitcher .layersDiv {
+  background-color: black;
+}
