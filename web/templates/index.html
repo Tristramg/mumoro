@@ -71,12 +71,16 @@
       icon_standard.graphicOpacity = 1.0;
       icon_standard.pointRadius = 6;
       icon['start'] = OpenLayers.Util.extend({}, icon_standard);
-      icon['start'] .externalGraphic = "/img/pin-d.png";
+      icon['start'].externalGraphic = "/img/pin-d.png";
       icon['dest']  = OpenLayers.Util.extend({}, icon_standard);
-      icon['dest'] .externalGraphic = "/img/pin-a.png";  
+      icon['dest'].externalGraphic = "/img/pin-a.png";  
+      icon['position'] = OpenLayers.Util.extend({}, icon_standard);
+      icon['position'].externalGraphic = "/img/pin-d.png";
+
       var node_markers = {
       'start': null,
-      'dest': null
+      'dest': null,
+      'position': null
       };
       var in_options = {'internalProjection': proj900913,'externalProjection': proj4326};  
       var geojson_reader = new OpenLayers.Format.GeoJSON(in_options);
@@ -113,12 +117,14 @@
 		  <span id="formError_start"></span>
 		  <br/>           
 		  <input type="text" name="startAdr" id="startAdr"/>
+		  <a id="startGeo" style="display:none;" href="#">Ma position</a>
 		</li>
 		<li>
 		  <label for="endAdr">Destination</label>
 		  <span id="formError_dest"></span>
 		  <br/>
 		  <input type="text" name="endAdr" id="endAdr"/>
+		  <a id="endGeo" style="display:none;" href="#">Ma position</a>
 		  <span class="tinyText">Example : « 23 rue de la
 		  Chalotais 35000 Rennes France »</span>
 		</li>
