@@ -80,12 +80,12 @@ def import_street_data( filename ):
     rs = s.execute()
     nd = 0
     for row in rs:
-         nd = nd+1
+         nd = row[0]
     s = mumoro_metadata.select((mumoro_metadata.c.origin == filename) & (mumoro_metadata.c.node_or_edge == 'Edges'))
     rs = s.execute()
     ed = 0
     for row in rs:
-         ed = ed+1
+         ed = row[0]
     return {'nodes': str(nd), 'edges' : str(ed)}
 
 
