@@ -131,6 +131,46 @@ function transformToDurationString(v) {
         return ( (Math.ceil(minutes) ) + "m");
 }       
 
+function refreshPosition(pos){
+    var lonLat = new OpenLayers.LonLat(pos.coords.longitude, 
+				       pos.coords.latitude);
+    var accuracy = pos.accuracy;
+    if(accuracy == undefined){
+	accuracy = 50;
+    }
+    console.log('Refreshing position: ' + lonLat.lat + ', ' + lonLat.lon + " +- " + accuracy);
+
+    var mapCoordinate = lonLat.transform(new OpenLayers.Projection("EPSG:4326"),
+ 					 this.map.getProjectionObject());
+    if(node_markers['position']) {
+        layerMarkers.removeFeatures(node_markers['position']);
+        node_markers['position'].destroy();
+        node_markers['position'] = null;
+    }
+    node_markers['position'] = new OpenLayers.Feature.
+	Vector(LonLatToPoint(mapCoordinate),
+	       'position',
+	       new OpenLayers.Style({'pointRadius': '20',
+				     'strokeColor': '#FF0000'}));
+    layerMarkers.addFeatures(node_markers['position']);
+    layerMarkers.drawFeature(node_markers['position']);
+
+    if (accuracy){
+	if(node_markers['position-accuracy']) {
+            layerMarkers.removeFeatures(node_markers['position-accuracy']);
+            node_markers['position-accuracy'].destroy();
+            node_markers['position-accuracy'] = null;
+	}
+	node_markers['position-accuracy'] = new OpenLayers.Feature.
+	    Vector(OpenLayers.Geometry.Polygon.
+		   createRegularPolygon(LonLatToPoint(mapCoordinate),
+					pos.accuracy, 50));
+	layerMarkers.addFeatures(node_markers['position-accuracy']);
+	layerMarkers.drawFeature(node_markers['position-accuracy']);
+    }
+    console.log('Position refreshed');
+}
+
 //Initialise the 'map' object
 function init() {
     $("#datepicker").val(now);
@@ -171,7 +211,8 @@ function init() {
     layerTilesAtHome = new OpenLayers.Layer.OSM.Osmarender("Osmarender");
     map.addLayer(layerTilesAtHome);
     var styleMap = new OpenLayers.StyleMap({strokeWidth: 3});
-    layers[ "connection" ] = {strokeColor: '#830531', strokeDashstyle: 'dashdot', 
+    layers[ "connection" ] = {strokeColor: '#830531', 
+			      strokeDashstyle: 'dashdot', 
 			      strokeWidth: 2};
     styleMap.addUniqueValueRules("default", "layer", layers);
     routeLayer = new OpenLayers.Layer.Vector("Route", {styleMap: styleMap});
@@ -184,6 +225,33 @@ function init() {
     map.addLayer(layerMarkers);
     map.addLayer(bikeLayer);
     bikeLayer.setZIndex(730);
+
+
+    // Location support
+    if (navigator.geolocation) {  
+	/* Code if geolocation is available. Add buttons*/
+	$('#startGeo').show().click(function(){
+				navigator.geolocation.
+				    getCurrentPosition(
+					function(pos){
+					    setMark({'lon': pos.coords.longitude,
+						     'lat': pos.coords.latitude},"start");    
+					});
+			    });
+	$('#endGeo').show().click(function(){
+				navigator.geolocation.
+				    getCurrentPosition(
+					function(pos){
+					    setMark({'lon': pos.coords.longitude,
+						     'lat': pos.coords.latitude},"end");    
+					});
+			    });
+	navigator.geolocation.watchPosition(refreshPosition);
+	/* Add indicator on map */
+    } else {  
+	/* Code if geolocation is not available */
+    }
+
     if( ! map.getCenter() ){
         var lonLat = new OpenLayers.LonLat(lon, lat).transform(new OpenLayers.Projection("EPSG:4326"), map.getProjectionObject());
         map.setCenter (lonLat, zoom);
@@ -203,6 +271,8 @@ function init() {
 						     });
     map.addControl(controlDrag);
     controlDrag.activate();
+
+
     if( fromHash ) {
         var tmpStart = new OpenLayers.LonLat(lonStart, latStart);
         var tmpDest = new OpenLayers.LonLat(lonDest, latDest);
@@ -232,7 +302,8 @@ function init() {
 			      handleClick( tmp, action);
 			  });
     // showDescription( layers );
-    new TouchHandler( map, 4 );  
+    // new TouchHandler( map, 4 );  
+
 } //End of function init()
 
 function hasChanged(mark) {
