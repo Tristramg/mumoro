@@ -92,7 +92,6 @@ class BaseLayer(object):
         return {'avg_lon':avg_lon, 'avg_lat':avg_lat }
  
     def match(self, ln, lt):
-        print "Trying to match {0}, {1}".format(ln, lt)
         epsilon = 0.002
         ln = float(ln)
         lt = float(lt)
@@ -309,5 +308,7 @@ class MultimodalGraph(object):
                 self.graph.add_edge(n.id + layer1.offset, nearest, property)
                 self.graph.add_edge(nearest, n.id + layer1.offset, property2)
                 count += 2
+            else:
+                print "!!!!! Nearest node not found"
         return count
  
