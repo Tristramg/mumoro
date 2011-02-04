@@ -25,6 +25,7 @@ from lib.core.mumoro import Bike, Car, Foot, PublicTransport, cost, co2, dist, e
 from lib import layer
 
 from lib import bikestations as bikestations
+from lib import utils
 from web import shorturl
 
 from sqlalchemy import *
@@ -34,7 +35,6 @@ import cherrypy
 import sys
 import simplejson as json
 import os
-import re
 import time
 import urllib
 import httplib
@@ -57,35 +57,17 @@ nodes_list_connection_array = []
 
 paths_array = []
 
-def md5_of_file(filename):
-    block_size=2**20
-    md5 = hashlib.md5()
-    while True:
-        data = filename.read(block_size)
-        if not data:
-            break
-        md5.update(data)
-    filename.close()
-    return md5.hexdigest()
-
-def valid_color_p( color ):
-    return re.search("^#([0-9]|[a-f]|[A-F]){6}$", color)
-
 #Loads an osm (compressed of not) file and insert data into database
 def import_street_data( filename ):
     engine = create_engine( db_type + ":///" + db_params )
     metadata = MetaData(bind = engine)
     mumoro_metadata = Table('metadata', metadata, autoload = True)
     s = mumoro_metadata.select((mumoro_metadata.c.origin == filename) & (mumoro_metadata.c.node_or_edge == 'Nodes'))
-    rs = s.execute()
-    nd = 0
-    for row in rs:
-         nd = row[0]
+    rs = s.execute().first()
+    nd = rs[0] if rs else 0
     s = mumoro_metadata.select((mumoro_metadata.c.origin == filename) & (mumoro_metadata.c.node_or_edge == 'Edges'))
-    rs = s.execute()
-    ed = 0
-    for row in rs:
-         ed = row[0]
+    rs = s.execute().first()
+    ed = rs[0] if rs else 0
     return {'nodes': str(nd), 'edges' : str(ed)}
 
 
@@ -95,23 +77,23 @@ def import_gtfs_data( filename, network_name = "Public Transport"):
     metadata = MetaData(bind = engine)
     mumoro_metadata = Table('metadata', metadata, autoload = True)
     nd = mumoro_metadata.select((mumoro_metadata.c.origin == filename) & (mumoro_metadata.c.node_or_edge == 'Nodes')).execute().first()[0]
-
     ed = mumoro_metadata.select((mumoro_metadata.c.origin == filename) & (mumoro_metadata.c.node_or_edge == 'Edges')).execute().first()[0]
-    
     services = mumoro_metadata.select((mumoro_metadata.c.origin == filename) & (mumoro_metadata.c.node_or_edge == 'Services')).execute().first()[0]
-
     lines = mumoro_metadata.select((mumoro_metadata.c.origin == filename) & (mumoro_metadata.c.node_or_edge == 'Lines')).execute().first()[0]
-
     stop_areas = mumoro_metadata.select((mumoro_metadata.c.origin == filename) & (mumoro_metadata.c.node_or_edge == 'StopAreas')).execute().first()[0]
 
     return {'nodes': str(nd), 'edges' : str(ed), 'services': str(services),
             'lines': str(lines), 'stop_areas': str(stop_areas)}
 
+
+
 def import_kalkati_data(filename, network_name = "Public Transport"):
     return import_gtfs_data(filename, network_name)
 
+
 def import_freq(self, line_name, nodesf, linesf):
     return import_gtfs_data(line_name)
+
 
 #Loads a bike service API ( from already formatted URL ). Insert bike stations in database and enables schedulded re-check.
 def import_bike_service( url, name ):
@@ -119,17 +101,17 @@ def import_bike_service( url, name ):
     metadata = MetaData(bind = engine)
     mumoro_metadata = Table('metadata', metadata, autoload = True)
     s = mumoro_metadata.select((mumoro_metadata.c.origin == url) & (mumoro_metadata.c.node_or_edge == 'bike_stations'))
-    rs = s.execute()
-    for row in rs:
-         bt = row[0]
+    rs = s.execute().first()
+    bt = rs[0] if rs else 0
     bike_stations_array.append( {'url_api': url,'table': str(bt)} )
     return {'url_api': url,'table': str(bt)}
+
 
 #Loads data from previous inserted data and creates a layer used in multi-modal graph
 def street_layer( data, name, color, mode ):
     if not data or not name:
         raise NameError('One or more parameters are missing')
-    if not valid_color_p( color ):
+    if not utils.valid_color_p( color ):
         raise NameError('Color for the layer is invalid')
     if mode != mumoro.Foot and mode != mumoro.Bike and mode != mumoro.Car and mode != None:
         raise NameError('Wrong layer mode paramater')
@@ -146,21 +128,20 @@ def public_transport_layer(data, name, color):
     layer_array.append( {'layer':res,'name':name,'mode':PublicTransport,'origin':data,'color':color} )
     return {'layer':res,'name':name,'mode':PublicTransport,'origin':PublicTransport,'color':color} 
 
+# vérifie le type des objectifs et ajoute à la variable globale paths_array les couches et les objectifs
 def paths( starting_layer, destination_layer, objectives ):
     if not starting_layer or not destination_layer:
         raise NameError('Empty layer(s)')
-    for i in range( len( objectives ) ):
-        if objectives[i] != mumoro.dist and objectives[i] != mumoro.cost and objectives[i] != mumoro.elevation and objectives[i] != mumoro.co2 and objectives[i] != mumoro.mode_change and objectives[i] != mumoro.line_change:
-            raise NameError('Wrong objective parameter')
+    def valid_obj(o): return [mumoro.dist, mumoro.cost, mumoro.elevation,
+                              mumoro.co2, mumoro.mode_change, mumoro.line_change].index(o)
+    c = map(valid_obj,objectives)
     paths_array.append( {'starting_layer':starting_layer,'destination_layer':destination_layer,'objectives':objectives} )
+
 
 #Creates a transit cost variable, including the duration in seconds of the transit and if the mode is changed
 def cost( duration, mode_change ):
     e = mumoro.Edge()
-    if mode_change:
-        e.mode_change = 1
-    else:
-        e.mode_change = 0
+    e.mode_change = 1 if mode_change else 0
     e.duration = mumoro.Duration( duration );
     return e
 
@@ -237,13 +218,13 @@ class Mumoro:
         s = self.config_table.select()
         rs = s.execute()
         row = rs.fetchone()
-        if row and row['md5']== md5_of_file( file( config_file ) ) and os.path.exists( os.getcwd() + "/" + row['binary_file'] ):
+        if row and row['md5']== utils.md5_of_file( file( config_file ) ) and os.path.exists( os.getcwd() + "/" + row['binary_file'] ):
                 print "No need to rebuilt graph : configuration didn't change so loading from binary file"
                 self.g = layer.MultimodalGraph(layers, str(row['binary_file']))
         else:
             if not row:
                 print "This is the first time of launch: creating multimodal graph from scratch"
-            elif row['md5'] != md5_of_file( file( config_file ) ):
+            elif row['md5'] != utils.md5_of_file( file( config_file ) ):
                 print "Configuration has changed since last launch. Rebuilding multimodal graph"
                 if os.path.exists( os.getcwd() + "/" + row['binary_file'] ) :
                     os.remove(os.getcwd() + "/" + row['binary_file'])   
@@ -273,7 +254,7 @@ class Mumoro:
                        self.g.connect_nodes_from_list( i['layer1']['layer'],i['layer2']['layer'],i['node_list']['layer'].nodes(),i['cost1'],i['cost2'] )
                    except KeyError:
                        raise NameError('Can not connect layers from the node list')
-            md5_config_checksum = md5_of_file( file( config_file ) )
+            md5_config_checksum = utils.md5_of_file( file( config_file ) )
             self.g.save( md5_config_checksum + '.dump' )
             i = self.config_table.insert()
             i.execute({'config_file': config_file, 'md5': md5_config_checksum, 'binary_file': md5_config_checksum + '.dump'})
