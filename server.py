@@ -63,15 +63,11 @@ def import_street_data( filename ):
     metadata = MetaData(bind = engine)
     mumoro_metadata = Table('metadata', metadata, autoload = True)
     s = mumoro_metadata.select((mumoro_metadata.c.origin == filename) & (mumoro_metadata.c.node_or_edge == 'Nodes'))
-    rs = s.execute()
-    nd = 0
-    for row in rs:
-         nd = nd+1
+    rs = s.execute().first()
+    nd = rs[0] if rs else 0
     s = mumoro_metadata.select((mumoro_metadata.c.origin == filename) & (mumoro_metadata.c.node_or_edge == 'Edges'))
-    rs = s.execute()
-    ed = 0
-    for row in rs:
-         ed = ed+1
+    rs = s.execute().first()
+    ed = rs[0] if rs else 0
     return {'nodes': str(nd), 'edges' : str(ed)}
 
 
@@ -81,18 +77,18 @@ def import_gtfs_data( filename, network_name = "Public Transport"):
     metadata = MetaData(bind = engine)
     mumoro_metadata = Table('metadata', metadata, autoload = True)
     nd = mumoro_metadata.select((mumoro_metadata.c.origin == filename) & (mumoro_metadata.c.node_or_edge == 'Nodes')).execute().first()[0]
-
     ed = mumoro_metadata.select((mumoro_metadata.c.origin == filename) & (mumoro_metadata.c.node_or_edge == 'Edges')).execute().first()[0]
-    
     services = mumoro_metadata.select((mumoro_metadata.c.origin == filename) & (mumoro_metadata.c.node_or_edge == 'Services')).execute().first()[0]
-
     return {'nodes': str(nd), 'edges' : str(ed), 'services': str(services) }
+
 
 def import_kalkati_data(filename, network_name = "Public Transport"):
     return import_gtfs_data(filename, network_name)
 
+
 def import_freq(self, line_name, nodesf, linesf):
     return import_gtfs_data(line_name)
+
 
 #Loads a bike service API ( from already formatted URL ). Insert bike stations in database and enables schedulded re-check.
 def import_bike_service( url, name ):
@@ -105,6 +101,7 @@ def import_bike_service( url, name ):
          bt = row[0]
     bike_stations_array.append( {'url_api': url,'table': str(bt)} )
     return {'url_api': url,'table': str(bt)}
+
 
 #Loads data from previous inserted data and creates a layer used in multi-modal graph
 def street_layer( data, name, color, mode ):
