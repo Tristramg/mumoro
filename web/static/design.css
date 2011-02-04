@@ -1,233 +1,257 @@
 a, a:visited,a:hover,a:focus,a:active {
-    text-decoration: underline;
-    color: #ffffff;
-    font-style: italic;
+  text-decoration: underline;
+  color: #3E3E3E;
+  font-style: italic;
 }
 
 a img {
-    border: none;
-    }
+  border: none;
+}
 
 html, body {
-    background-color: #594747;
-    font-family: "Verdana", Arial, Helvetica, sans-serif;
-    color: #ffffff; 
-    font-size: 12pt;
-    height: 99%;
-    margin: 0;
-    padding: 0;
+  background-color: #EFEFEF;
+  font-family: "Verdana", Arial, Helvetica, sans-serif;
+  color: #3E3E3E; 
+  font-size: 12px;
+  height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 h1 {
-    font-size: x-large;
+  font-size: 1.5em;
+  font-weight: bold;
+  margin: 0.3em 0 0.5em 0;
 }
 
 h2 {
-    font-size: large;
+  font-size: 1.2em;
+  font-weight: normal;
 }
 
 .tinyText {
-    font-size: x-small;
+  font-size: x-small;
 }
 
 .smallTitle {
-    font-size: small;
+  font-size: small;
 }
 
 .errorRed {
-    color: #ff2f2f; 
-    font-size: x-small;
+  color: #ff2f2f; 
+  font-size: x-small;
 }
 
 .errorOrange {
-    color: #fd6e2f;
-    font-size: x-small;
+  color: #fd6e2f;
+  font-size: x-small;
 }
 
 .bikeRed {
-    color: #ff2f2f;
-    font-size: small
+  color: #ff2f2f;
+  font-size: small
 }
 
 .bikeOrange {
-    color: #fd6e2f;
-    font-size: small
+  color: #fd6e2f;
+  font-size: small
 }
 
 
 table {
-   border-collapse: collapse;
+  border-collapse: collapse;
 }
 
 td, th
 {
-   border: 1px solid white;
+  border: 1px solid #4D4D4D;
 }
 
 table.tablesorter {
-    font-size: x-small;
-    background-color: #4D4D4D;
-    border: 1px solid #000;
+  font-size: x-small;
+  background-color: #4D4D4D;
+  border: 1px solid #000;
 }
 
 table.tablesorter th {
-    text-align: left;
-    padding: 5px;
-    background-color: #6E6E6E;
+  text-align: left;
+  padding: 5px;
+  background-color: #6E6E6E;
 }
 
 table.tablesorter td {
-    color: #FFF;
-    padding: 5px;
+  color: #3E3E3E;
+  padding: 5px;
 }
 
 table.tablesorter tr:hover {
-    background-color: #90D090;
-    cursor: pointer;
+  background-color: #90D090;
+  cursor: pointer;
 }
 
 table.tablesorter .even {
-    background-color: #3D3D3D;
+  background-color: #3D3D3D;
 }
 
 table.tablesorter .odd {
-    background-color: #6E6E6E;
+  background-color: #6E6E6E;
 }
 
 table.tablesorter .hl{
-    background-color: #60A060;
+  background-color: #60A060;
 }
 
 
 table.tablesorter .header {
-    background-image: url(img/bg.png);
-    background-repeat: no-repeat;
-    border-left: 1px solid #FFF;
-    border-right: 1px solid #000;
-    border-top: 1px solid #FFF;
-    padding-left: 30px;
-    padding-top: 8px;
-    height: auto;
+  background-image: url(img/bg.png);
+  background-repeat: no-repeat;
+  border-left: 1px solid #FFF;
+  border-right: 1px solid #000;
+  border-top: 1px solid #FFF;
+  padding-left: 30px;
+  padding-top: 8px;
+  height: auto;
 }
 
 table.tablesorter .headerSortUp {
-    background-image: url(img/asc.png);
-    background-repeat: no-repeat;
+  background-image: url(img/asc.png);
+  background-repeat: no-repeat;
 }
 
 table.tablesorter .headerSortDown {
-    background-image: url(img/desc.png);
-    background-repeat: no-repeat;
+  background-image: url(img/desc.png);
+  background-repeat: no-repeat;
 }
 
 ul {
-    list-style-type: circle;
+  list-style-type: circle;
 }
 #licences {
-    z-index: 10000;
-    position:absolute;
-    bottom: 2em;
-    right: 1em;
+  z-index: 10000;
+  position: absolute;
+  bottom: 1px;
+  right: 1em;
   color: black;
-  font-size:smaller;
+  opacity: 0.5;
+  font-size: 10px;
 }
 
 #licences a {
-    color: black;
-}
-#map{
-    position: absolute;
-    border: 1px solid black;
-    margin: 0px; 
-    padding: 0px;
-    left: 27em;
-    right: 2px;
-    top: 0px;
-    bottom: 0px;
-
+  color: black !important;
+  text-decoration: none !important;
 }
 
 #main {
-    position: absolute;
-    top: 100px;
-    bottom: 0px;
-    width: 100%;
-    margin: 0;
-    padding: 0;
+  height: 100%;
 }
 
 div#footer {
-    position: absolute;
-    width: 750px;
-    bottom: 0;
-    left: 10px;
-}
-#header {
-    position: absolute;
-    top:0px;
 }
 
-#lefting {
-    margin: 5px;
-    max-width: 27em;
+#left-panel {
+  width: 20em;
+  float: left;
+  overflow: auto;
+  height: 100%;
+  position: absolute;
+  border-right: 1px solid #B5B5B5;
+  -moz-box-shadow: 0 0 2px 2px gray;
+  -webkit-box-shadow: 0 0 2px 2px gray;
+  box-shadow: 0 0 2px 2px gray;
+  z-index: 750;
 }
-
+#left-panel > div.wrapper{
+  padding: 1px 2px 1px 5px;
+}
+#right-panel{
+  margin-left: 20em;
+  height: 100%;
+}
+#map{
+  width: 100%;
+  height: 100%;
+}
 #bikes{
-    color: #423535;
+  color: #423535;
 }
-
+#mumoro_form{
+  padding: 5px 3px 5px 5px;
+  margin: 0 -2px 0 -5px;
+  background-color: #FFFFFF;
+  border-top: 1px solid #B5B5B5;
+  border-bottom: 1px solid #B5B5B5;
+}
+#mumoro_form input[type=text]{
+  width: 90%;
+}
+#mumoro_form form > ul{
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+#mumoro_form form > ul > li{
+  padding: 0;
+  margin: 0.1em 0 0.1em 0;
+  display: block;
+}
+#AnyTime--datepicker{
+  z-index: 99999;
+}
 /* Generic context menu styles */
 .contextMenu {
-    position: absolute;
-    width: 120px;
-    z-index: 99999;
-    border: solid 1px #CCC;
-    background: #EEE;
-    padding: 0px;
-    margin: 0px;
-    display: none;
-    font-family: Verdana, Arial, Helvetica, sans-serif;
-    font-size: 11px;
+  position: absolute;
+  width: 120px;
+  z-index: 99999;
+  border: solid 1px #CCC;
+  background: #EEE;
+  padding: 0px;
+  margin: 0px;
+  display: none;
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  font-size: 11px;
 }
 
 .contextMenu LI {
-    list-style: none;
-    padding: 0px;
-    margin: 0px;
+  list-style: none;
+  padding: 0px;
+  margin: 0px;
 }
 
 .contextMenu A {
-    color: #333;
-    text-decoration: none;
-    display: block;
-    line-height: 20px;
-    height: 20px;
-    background-position: 6px center;
-    background-repeat: no-repeat;
-    outline: none;
-    padding: 1px 5px;
-    padding-left: 28px;
+  color: #333;
+  text-decoration: none;
+  display: block;
+  line-height: 20px;
+  height: 20px;
+  background-position: 6px center;
+  background-repeat: no-repeat;
+  outline: none;
+  padding: 1px 5px;
+  padding-left: 28px;
 }
 
 .contextMenu LI.hover A {
-    color: #FFF;
-    background-color: #3399FF;
+  color: #AAA;
+  background-color: #3399FF;
 }
 
 .contextMenu LI.disabled A {
-    color: #AAA;
-    cursor: default;
+  color: #AAA;
+  cursor: default;
 }
 
 .contextMenu LI.hover.disabled A {
-    background-color: transparent;
+  background-color: transparent;
 }
 
 .contextMenu LI.separator {
-    border-top: solid 1px #CCC;
+  border-top: solid 1px #CCC;
 }
 
 .contextMenu LI.start A { background-image: url(img/context-arrow-green.png); }
 .contextMenu LI.dest A { background-image: url(img/context-arrow-finish.png); }
 
 
+.olControlLayerSwitcher .layersDiv {
+  background-color: black;
+}
