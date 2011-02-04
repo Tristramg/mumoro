@@ -96,9 +96,8 @@ def import_bike_service( url, name ):
     metadata = MetaData(bind = engine)
     mumoro_metadata = Table('metadata', metadata, autoload = True)
     s = mumoro_metadata.select((mumoro_metadata.c.origin == url) & (mumoro_metadata.c.node_or_edge == 'bike_stations'))
-    rs = s.execute()
-    for row in rs:
-         bt = row[0]
+    rs = s.execute().first()
+    bt = rs[0] if rs else 0
     bike_stations_array.append( {'url_api': url,'table': str(bt)} )
     return {'url_api': url,'table': str(bt)}
 
@@ -124,21 +123,20 @@ def public_transport_layer(data, name, color):
     layer_array.append( {'layer':res,'name':name,'mode':PublicTransport,'origin':data,'color':color} )
     return {'layer':res,'name':name,'mode':PublicTransport,'origin':PublicTransport,'color':color} 
 
+# vérifie le type des objectifs et ajoute à la variable globale paths_array les couches et les objectifs
 def paths( starting_layer, destination_layer, objectives ):
     if not starting_layer or not destination_layer:
         raise NameError('Empty layer(s)')
-    for i in range( len( objectives ) ):
-        if objectives[i] != mumoro.dist and objectives[i] != mumoro.cost and objectives[i] != mumoro.elevation and objectives[i] != mumoro.co2 and objectives[i] != mumoro.mode_change and objectives[i] != mumoro.line_change:
-            raise NameError('Wrong objective parameter')
+    def valid_obj(o): return [mumoro.dist, mumoro.cost, mumoro.elevation,
+                              mumoro.co2, mumoro.mode_change, mumoro.line_change].index(o)
+    c = map(valid_obj,objectives)
     paths_array.append( {'starting_layer':starting_layer,'destination_layer':destination_layer,'objectives':objectives} )
+
 
 #Creates a transit cost variable, including the duration in seconds of the transit and if the mode is changed
 def cost( duration, mode_change ):
     e = mumoro.Edge()
-    if mode_change:
-        e.mode_change = 1
-    else:
-        e.mode_change = 0
+    e.mode_change = 1 if mode_change else 0
     e.duration = mumoro.Duration( duration );
     return e
 
