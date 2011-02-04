@@ -80,12 +80,12 @@ def import_street_data( filename ):
     rs = s.execute()
     nd = 0
     for row in rs:
-         nd = nd+1
+         nd = row[0]
     s = mumoro_metadata.select((mumoro_metadata.c.origin == filename) & (mumoro_metadata.c.node_or_edge == 'Edges'))
     rs = s.execute()
     ed = 0
     for row in rs:
-         ed = ed+1
+         ed = row[0]
     return {'nodes': str(nd), 'edges' : str(ed)}
 
 
@@ -100,7 +100,12 @@ def import_gtfs_data( filename, network_name = "Public Transport"):
     
     services = mumoro_metadata.select((mumoro_metadata.c.origin == filename) & (mumoro_metadata.c.node_or_edge == 'Services')).execute().first()[0]
 
-    return {'nodes': str(nd), 'edges' : str(ed), 'services': str(services) }
+    lines = mumoro_metadata.select((mumoro_metadata.c.origin == filename) & (mumoro_metadata.c.node_or_edge == 'Lines')).execute().first()[0]
+
+    stop_areas = mumoro_metadata.select((mumoro_metadata.c.origin == filename) & (mumoro_metadata.c.node_or_edge == 'StopAreas')).execute().first()[0]
+
+    return {'nodes': str(nd), 'edges' : str(ed), 'services': str(services),
+            'lines': str(lines), 'stop_areas': str(stop_areas)}
 
 def import_kalkati_data(filename, network_name = "Public Transport"):
     return import_gtfs_data(filename, network_name)
@@ -274,6 +279,25 @@ class Mumoro:
             i.execute({'config_file': config_file, 'md5': md5_config_checksum, 'binary_file': md5_config_checksum + '.dump'})
 
     @cherrypy.expose
+    def bus_lines(self):
+        def concat(x,y):
+            x.extend(y)
+            return x
+        return json.dumps(
+            {"type": "FeatureCollection",
+             "features":
+                 reduce(concat,
+                        [[{"type":"Feature",
+                           "geomerty": { "type": "Linestring",
+                                         "coordinates": [[node.lon, node.lat] for node in layer['layer'].stop_areas(line)]},
+                           "properties": {"short_name": line.short_name,
+                                          "route_long_name": line.long_name,
+                                          "color": line.color,
+                                          "text_color": line.text_color}}
+                          for line in layer['layer'].lines()] for layer in layer_array if layer['mode'] == PublicTransport],[])
+             })
+
+    @cherrypy.expose
     def path(self, slon, slat, dlon, dlat, time):
         u_obj = []
         #Creates the union of all used objectives
@@ -344,12 +368,17 @@ class Mumoro:
             coordinates = []
             last_node = path.nodes[0]
             last_coord = self.g.coordinates(last_node)
+            last_layer = self.g.layer_object(last_node)
+            last_layer_name = last_coord[3]
             for node in path.nodes:
                 coord = self.g.coordinates(node)
-                if(last_coord[3] != coord[3]):
+                layer_name = coord[3]
+                if(last_layer_name != layer_name):
+                    layer = self.g.layer_object(node)
                     geometry['coordinates'] = coordinates
                     feature['geometry'] = geometry
                     feature['properties'] = {'layer': last_coord[3]}
+
                     features.append(feature)
 
                     feature = {'type': 'feature'}
@@ -365,6 +394,8 @@ class Mumoro:
                             'properties': {'layer': 'connection'}
                             }
                     features.append(connection);
+                    last_layer_name = layer_name
+                    last_layer = layer
                 last_node = node
                 last_coord = coord
                 coordinates.append([coord[0], coord[1]])
@@ -426,9 +457,9 @@ class Mumoro:
         if( not fromHash ):
             a = paths_array[0]['starting_layer']['layer'].average()
             b = paths_array[0]['starting_layer']['layer'].borders()
-            return tmpl.generate(fromHash='false',lonMap=a['avg_lon'],latMap=a['avg_lat'],zoom=14,lonStart=b['min_lon'],latStart=b['min_lat'],lonDest=b['max_lon'],latDest=b['max_lat'],addressStart='',addressDest='',hashUrl=self.web_url,layers=t, date=datetime.datetime.today().strftime("%d/%m/%Y %H:%M")).render('html', doctype='html5')
+            return tmpl.generate(fromHash='false',lonStart=b['min_lon'],latStart=b['min_lat'],lonDest=b['max_lon'],latDest=b['max_lat'],addressStart='',addressDest='',hashUrl=self.web_url,layers=t, date=datetime.datetime.today().strftime("%d/%m/%Y %H:%M")).render('html', doctype='html5')
         else:
-            return tmpl.generate(fromHash='true',lonMap=hashData[2],latMap=hashData[3],zoom=hashData[1],lonStart=hashData[4],latStart=hashData[5],lonDest=hashData[6],latDest=hashData[7],addressStart=hashData[8].decode('utf-8'),addressDest=hashData[9].decode('utf-8'),hashUrl=self.web_url,layers=t,date=hashData[10]).render('html', doctype='html5')
+            return tmpl.generate(fromHash='true',lonStart=hashData[4],latStart=hashData[5],lonDest=hashData[6],latDest=hashData[7],addressStart=hashData[8].decode('utf-8'),addressDest=hashData[9].decode('utf-8'),hashUrl=self.web_url,layers=t,date=hashData[10]).render('html', doctype='html5')
 
     @cherrypy.expose
     def info(self):

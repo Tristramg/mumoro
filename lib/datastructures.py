@@ -106,7 +106,7 @@ def create_pt_nodes_table(id, metadata, stop_areas_table):
             Column('lat', Float),
             Column('the_geom', String),
             Column('route', String),
-            Column('stop_area', Integer, ForeignKey(stop_areas_table + ".id"))
+            Column('stop_area', Integer, ForeignKey(stop_areas_table + ".id")),
             )
     metadata.create_all()
     return table

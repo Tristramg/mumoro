@@ -91,8 +91,7 @@ class BaseLayer(object):
         avg_lat = select([func.avg(self.nodes_table.c.lat, type_=Float )]).execute().first()[0]
         return {'avg_lon':avg_lon, 'avg_lat':avg_lat }
  
-    def match(self, ln, lt):
-        epsilon = 0.002
+    def match(self, ln, lt, epsilon = 0.002):
         ln = float(ln)
         lt = float(lt)
         res = self.nodes_table.select(
@@ -181,7 +180,16 @@ class GTFSLayer(BaseLayer):
         super(GTFSLayer, self).__init__(name, data, metadata)
         self.services = Table(data['services'], metadata, autoload = True)
         self.mode = mumoro.PublicTransport
- 
+        self.stop_areas_table = Table(data['stop_areas'], metadata, autoload = True)
+        self.lines_table = Table(data['lines'], metadata, autoload = True)
+
+    def lines(self):
+        e = self.lines_table.select().execute()
+        return e
+
+    def stop_areas(self, line):
+        return self.nodes_table.select(self.nodes_table.c.route == str(line.code)).execute()
+
     def edges(self):
         for row in self.edges_table.select().execute():
             services = self.services.select(self.services.c.id == int(row.services)).execute().first().services
@@ -225,6 +233,7 @@ class MultimodalGraph(object):
             self.graph = mumoro.Graph(filename)
         else:
             count = 0
+            tcount = 0
             for l in layers:
                 for e in l.edges():
                     if e.has_key('properties'):
@@ -232,8 +241,8 @@ class MultimodalGraph(object):
                         count += 1
                     else:
                         if self.graph.public_transport_edge(e['source'], e['target'], e['departure'], e['arrival'], str(e['services'])):
-                            count += 1
-                print "On layer {0}, {1} edges, {2} nodes".format(l.name, count, l.count)
+                            tcount += 1
+                print "On layer {0}, {1} edges, {2} transport edges, {3} nodes".format(l.name, count, tcount, l.count)
             self.graph.sort()
             print "The multimodal graph has been built and has {0} nodes and {1} edges".format(nb_nodes, count)
  
@@ -249,13 +258,16 @@ class MultimodalGraph(object):
                 return l[1]
         print "Unable to find the right layer for node {0}".format(node)
         print self.node_to_layer
- 
-    def coordinates(self, node):
+
+    def layer_object(self,node):
         name = self.layer(node)
         for l in self.layers:
             if l.name == name:
-                return l.coordinates(node)
-        print "Unknown node: {0} on layer: {1}".format(node, name)
+                return l
+        raise NameError("Unknown node: {0} on layer: {1}".format(node, name))
+
+    def coordinates(self, node):
+        return self.layer_object(node).coordinates(node)
  
     def match(self, name, lon, lat):
         for l in self.layers:
@@ -299,16 +311,17 @@ class MultimodalGraph(object):
 
 
     def connect_nearest_nodes(self, layer1, layer2, property, property2 = None):
+        print "Connecting nearest nodes from layer offset {0} to layer offset {1}".format(layer1.offset, layer2.offset)
         count = 0
         if property2 == None:
             property2 = property
         for n in layer1.nodes():
-            nearest = layer2.match(n.lon, n.lat)
+            nearest = layer2.match(n.lon, n.lat, 0.01)
             if nearest:
                 self.graph.add_edge(n.id + layer1.offset, nearest, property)
                 self.graph.add_edge(nearest, n.id + layer1.offset, property2)
                 count += 2
             else:
-                print "!!!!! Nearest node not found"
+                print "(lon='{0}' AND lat='{1}') OR".format(str(n.lon), str(n.lat))
         return count
  
