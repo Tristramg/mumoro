@@ -108,12 +108,17 @@ class BaseLayer(object):
             return None
 
  
-    def coordinates(self, nd):
-        res = self.nodes_table.select(self.nodes_table.c.id == (nd - self.offset)).execute().first()    
+    def node(self, nd):
+        res = self.nodes_table.select(self.nodes_table.c.id == (nd - self.offset)).execute().first()
         if res:
-            return (res.lon, res.lat, res.original_id, self.name)
+            return res
         else:
             print "Unknow node {0} on layer {1}, offset ".format(nd, self.name, self.offset)
+
+
+    def coordinates(self, nd):
+        res = self.node(nd)
+        return (res.lon, res.lat, res.original_id, self.name)
  
     def nodes(self):
         for row in self.nodes_table.select().execute():
@@ -163,11 +168,9 @@ class Layer(BaseLayer):
                 e.elevation = 0
 #                if self.mode == mumoro.Bike:
 #                    e.elevation = max(0, source_alt - target_alt)
-                yield {
-                    'source': node2,
-                    'target': node1,
-                    'properties': e,
-                    }
+                yield {'source': node2,
+                       'target': node1,
+                       'properties': e}
             except NotAccessible:
                 pass
  
@@ -187,19 +190,22 @@ class GTFSLayer(BaseLayer):
         e = self.lines_table.select().execute()
         return e
 
+    def stop_area(self, id):
+        return self.stop_areas_table.select(self.stop_areas_table.c.code == str(id)).execute().first()
+
     def stop_areas(self, line):
+        # Find first stop
+        start = self.edges_table.select(~self.edges_table.c.source.in_(self.edges_table.select())).execute().first()
         return self.nodes_table.select(self.nodes_table.c.route == str(line.code)).execute()
 
     def edges(self):
         for row in self.edges_table.select().execute():
             services = self.services.select(self.services.c.id == int(row.services)).execute().first().services
-            yield {
-                    'source': row.source + self.offset,
-                    'target': row.target + self.offset,
-                    'departure': row.start_secs,
-                    'arrival': row.arrival_secs,
-                    'services': services
-                    }
+            yield {'source': row.source + self.offset,
+                   'target': row.target + self.offset,
+                   'departure': row.start_secs,
+                   'arrival': row.arrival_secs,
+                   'services': services}
  
         # Connects every node corresponding to a same stop:
         # if a stop is used by 3 routes, the stop will be represented by 3 nodes
@@ -210,11 +216,9 @@ class GTFSLayer(BaseLayer):
         e.line_change = 1
         e.duration = mumoro.Duration(60) # There should be at least a minute between two bus/trains at the same station
         for r in res:
-            yield {
-                    'source': row[0] + self.offset,    
+            yield { 'source': row[0] + self.offset,    
                     'target': row[1] + self.offset,
-                    'properties': e
-                    }
+                    'properties': e }
  
 
 class MultimodalGraph(object):
