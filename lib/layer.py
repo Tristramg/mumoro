@@ -17,6 +17,9 @@
 #
 #    © Université de Toulouse 1 2010
 #    Author: Tristram Gräbener, Odysseas Gabrielides
+#    © Demotera 2011
+#    Author: Paul Rivier, Pierre Paysant-Le Roux
+
 
 from lib.datastructures import *
 import core.mumoro as mumoro
@@ -173,7 +176,20 @@ class Layer(BaseLayer):
                        'properties': e}
             except NotAccessible:
                 pass
- 
+    def icon(self, node):
+            if self.mode == mumoro.Foot:
+                return "modes/foot.png"
+            elif self.mode == mumoro.Bike:
+                return "modes/bike.png"
+            elif self.mode == mumoro.Car:
+                return "modes/car.png"
+            elif self.mod == mumoro.PublicTransport:
+                return "modes/bus.png"
+            else:
+                return ""
+
+    def color(self, node):
+        return None
     
  
 class GTFSLayer(BaseLayer):
@@ -186,17 +202,25 @@ class GTFSLayer(BaseLayer):
         self.stop_areas_table = Table(data['stop_areas'], metadata, autoload = True)
         self.lines_table = Table(data['lines'], metadata, autoload = True)
 
+    def icon(self, node):
+        return 'pictos_lignes/21/' + self.line(node).short_name + '.png'
+
+    def color(self, node):
+        color = self.line(node).color
+        return "#" + (self.line(node).text_color if color == 'ffffff' else color)
+
+    def marker_icon(self, node):
+        return 'markers_lignes/' + self.line(node).short_name + '.png'
+
     def lines(self):
         e = self.lines_table.select().execute()
         return e
 
+    def line(self, node):
+        return self.lines_table.select(self.lines_table.c.code == str(node.route)).execute().first()
+
     def stop_area(self, id):
         return self.stop_areas_table.select(self.stop_areas_table.c.code == str(id)).execute().first()
-
-    def stop_areas(self, line):
-        # Find first stop
-        start = self.edges_table.select(~self.edges_table.c.source.in_(self.edges_table.select())).execute().first()
-        return self.nodes_table.select(self.nodes_table.c.route == str(line.code)).execute()
 
     def edges(self):
         for row in self.edges_table.select().execute():
