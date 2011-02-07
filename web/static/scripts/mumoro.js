@@ -49,7 +49,7 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
 						       opacity: 0.8
 						   });
     this.map.addLayer(cloudmade);
-    var styleMap = new OpenLayers.StyleMap({strokeWidth: 3});
+    var styleMap = new OpenLayers.StyleMap({strokeWidth: 2});
     styleMap.addUniqueValueRules("default", "layer", 
 				 {"Foot": { strokeColor : "#4e9a06",
 					    strokeDashstyle: "1 8",
@@ -57,13 +57,14 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
 				  "STAR": { strokeColor : "${color}",
 					    strokeWidth: 5,
 					    strokeDashstyle: 'longdash'},
-				  "VeloSTAR": {strokeColor : "#204a87"},
-				  "marker": {graphicWidth: 25,
+				  "Bike": {strokeColor : "#204a87"},
+				  "marker": {graphicWidth: 49,
 					     graphicHeight: 39,
 					     graphicXOffset: -12,
 					     graphicYOffset: -39,
 					     graphicOpacity: 1.0,
-					     externalGraphic: "/img/${marker_icon}"
+					     externalGraphic: "/img/${marker_icon}",
+					     cursor: 'pointer'
 				  },
 				  "connection": {strokeColor : "#4e9a06",
 						 strokeDashstyle: "1 8",
@@ -227,30 +228,39 @@ Mumoro.prototype = {
     cacheDest: "",
     
     popup_content: function(feature){
-	return $('<div/>').append($('<h2/>').
+	return $('<div/>').append($('<div/>',{'class': 'bus-popup'}).append($('<h2/>').
 				  append($('<img/>', 
 					   {src: '/img/' + 
 					    feature.attributes.line_icon})).
-				  append(feature.attributes.line_name)
+				  append("vers " + feature.attributes.headsign)
 
 ).
-	    append($('<p/>').append("Monter à « "+ 
+	    append($('<p/>').append("Monter à <span class='departure'>"+ 
 				    feature.attributes.stop_area + 
-				    " »")).
-	    append($('<p/>').append("Descendre à « "+ 
+				    "</span>")).
+	    append($('<p/>').append("Descendre à <span class='arrival'>"+ 
 				    feature.attributes.dest_stop_area + 
-				    " »")).html();
+				    "</span>"))).html();
+    },
+
+    cleanup_path: function(){
+	map = this.map;
+	while(map.popups.length){
+	    var p = map.popups[0];
+	    map.removePopup(p);
+	    p.destroy();
+	}
+	this.routeLayer.destroyFeatures();	
     },
 
     disp_path: function(id) {
-	this.routeLayer.destroyFeatures();
-	map = this.map;
-	$.each(this.map.popups, function(){
-		   map.removePopup(this);
-		   this.destroy();});
+	this.cleanup_path();
 	var features = this.geojson_reader.read(this.paths[id]);
-	if(features)
+	if(features){
             this.routeLayer.addFeatures(features);
+	    $('#path_costs tr').removeClass("selected");
+	    $('#path_costs tr.path-' + id).addClass("selected");
+	}
     },
     
     compute: function(){
@@ -263,11 +273,11 @@ Mumoro.prototype = {
 			       time: $("#datepicker").val()
 			      },
 		      function(data) {
+			  $("#info").show();
 			  if(data.error){
-			      $("#path_costs").html("<span class=\"errorOrange\">No route found</span>");
-			      self.clearPath();
-			      self.clearArrow("start");
-			      self.clearArrow("dest");
+			      $('#path_costs').html($('<p/>', {'class': 'error'}).text(data.error));
+			      self.cleanup_path();
+			      $("#hash_url").html('');
 			  }
 			  else {
 			      $("#path_costs").html(self.itineraries_descriptions(data));
@@ -287,7 +297,7 @@ Mumoro.prototype = {
 					 var tbody = $(this);
 					 $.each(data.paths, function(i,p){
 				  var time = p.cost[0];
-				  tbody.append($('<tr/>').append($('<td/>').each(
+				  tbody.append($('<tr/>',{'class': 'path-'+i}).append($('<td/>').each(
 									    function(id,td){
 $.each($.grep(p.features, 
 	       function(f){ return f.properties.icon;}),
@@ -398,12 +408,10 @@ $.each($.grep(p.features,
 		  },
 		  function(data){
                       if(data.error){
-			  $("#hash_url").html(
-                              "<span class=\"errorOrange\">Couldn't add the route into the database</span>"
-			  );
+			  $("#hash_url").html('');
                       } else {
 			  $("#hash_url").html(
-                              "<p>Send this url to a friend : <br/><span class=\"tinyText\">" +
+                              "<p>Lien vers cette recherche : <br/><span class=\"tinyText\">" +
 				  self.hashUrl + "/h?id="+data.h+"</span></p>"
 			  );  
                       }
@@ -493,16 +501,16 @@ $.each($.grep(p.features,
 	var self = this;
 	$.getJSON(url, {q: str},
 		  function(data) {
-                      if( data.cord_error != '' ) {
+		      if( data.cord_error != '' ) {
 			  if( mark == "start" ) {
                               $('#startAdr').css({backgroundColor: "#f48b5d"});
-                              $("#formError_start").html("<span class=\"errorOrange\">Nothing found. Please type again.</span>");
+                              $("#formError_start").html("<span class=\"errorOrange\">Adresse inconnue</span>");
                               self.clearPath();
                               self.clearArrow(mark);
 			      
 			  } else if( mark == "dest" ) {
                               $('#endAdr').css({backgroundColor: "#f48b5d"});
-                              $("#formError_dest").html("<span class=\"errorOrange\">Nothing found. Please type again.</span>");
+                              $("#formError_dest").html("<span class=\"errorOrange\">Adresse inconnue</span>");
                               self.clearPath();
                               self.clearArrow(mark);
 			  }               
@@ -510,13 +518,13 @@ $.each($.grep(p.features,
                       else if( !data.is_covered ) {
 			  if( mark == "start" ) {
                               $('#startAdr').css({backgroundColor: "#f48b5d"});
-                              $("#formError_start").html("<span class=\"errorOrange\">Not in covered zone.</span>");
+                              $("#formError_start").html("<span class=\"errorOrange\">Ce lieux est trop éloigné de Rennes</span>");
                               self.clearPath();
                               self.clearArrow(mark);
 			  }                   
 			  else if( mark == "dest" ) {
                               $('#endAdr').css({backgroundColor: "#f48b5d"});
-                              $("#formError_dest").html("<span class=\"errorOrange\">Not in covered zone.</span>");
+                              $("#formError_dest").html("<span class=\"errorOrange\">Ce lieux est trop éloigné de Rennes</span>");
                               self.clearPath();
                               self.clearArrow(mark);
 			  }               
@@ -525,20 +533,19 @@ $.each($.grep(p.features,
 			  if(mark == "start"){
                               $('#startAdr').css({backgroundColor: "#f48b5d"});
                               $("#formError_start").html(
-				  "<span class=\"errorOrange\">Can not find a node. Retry with a different address.</span>"
+				  "<span class=\"errorOrange\">Adresse inconnue</span>"
                               );
                               self.clearPath();
                               self.clearArrow(mark);
 			  } else if(mark == "dest") {
                               $('#endAdr').css({backgroundColor: "#f48b5d"});
                               $("#formError_dest").html(
-				  "<span class=\"errorOrange\">Can not find a node. Retry with a different address.</span>"
+				  "<span class=\"errorOrange\">Adresse inconnue</span>"
                               );
                               self.clearPath();
                               self.clearArrow(mark);
 			  }
-                      }
-                      else {       
+                      } else {
 			  var cord = new OpenLayers.LonLat(data.lon, data.lat);
 			  if(mark == "start"){
                               $('#startAdr').val(data.display_name);

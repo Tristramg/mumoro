@@ -329,7 +329,7 @@ class Mumoro:
                 str_obj.append( 'Line Change' )
         cherrypy.response.headers['Content-Type']= 'application/json'
         if len(p) == 0:
-            return json.dumps({'error': 'No route found'})
+            return json.dumps({'error': 'Impossible de calculer un itinéraire'})
         print "Len of routes " + str( len( p ) )
         ret = {
                 'objectives': str_obj,
@@ -398,6 +398,7 @@ class Mumoro:
                                                                    coord[1]]},
                                        "properties": { "line": node.route,
                                                        "layer": "marker",
+                                                       "headsign": node.headsign,
                                                        "marker_icon": 
                                                        layer.marker_icon(node),
                                                        "line_icon": 

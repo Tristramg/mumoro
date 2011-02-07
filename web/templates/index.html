@@ -67,14 +67,14 @@
 		  <label for="startAdr">Départ</label>
 		  <span id="formError_start"></span>
 		  <br/>           
-		  <input type="text" name="startAdr" id="startAdr" value="$addressStart"/>
+		  <textarea name="startAdr" id="startAdr" value="$addressStart">$addressStart</textarea>
 		  <a id="startGeo" style="display:none;" href="#">Ma position</a>
 		</li>
 		<li>
 		  <label for="endAdr">Destination</label>
 		  <span id="formError_dest"></span>
 		  <br/>
-		  <input type="text" name="endAdr" id="endAdr" value="$addressDest"/>
+		  <textarea name="endAdr" id="endAdr">$addressDest</textarea>
 		  <a id="destGeo" style="display:none;" href="#">Ma
 		  position</a>
 		  <br/>
@@ -88,9 +88,9 @@
 	      </ul>
             </form>
           </div>
-          <div id="info">
-            <p id="path_costs"></p>
-            <!-- <p id="routing_description"></p> -->
+          <div id="info" style="display: none;">
+	    <h2>Itinéraires</h2>
+            <div id="path_costs"></div>
             <p id="hash_url"></p>
           </div>
 	</div>
@@ -111,8 +111,8 @@
       </div>        
     </div>
     <ul id="myMenu" class="contextMenu"> 
-      <li class="start"><a href="#start">Set Start</a></li> 
-      <li class="dest"><a href="#dest">Set Destination</a></li> 
+      <li class="start"><a href="#start">Partir d’ici</a></li> 
+      <li class="dest"><a href="#dest">Arriver ici</a></li> 
     </ul>
   </body>
 </html>
