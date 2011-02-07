@@ -2,14 +2,12 @@ OpenLayers.ImgPath = "/img/openlayers/";
 
 function Mumoro(lonStart, latStart, lonDest, latDest,
                 fromHash, hashUrl, layers){
-    this.layers = layers;
     this.lonStart = lonStart;
     this.latStart = latStart;
     this.lonDest = lonDest;
     this.latDest = latDest;
     this.fromHash = fromHash;
     this.hashUrl = hashUrl;
-    this.layers = layers;
     
     var icon_standard = OpenLayers.Util.extend({}, OpenLayers.Feature.Vector.style['default']);
     icon_standard.graphicWidth = 26;
@@ -51,11 +49,27 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
 						   });
     this.map.addLayer(cloudmade);
     var styleMap = new OpenLayers.StyleMap({strokeWidth: 3});
-    this.layers["connection" ] = {strokeColor: '#830531', 
-			      strokeDashstyle: 'dashdot', 
-			      strokeWidth: 2};
-    styleMap.addUniqueValueRules("default", "layer", this.layers);
+    styleMap.addUniqueValueRules("default", "layer", 
+				 {"Foot": { strokeColor : "#4e9a06",
+					    strokeDashstyle: "1 8",
+					    strokeWidth: 5},
+				  "STAR": { strokeColor : "#ce5c00"},
+				  "VeloSTAR": {strokeColor : "#204a87"},
+				  "connection": {strokeColor: '#EFEFEF', 
+						 strokeDashstyle: 'dashdot', 
+						 strokeWidth: 2}});
     this.routeLayer = new OpenLayers.Layer.Vector("Route", {styleMap: styleMap});
+    this.routeLayer.onFeatureInsert= function(feature){
+	if(feature.attributes.type == "departure"){
+	    feature.layer.map.addPopup(new OpenLayers.Popup.
+				       FramedCloud("departure",
+						   feature.geometry.getBounds().getCenterLonLat(),
+						   new OpenLayers.Size(100,100),
+						   self.popup_content(feature),
+						   null,
+						   true));
+	}
+    };
     this.map.addLayer(this.routeLayer);
     // bikeLayer = new OpenLayers.Layer.Text( "Bike Stations",{
     // 					       location:"./bikes",
@@ -63,16 +77,18 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
     // 					       projection: map.displayProjection
     // 					   });
     this.map.addLayer(this.layerMarkers);
+    // var busLayer = new OpenLayers.Layer.Vector("BUS", 
+    // 					       {styleMap: new OpenLayers.StyleMap({'strokeColor': '${stroke_color}', 
+    // 										   'strokeWidth': 2})});
 
-    var busStyle = new OpenLayers.Style({'strokeColor': '${color}', 
-					 'strokeWidth': 2});
-    var busLayer = new OpenLayers.Layer.Vector("BUS", {style: busStyle});
-    this.map.addLayer(busLayer);
-    $.getJSON("bus_lines",
-	      function(data) {
-		  var features = self.geojson_reader.read(data);
-		  if(features)
-		      busLayer.addFeatures(features);});
+    // this.map.addLayer(busLayer);
+    // $.getJSON("bus_lines",
+    // 	      function(data) {
+    // 		  var features = self.geojson_reader.read(data);
+    // 		  if(features){
+    // 		      window.console.debug('Adding features');
+    // 		      busLayer.addFeatures(features);}
+    // 	      });
     // Location support
     if (navigator.geolocation) {  
 	/* Code if geolocation is available. Add buttons*/
@@ -172,6 +188,12 @@ Mumoro.prototype = {
     cacheStart: "",
     cacheDest: "",
     
+    popup_content: function(feature){
+	return $('<div/>').append($('<img/>', {src: '/img/pictos_lignes/21/' + 
+				feature.attributes.line + '.png'})).
+	    append(feature.attributes.stop_area).html();
+    },
+
     disp_path: function(id) {
 	this.routeLayer.destroyFeatures();
 	var features = this.geojson_reader.read(this.paths[id]);

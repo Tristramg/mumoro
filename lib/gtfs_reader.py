@@ -53,8 +53,8 @@ def convert(filename, session, start_date, end_date):
     
 
     #Start with mapping (route_id, stop_id) to an int
-    count = 0
-    routes_count = 0
+    count = 1
+    routes_count = 1
     routes_map = {}
 
     for route in s.GetRouteList():
@@ -62,7 +62,7 @@ def convert(filename, session, start_date, end_date):
         routes_map[route.route_id] = routes_count
         routes_count += 1
 
-    stop_areas_count = 0
+    stop_areas_count = 1
     stop_areas_map = {}
     for stop in s.GetStopList():
         if stop.parent_station == '':

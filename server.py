@@ -265,16 +265,22 @@ class Mumoro:
             x.extend(y)
             return x
         return json.dumps(
-            {"type": "FeatureCollection",
+            {'crs': {'type': 'EPSG',
+                     'properties': {
+                        'code': 4326
+                        }
+                     },
+             "type": "FeatureCollection",
              "features":
                  reduce(concat,
                         [[{"type":"Feature",
-                           "geomerty": { "type": "Linestring",
+                           "geometry": { "type": "LineString",
                                          "coordinates": [[node.lon, node.lat] for node in layer['layer'].stop_areas(line)]},
                            "properties": {"short_name": line.short_name,
                                           "route_long_name": line.long_name,
-                                          "color": line.color,
-                                          "text_color": line.text_color}}
+                                          "color": "#" + line.color,
+                                          "text_color": "#" + line.text_color,
+                                          "stroke_color": line.color if line.text_color == "ffffff" else line.text_color}}
                           for line in layer['layer'].lines()] for layer in layer_array if layer['mode'] == PublicTransport],[])
              })
 
@@ -375,6 +381,15 @@ class Mumoro:
                             'properties': {'layer': 'connection'}
                             }
                     features.append(connection);
+                    if layer.mode == mumoro.PublicTransport:
+                        n = layer.node(node)
+                        features.append({"type":"Feature",
+                                         "geometry":{"type":"Point",
+                                                     "coordinates": [coord[0],coord[1]]},
+                                         "properties": { "line": n.route,
+                                                         "stop_area": layer.stop_area(n.original_id).name,
+                                                         "type": "departure"}})
+
                     last_layer_name = layer_name
                     last_layer = layer
                 last_node = node
