@@ -264,7 +264,7 @@ def import_freq(line_name, nodesf, linesf, start_date, end_date):
     freq_data_array.append({'line_name': line_name, 'nodesf': nodesf, 'linesf': linesf, 'start_date': start_date, 'end_date': end_date})
 
 #Loads data from previous inserted data and creates a layer used in multi-modal graph
-def street_layer(data, name, color, mode):
+def street_layer(data, name, color, mode, bike_service=None):
     pass
 
 def public_transport_layer(data, name, color):

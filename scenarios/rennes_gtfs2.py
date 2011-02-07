@@ -35,9 +35,8 @@ star_data = import_gtfs_data('GTFS-20110118.zip', 'Metro Bus STAR')
 #For GTFS Municipal layer dont mention layer mode
 #--------------------------------------------------------------------------------------------------------------------
 foot_layer = street_layer( data=osm_data , name='Foot', color='#7E2217', mode=mumoro.Foot )
-bike_layer = street_layer( data=osm_data, name='Bike', color='#652AF7', mode=mumoro.Bike )
+bike_layer = street_layer( data=osm_data, name='Bike', color='#652AF7', mode=mumoro.Bike, bike_service=data_bike )
 star_layer = public_transport_layer(data=star_data ,name='STAR', color='#4CC417' )
-
 #Starting layer is the layer on wich the route begins
 #Destination layer is the layer on wich the route finishes
 #Starting & destination layers MUST be selected, otherwise the server could not start

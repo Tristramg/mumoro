@@ -54,7 +54,7 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
 				 {"Foot": { strokeColor : "#4e9a06",
 					    strokeDashstyle: "1 8",
 					    strokeWidth: 5},
-				  "STAR": { strokeColor : "${color}",
+				  "Bus": { strokeColor : "${color}",
 					    strokeWidth: 5,
 					    strokeDashstyle: 'longdash'},
 				  "Bike": {strokeColor : "#204a87"},
@@ -76,12 +76,12 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
     }
     function onFeatureSelect(evt) {
 	feature = evt.feature;
-	if(feature.attributes.type == "departure"){
+	if(feature.attributes.type == "bus_departure" || feature.attributes.type == "bike_departure"){
 	    popup = new OpenLayers.Popup.
 		FramedCloud("featurePopup",
 			    feature.geometry.getBounds().getCenterLonLat(),
                             new OpenLayers.Size(100,100),
-			    self.popup_content(feature),
+			    feature.attributes.type == "bus_departure" ? self.bus_popup_content(feature) : self.bike_popup_content(feature),
                             null, false, onPopupClose);
 	    feature.popup = popup;
 	    popup.feature = feature;
@@ -227,7 +227,7 @@ Mumoro.prototype = {
     cacheStart: "",
     cacheDest: "",
     
-    popup_content: function(feature){
+    bus_popup_content: function(feature){
 	return $('<div/>').append($('<div/>',{'class': 'bus-popup'}).append($('<h2/>').
 				  append($('<img/>', 
 					   {src: '/img/' + 
@@ -240,6 +240,17 @@ Mumoro.prototype = {
 				    "</span>")).
 	    append($('<p/>').append("Descendre à <span class='arrival'>"+ 
 				    feature.attributes.dest_stop_area + 
+				    "</span>"))).html();
+    },
+
+    bike_popup_content: function(feature){
+	return $('<div/>').append($('<div/>',{'class': 'bike-popup'}).append($('<h2/>').
+				  append("Le Vélo STAR")).
+	    append($('<p/>').append("Prendre un vélo à la borne <span class='departure'>"+ 
+				    feature.attributes.station_name + 
+				    "</span>")).
+	    append($('<p/>').append("Déposer le vélo à la borne <span class='arrival'>"+ 
+				    feature.attributes.dest_station_name + 
 				    "</span>"))).html();
     },
 

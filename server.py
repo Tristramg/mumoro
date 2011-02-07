@@ -109,7 +109,7 @@ def import_bike_service( url, name ):
 
 
 #Loads data from previous inserted data and creates a layer used in multi-modal graph
-def street_layer( data, name, color, mode ):
+def street_layer( data, name, color, mode, bike_service=None ):
     if not data or not name:
         raise NameError('One or more parameters are missing')
     if not utils.valid_color_p( color ):
@@ -118,10 +118,10 @@ def street_layer( data, name, color, mode ):
         raise NameError('Wrong layer mode paramater')
     engine = create_engine(db_type + ":///" + db_params)
     metadata = MetaData(bind = engine)
-    res = layer.Layer(name, mode, data, metadata)
+    res = layer.Layer(name, mode, data, metadata, bike_service)
     layer_array.append( {'layer':res,'name':name,'mode':mode,'origin':data,'color':color} )
     return {'layer':res,'name':name,'mode':mode,'origin':data,'color':color} 
-    
+
 def public_transport_layer(data, name, color): 
     engine = create_engine(db_type + ":///" + db_params)
     metadata = MetaData(bind = engine)
@@ -176,7 +176,7 @@ class Mumoro:
             raise NameError('Website URL is empty')
         self.web_url = web_url
         if not layer_array:
-                raise NameError('Can not create multimodal graph beceause there are no layers')
+            raise NameError('Can not create multimodal graph beceause there are no layers')
         layers = []
         for i in layer_array:
             layers.append( i['layer'] )
@@ -260,30 +260,6 @@ class Mumoro:
             i = self.config_table.insert()
             i.execute({'config_file': config_file, 'md5': md5_config_checksum, 'binary_file': md5_config_checksum + '.dump'})
 
-    @cherrypy.expose
-    def bus_lines(self):
-        def concat(x,y):
-            x.extend(y)
-            return x
-        return json.dumps(
-            {'crs': {'type': 'EPSG',
-                     'properties': {
-                        'code': 4326
-                        }
-                     },
-             "type": "FeatureCollection",
-             "features":
-                 reduce(concat,
-                        [[{"type":"Feature",
-                           "geometry": { "type": "LineString",
-                                         "coordinates": [[node.lon, node.lat] for node in layer['layer'].stop_areas(line)]},
-                           "properties": {"short_name": line.short_name,
-                                          "route_long_name": line.long_name,
-                                          "color": "#" + line.color,
-                                          "text_color": "#" + line.text_color,
-                                          "stroke_color": line.color if line.text_color == "ffffff" else line.text_color}}
-                          for line in layer['layer'].lines()] for layer in layer_array if layer['mode'] == PublicTransport],[])
-             })
 
     @cherrypy.expose
     def path(self, slon, slat, dlon, dlat, time):
@@ -369,7 +345,7 @@ class Mumoro:
                 if(last_layer_name != layer_name):
                     geometry['coordinates'] = coordinates
                     feature['geometry'] = geometry
-                    feature['properties'] = {'layer': last_coord[3]}
+                    feature['properties'] = {'layer': last_layer.layer_name()}
                     feature['properties']['icon'] = last_layer.icon(last_node)
                     feature['properties']['color'] = last_layer.color(last_node)
 
@@ -391,6 +367,10 @@ class Mumoro:
                     if last_layer.mode == mumoro.PublicTransport and last_layer != None:
                         # complete last marker
                         last_marker["properties"]["dest_stop_area"] = last_layer.stop_area(last_node.original_id).name
+                    elif last_layer.mode == mumoro.Bike and last_layer != None:
+                        bike_station = last_layer.bike_station(last_node)
+                        if bike_station:
+                            last_marker["properties"]["dest_station_name"] = bike_station.name
                     if layer.mode == mumoro.PublicTransport:
                         last_marker = {"type":"Feature",
                                        "geometry":{"type":"Point",
@@ -410,8 +390,23 @@ class Mumoro:
                                                        stop_area(node.
                                                                  original_id).
                                                        name,
-                                                       "type": "departure"}}
+                                                       "type": "bus_departure"}}
                         markers.append(last_marker)
+                    elif layer.mode == mumoro.Bike:
+                        bike_station = layer.bike_station(node)
+                        if bike_station:
+                            last_marker = {"type":"Feature",
+                                           "geometry":{"type":"Point",
+                                                       "coordinates": [coord[0],
+                                                                       coord[1]]},
+                                           "properties": { "layer": "marker",
+                                                           "marker_icon": 
+                                                           layer.marker_icon(node),
+                                                           "bikes_av": bike_station.av_bikes,
+                                                           "slots_av": bike_station.av_slots,
+                                                           "station_name": bike_station.name,
+                                                           "type": "bike_departure"}}
+                            markers.append(last_marker)
                         
                     last_layer_name = layer_name
                     last_layer = layer
@@ -421,7 +416,7 @@ class Mumoro:
                 coordinates.append([coord[0], coord[1]])
             geometry['coordinates'] = coordinates
             feature['geometry'] = geometry
-            feature['properties'] = {'layer': last_coord[3]}
+            feature['properties'] = {'layer': last_layer.layer_name()}
             feature['properties']['icon'] = last_layer.icon(last_node)
             features.append(feature)
             features.extend(markers)

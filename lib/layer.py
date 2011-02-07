@@ -128,9 +128,10 @@ class BaseLayer(object):
             yield row  
  
 class Layer(BaseLayer):
-    def __init__(self, name, mode, data, metadata):
+    def __init__(self, name, mode, data, metadata, bike_service=None):
         super(Layer, self).__init__(name, data, metadata)
         self.mode = mode
+        self.bike_service = bike_service
                
     def edges(self):
         for edge in self.edges_table.select().execute():
@@ -188,10 +189,55 @@ class Layer(BaseLayer):
             else:
                 return ""
 
+    def marker_icon(self, node):
+        if self.mode == mumoro.Bike:
+            return 'markers/bike.png'
+        else:
+            return ""
+
+    def layer_name(self):
+            if self.mode == mumoro.Foot:
+                return "Foot"
+            elif self.mode == mumoro.Bike:
+                return "Bike"
+            elif self.mode == mumoro.Car:
+                return "Car"
+            elif self.mod == mumoro.PublicTransport:
+                return "Bus"
+            else:
+                return ""
+
     def color(self, node):
         return None
+
+    def bike_stations_table(self):
+        if self.bike_service != None:
+            return Table(self.bike_service['table'], self.metadata, autoload = True)
+        else:
+            return None
+
     
- 
+    def bike_station(self, node):
+        if self.bike_stations_table() != None:
+            t = self.bike_stations_table()
+            ln = node.lon
+            lt = node.lat
+            epsilon = 0.002
+            res = t.select(
+                (t.c.lon >= (ln - epsilon)) &
+                (t.c.lon <= (ln + epsilon)) &
+                (t.c.lat >= (lt - epsilon)) &
+                (t.c.lat <= (lt + epsilon)),
+                order_by = ((t.c.lon - ln) * (t.c.lon -ln)) + ((t.c.lat - lt) * (t.c.lat - lt))
+                ).execute().first()
+            
+            if res:
+                return res
+            else:
+                return None
+        else:
+            return None
+
 class GTFSLayer(BaseLayer):
     """A layer for public transport described by the General Transit Feed Format"""
  
@@ -201,6 +247,9 @@ class GTFSLayer(BaseLayer):
         self.mode = mumoro.PublicTransport
         self.stop_areas_table = Table(data['stop_areas'], metadata, autoload = True)
         self.lines_table = Table(data['lines'], metadata, autoload = True)
+
+    def layer_name(self):
+        return "Bus"
 
     def icon(self, node):
         return 'pictos_lignes/21/' + self.line(node).short_name + '.png'

@@ -1,7 +1,6 @@
 a, a:visited,a:hover,a:focus,a:active {
   text-decoration: underline;
   color: #3E3E3E;
-  font-style: italic;
 }
 
 a img {
@@ -150,7 +149,6 @@ div#footer {
 /* Generic context menu styles */
 .contextMenu {
   position: absolute;
-  width: 120px;
   z-index: 99999;
   border: solid 1px #CCC;
   background: #EEE;
@@ -161,45 +159,44 @@ div#footer {
   font-size: 11px;
 }
 
-.contextMenu LI {
+
+.contextMenu ul {
+  padding: 0;
+  margin: 0;
+}
+
+.contextMenu li {
   list-style: none;
-  padding: 0px;
   margin: 0px;
 }
 
-.contextMenu A {
+.contextMenu a {
   color: #333;
   text-decoration: none;
-  display: block;
   line-height: 20px;
   height: 20px;
-  background-position: 6px center;
-  background-repeat: no-repeat;
   outline: none;
-  padding: 1px 5px;
-  padding-left: 28px;
+  padding: 2px 5px;
+  display: block;
 }
 
-.contextMenu LI.hover A {
+.contextMenu li.hover a {
   color: #AAA;
   background-color: #3399FF;
 }
 
-.contextMenu LI.disabled A {
+.contextMenu li.disabled a {
   color: #AAA;
   cursor: default;
 }
 
-.contextMenu LI.hover.disabled A {
+.contextMenu li.hover.disabled a {
   background-color: transparent;
 }
 
-.contextMenu LI.separator {
+.contextMenu li.separator {
   border-top: solid 1px #CCC;
 }
-
-.contextMenu LI.start A { background-image: url(img/context-arrow-green.png); }
-.contextMenu LI.dest A { background-image: url(img/context-arrow-finish.png); }
 
 .olControlLayerSwitcher .layersDiv {
   background-color: black;
@@ -231,16 +228,19 @@ div.bus-popup h2 img{
   margin-right: 1ex;
 }
 
-div.bus-popup p{
+div.bus-popup p,
+div.bike-popup p{
   margin: 0.2em 0;
   padding: 0;
 }
 
-div.bus-popup span.departure{
+div.bus-popup span.departure,
+div.bike-popup span.departure{
   color: #4e9a06;
   font-weight: bold;
 }
-div.bus-popup span.arrival{
+div.bus-popup span.arrival,
+div.bike-popup span.arrival{
   color: #cc0000;
   font-weight: bold;
 }
