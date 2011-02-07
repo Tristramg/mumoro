@@ -45,7 +45,8 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
     // Other defined layers are OpenLayers.Layer.OSM.Mapnik, OpenLayers.Layer.OSM.Maplint and OpenLayers.Layer.OSM.CycleMap
     var cloudmade = new OpenLayers.Layer.CloudMade("CloudMade", {
 						       key: 'fff941bc66c34422a2e41a529e34aebc',
-						       styleId: 997
+						       styleId: 997,
+						       opacity: 0.8
 						   });
     this.map.addLayer(cloudmade);
     var styleMap = new OpenLayers.StyleMap({strokeWidth: 3});
@@ -53,23 +54,51 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
 				 {"Foot": { strokeColor : "#4e9a06",
 					    strokeDashstyle: "1 8",
 					    strokeWidth: 5},
-				  "STAR": { strokeColor : "#ce5c00"},
+				  "STAR": { strokeColor : "${color}",
+					    strokeWidth: 5,
+					    strokeDashstyle: 'longdash'},
 				  "VeloSTAR": {strokeColor : "#204a87"},
-				  "connection": {strokeColor: '#EFEFEF', 
-						 strokeDashstyle: 'dashdot', 
-						 strokeWidth: 2}});
+				  "marker": {graphicWidth: 25,
+					     graphicHeight: 39,
+					     graphicXOffset: -12,
+					     graphicYOffset: -39,
+					     graphicOpacity: 1.0,
+					     externalGraphic: "/img/${marker_icon}"
+				  },
+				  "connection": {strokeColor : "#4e9a06",
+						 strokeDashstyle: "1 8",
+						 strokeWidth: 5}});
     this.routeLayer = new OpenLayers.Layer.Vector("Route", {styleMap: styleMap});
-    this.routeLayer.onFeatureInsert= function(feature){
+
+    function onPopupClose(evt) {
+	selectControl.unselect(this.feature);
+    }
+    function onFeatureSelect(evt) {
+	feature = evt.feature;
 	if(feature.attributes.type == "departure"){
-	    feature.layer.map.addPopup(new OpenLayers.Popup.
-				       FramedCloud("departure",
-						   feature.geometry.getBounds().getCenterLonLat(),
-						   new OpenLayers.Size(100,100),
-						   self.popup_content(feature),
-						   null,
-						   true));
+	    popup = new OpenLayers.Popup.
+		FramedCloud("featurePopup",
+			    feature.geometry.getBounds().getCenterLonLat(),
+                            new OpenLayers.Size(100,100),
+			    self.popup_content(feature),
+                            null, false, onPopupClose);
+	    feature.popup = popup;
+	    popup.feature = feature;
+	    self.map.addPopup(popup);
 	}
-    };
+    }
+    function onFeatureUnselect(evt) {
+	feature = evt.feature;
+	if (feature.popup) {
+            popup.feature = null;
+            self.map.removePopup(feature.popup);
+            feature.popup.destroy();
+            feature.popup = null;
+	}
+    }
+    this.routeLayer.events.on({'featureselected': onFeatureSelect,
+    			       'featureunselected': onFeatureUnselect
+    			      });
     this.map.addLayer(this.routeLayer);
     // bikeLayer = new OpenLayers.Layer.Text( "Bike Stations",{
     // 					       location:"./bikes",
@@ -92,8 +121,11 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
     // Location support
     if (navigator.geolocation) {  
 	/* Code if geolocation is available. Add buttons*/
-	$('#startGeo').show().click(this.setDepFromGeo);
-	$('#destGeo').show().click(this.setDestFromGeo);
+	navigator.geolocation.
+	    getCurrentPosition(function(p){
+			    $('#startGeo').show().click(self.setDepFromGeo);
+			    $('#destGeo').show().click(self.setDestFromGeo);
+			    });
 	var gpsStyleMap = new OpenLayers.StyleMap({'strokeColor': "blue", 
 						'fillColor': "blue", 
 						'strokeWidth': 1});
@@ -106,28 +138,34 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
 	/* Add indicator on map */
 	
 	navigator.geolocation.watchPosition(function(p){self.refreshPosition(p, gpsLayer);});
-    } else {  
 	/* Code if geolocation is not available */
     }
     
     // map.addLayer(bikeLayer);
     // bikeLayer.setZIndex(730);
     var controlDrag = new OpenLayers.Control.
-	DragFeature(this.layerMarkers, {
-			'onStart': function(feature) {
-			    feature.style.graphicOpacity = 0.5;
-			},
-			'onComplete': function(feature) {
-			    lonlat = new OpenLayers.LonLat(feature.geometry.x,feature.geometry.y);
-			    ll = self.MToLonLat(lonlat);
-			    feature.style.graphicOpacity = 1.0;
-			    self.nodes['fmouse_'+feature.data]=true;
-			    self.reverseGeocoding(lonlat,feature.data);
-			    self.setMark(lonlat,feature.data);
-			}
-		    });
+    	DragFeature(this.layerMarkers, {
+    			// 'onStart': function(feature) {
+    			//     feature.style.graphicOpacity = 0.5;
+    			// },
+    			'onComplete': function(feature) {
+    			    lonlat = new OpenLayers.LonLat(feature.geometry.x,feature.geometry.y);
+    			    ll = self.MToLonLat(lonlat);
+    			    feature.style.graphicOpacity = 1.0;
+    			    self.nodes['fmouse_'+feature.data]=true;
+    			    self.reverseGeocoding(lonlat,feature.data);
+    			    self.setMark(lonlat,feature.data);
+    			}
+    		    });
     this.map.addControl(controlDrag);
     controlDrag.activate();
+
+    selectControl = new OpenLayers.Control.
+	SelectFeature([this.routeLayer, this.layerMarkers], {clickout: true,
+							     multiple: true});
+
+    this.map.addControl(selectControl);
+    selectControl.activate();
     
     if( this.fromHash ) {
         var tmpStart = new OpenLayers.LonLat(this.lonStart, this.latStart);
@@ -189,13 +227,27 @@ Mumoro.prototype = {
     cacheDest: "",
     
     popup_content: function(feature){
-	return $('<div/>').append($('<img/>', {src: '/img/pictos_lignes/21/' + 
-				feature.attributes.line + '.png'})).
-	    append(feature.attributes.stop_area).html();
+	return $('<div/>').append($('<h2/>').
+				  append($('<img/>', 
+					   {src: '/img/' + 
+					    feature.attributes.line_icon})).
+				  append(feature.attributes.line_name)
+
+).
+	    append($('<p/>').append("Monter à « "+ 
+				    feature.attributes.stop_area + 
+				    " »")).
+	    append($('<p/>').append("Descendre à « "+ 
+				    feature.attributes.dest_stop_area + 
+				    " »")).html();
     },
 
     disp_path: function(id) {
 	this.routeLayer.destroyFeatures();
+	map = this.map;
+	$.each(this.map.popups, function(){
+		   map.removePopup(this);
+		   this.destroy();});
 	var features = this.geojson_reader.read(this.paths[id]);
 	if(features)
             this.routeLayer.addFeatures(features);
@@ -218,31 +270,7 @@ Mumoro.prototype = {
 			      self.clearArrow("dest");
 			  }
 			  else {
-			      $("#path_costs").html("<span class=\"tableDes\">Costs:</span>\n<table id=\"costs_table\" class=\"tablesorter\">\n");
-			      $("#path_costs table").append("<thead><tr>");
-			      $.each(data.objectives, function(key, val){$("#path_costs tr").append(
-									     "<th>"+val+"</th>"
-									 );});
-			      $("#path_costs table").append("<tbody>");
-			      $.each( data.paths, function(key, val){
-					  $("#path_costs tbody").append("<tr>");
-					  $.each(val.cost, function(k,v){
-						     if( k != 0 ) {
-							 if( parseInt(v) != 0 )
-							     $("#path_costs tbody tr:last").append("<td><span class=\"tableDes\">"+v+"</span></td>");
-							 else
-							     $("#path_costs tbody tr:last").append("<td><span class=\"tableDes\">None</span></td>");
-						     }
-						     else {
-							 $("#path_costs tbody tr:last").append(
-							     "<td>"+self.transformToDurationString(v)+"</td>"
-							 );
-						     }
-						 });
-					  $("#path_costs tbody tr:last").click(function(){self.disp_path(key); 
-											  $("#path_costs tbody tr").removeClass("hl"); 
-											  $(this).addClass("hl"); });});
-			      $("#costs_table").tablesorter();
+			      $("#path_costs").html(self.itineraries_descriptions(data));
 			      self.paths = data.paths;
 			      self.disp_path(0);
 			      if( !self.fromHash )
@@ -252,6 +280,56 @@ Mumoro.prototype = {
 	}
     },
     
+    itineraries_descriptions: function(data){
+	var self = this;
+	return $('<table/>').
+	    append($('<tbody>').each(function(){
+					 var tbody = $(this);
+					 $.each(data.paths, function(i,p){
+				  var time = p.cost[0];
+				  tbody.append($('<tr/>').append($('<td/>').each(
+									    function(id,td){
+$.each($.grep(p.features, 
+	       function(f){ return f.properties.icon;}),
+      function(id, f){ $(td).append($('<img/>',
+			       { src: "/img/" + f.properties.icon }));});}
+
+							    )).append($('<td/>').append(self.
+							 transformToDurationString(time))).
+					       click(function(){self.disp_path(i);})
+
+);});}));
+
+// ,
+// 							   $('<td/>').append()]);
+// 			      })));
+	// $("#path_costs").html("<span class=\"tableDes\">Costs:</span>\n<table id=\"costs_table\" class=\"tablesorter\">\n");
+	// 		      $("#path_costs table").append("<thead><tr>");
+	// 		      $.each(data.objectives, function(key, val){$("#path_costs tr").append(
+	// 								     "<th>"+val+"</th>"
+	// 								 );});
+	// 		      $("#path_costs table").append("<tbody>");
+	// 		      $.each( data.paths, function(key, val){
+	// 				  $("#path_costs tbody").append("<tr>");
+	// 				  $.each(val.cost, function(k,v){
+	// 					     if( k != 0 ) {
+	// 						 if( parseInt(v) != 0 )
+	// 						     $("#path_costs tbody tr:last").append("<td><span class=\"tableDes\">"+v+"</span></td>");
+	// 						 else
+	// 						     $("#path_costs tbody tr:last").append("<td><span class=\"tableDes\">None</span></td>");
+	// 					     }
+	// 					     else {
+	// 						 $("#path_costs tbody tr:last").append(
+	// 						     "<td>"+self.transformToDurationString(v)+"</td>"
+	// 						 );
+	// 					     }
+	// 					 });
+	// 				  $("#path_costs tbody tr:last").click(function(){self.disp_path(key); 
+	// 										  $("#path_costs tbody tr").removeClass("hl"); 
+	// 										  $(this).addClass("hl"); });});
+	// 		      $("#costs_table").tablesorter();	
+    },
+
     setDepFromGeo: function(){
 	setDepOrDestFromGeo('start');
     },

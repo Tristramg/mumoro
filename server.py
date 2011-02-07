@@ -18,7 +18,8 @@
 #
 #    © Université de Toulouse 1 2010
 #    Author: Tristram Gräbener, Odysseas Gabrielides
-
+#    © Demotera 2011
+#    Author: Paul Rivier, Pierre Paysant-Le Roux
 
 from lib.core import mumoro
 from lib.core.mumoro import Bike, Car, Foot, PublicTransport, cost, co2, dist, elevation, line_change, mode_change, Costs
@@ -350,21 +351,27 @@ class Mumoro:
                 p_str['cost'].append(c)
 
             features = []
+            markers = []
+            last_marker = None
             feature = {'type': 'feature'}
             geometry = {'type': 'Linestring'}
             coordinates = []
-            last_node = path.nodes[0]
-            last_coord = self.g.coordinates(last_node)
-            last_layer = self.g.layer_object(last_node)
+            last_node_id = path.nodes[0]
+            last_coord = self.g.coordinates(last_node_id)
+            last_layer = self.g.layer_object(last_node_id)
+            last_node = last_layer.node(last_node_id)
             last_layer_name = last_coord[3]
-            for node in path.nodes:
-                coord = self.g.coordinates(node)
+            for node_id in path.nodes:
+                coord = self.g.coordinates(node_id)
                 layer_name = coord[3]
+                layer = self.g.layer_object(node_id)
+                node = layer.node(node_id)
                 if(last_layer_name != layer_name):
-                    layer = self.g.layer_object(node)
                     geometry['coordinates'] = coordinates
                     feature['geometry'] = geometry
                     feature['properties'] = {'layer': last_coord[3]}
+                    feature['properties']['icon'] = last_layer.icon(last_node)
+                    feature['properties']['color'] = last_layer.color(last_node)
 
                     features.append(feature)
 
@@ -380,25 +387,43 @@ class Mumoro:
                                 },
                             'properties': {'layer': 'connection'}
                             }
-                    features.append(connection);
+                    features.append(connection)
+                    if last_layer.mode == mumoro.PublicTransport and last_layer != None:
+                        # complete last marker
+                        last_marker["properties"]["dest_stop_area"] = last_layer.stop_area(last_node.original_id).name
                     if layer.mode == mumoro.PublicTransport:
-                        n = layer.node(node)
-                        features.append({"type":"Feature",
-                                         "geometry":{"type":"Point",
-                                                     "coordinates": [coord[0],coord[1]]},
-                                         "properties": { "line": n.route,
-                                                         "stop_area": layer.stop_area(n.original_id).name,
-                                                         "type": "departure"}})
-
+                        last_marker = {"type":"Feature",
+                                       "geometry":{"type":"Point",
+                                                   "coordinates": [coord[0],
+                                                                   coord[1]]},
+                                       "properties": { "line": node.route,
+                                                       "layer": "marker",
+                                                       "marker_icon": 
+                                                       layer.marker_icon(node),
+                                                       "line_icon": 
+                                                       layer.icon(node),
+                                                       "line_name":
+                                                           layer.line(node).long_name,
+                                                       "stop_area": 
+                                                       layer.
+                                                       stop_area(node.
+                                                                 original_id).
+                                                       name,
+                                                       "type": "departure"}}
+                        markers.append(last_marker)
+                        
                     last_layer_name = layer_name
                     last_layer = layer
                 last_node = node
+                last_node_id = node_id
                 last_coord = coord
                 coordinates.append([coord[0], coord[1]])
             geometry['coordinates'] = coordinates
             feature['geometry'] = geometry
             feature['properties'] = {'layer': last_coord[3]}
+            feature['properties']['icon'] = last_layer.icon(last_node)
             features.append(feature)
+            features.extend(markers)
             p_str['features'] = features
             ret['paths'].append(p_str)
         return json.dumps(ret)
@@ -451,9 +476,13 @@ class Mumoro:
                 t = t + ","
         t = t + "}"
         if( not fromHash ):
-            a = paths_array[0]['starting_layer']['layer'].average()
-            b = paths_array[0]['starting_layer']['layer'].borders()
-            return tmpl.generate(fromHash='false',lonStart=b['min_lon'],latStart=b['min_lat'],lonDest=b['max_lon'],latDest=b['max_lat'],addressStart='',addressDest='',hashUrl=self.web_url,layers=t, date=datetime.datetime.today().strftime("%d/%m/%Y %H:%M")).render('html', doctype='html5')
+            return tmpl.generate(fromHash='false',
+                                 lonStart=-1.688976,latStart=48.122070,
+                                 lonDest=-1.659279,latDest=48.103045,
+                                 addressStart='',addressDest='',
+                                 hashUrl=self.web_url,layers=t, 
+                                 date=datetime.datetime.today().
+                                 strftime("%d/%m/%Y %H:%M")).render('html', doctype='html5')
         else:
             return tmpl.generate(fromHash='true',lonStart=hashData[4],latStart=hashData[5],lonDest=hashData[6],latDest=hashData[7],addressStart=hashData[8].decode('utf-8'),addressDest=hashData[9].decode('utf-8'),hashUrl=self.web_url,layers=t,date=hashData[10]).render('html', doctype='html5')
 
