@@ -35,12 +35,13 @@ class Node(object):
         self.the_geom = the_geom
 
 class PT_Node(object):
-    def __init__(self, id, lon, lat, route, stop_area, the_geom = ""):
+    def __init__(self, id, lon, lat, route, stop_area, headsign, the_geom = ""):
         self.original_id = id
         self.lon = lon
         self.lat = lat
         self.route = route
         self.the_geom = the_geom
+        self.headsign = headsign
         self.stop_area = stop_area
 
 class PT_Service(object):
@@ -106,6 +107,7 @@ def create_pt_nodes_table(id, metadata, stop_areas_table):
             Column('lat', Float),
             Column('the_geom', String),
             Column('route', String),
+            Column('headsign', String),
             Column('stop_area', Integer, ForeignKey(stop_areas_table + ".id")),
             )
     metadata.create_all()

@@ -46,7 +46,7 @@ Utiliser la bdd préparée :
 
 Ou la constituer (long)
 
-  ./env/bin/mumoro_import_data scenarios/rennes.py
+  python data_import scenarios/rennes.py
 
 
 
