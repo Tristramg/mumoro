@@ -8,17 +8,17 @@
 	  content="text/html; charset=utf-8" /> 
     <meta name="viewport" 
 	  content="initial-scale=1.0,maximum-scale=1.0, minimum-scale=1.0, user-scalable=no"/>
-    <title>Mumoro Rennes</title>
-    <script type="text/javascript">
-      var gaJsHost = (("https:" == document.location.protocol) ?"https://ssl." : "http://www.");
-      document.write(unescape("%3Cscript src='" + gaJsHost +"google-analytics.com/ga.js'type='text/javascript'%3E%3C/script%3E"));
-    </script>
-    <script type="text/javascript">
-      try {
-      var pageTracker = _gat._getTracker("UA-407886-3");
-      pageTracker._trackPageview();
-      } catch(err) {}
-    </script>       
+    <title>Mobi’Rennes</title>
+    <!-- <script type="text/javascript"> -->
+    <!--   var gaJsHost = (("https:" == document.location.protocol) ?"https://ssl." : "http://www."); -->
+    <!--   document.write(unescape("%3Cscript src='" + gaJsHost +"google-analytics.com/ga.js'type='text/javascript'%3E%3C/script%3E")); -->
+    <!-- </script> -->
+    <!-- <script type="text/javascript"> -->
+    <!--   try { -->
+    <!--   var pageTracker = _gat._getTracker("UA-407886-3"); -->
+    <!--   pageTracker._trackPageview(); -->
+    <!--   } catch(err) {} -->
+    <!-- </script>        -->
     <script src="/openlayers/OpenLayers.js" type="text/javascript"/>
     <script src="http://www.openstreetmap.org/openlayers/OpenStreetMap.js" 
 	    type="text/javascript"/>
@@ -49,8 +49,9 @@
     <div id="main">
       <div id="left-panel">
 	<div class="wrapper">
-          <h1>Mumoro Rennes</h1>
-          <h2>Multimodal and multiobjective routing <a href="/info">Read more here</a></h2>
+          <h1><img src="/img/logo-s.png" /></h1>
+          <h2>Calcul d'itinéraires sur Rennes et ses
+          environs.<br /><a href="/info">En savoir plus ...</a></h2>
 	  
           <div id="mumoro_form">
             <form method="get" action="javascript:$.mumoro.validateAddresses();">
@@ -63,23 +64,23 @@
 		    firstDOW: 1 } );
 		  </script>
 		</li>
+		<span class="tinyText"> Vous pouvez saisir une
+		adresse, ou faire un clic droit sur la carte.</span>
 		<li>
-		  <label for="startAdr">Départ</label>
+		  <label for="startAdr">Adresse du départ</label>
 		  <span id="formError_start"></span>
 		  <br/>           
 		  <input type="text" name="startAdr" id="startAdr" value="$addressStart"/>
 		  <a id="startGeo" style="display:none;" href="#">Ma position</a>
 		</li>
 		<li>
-		  <label for="endAdr">Destination</label>
+		  <label for="endAdr">Adresse de la destination</label>
 		  <span id="formError_dest"></span>
 		  <br/>
 		  <input type="text" name="endAdr" id="endAdr" value="$addressDest"/>
 		  <a id="destGeo" style="display:none;" href="#">Ma
 		  position</a>
 		  <br/>
-		  <span class="tinyText">Example : « 23 rue de la
-		  Chalotais 35000 Rennes France »</span>
 		</li>
 		<li>
 		  <input type="button" value="Trajet retour" onclick="$.mumoro.reverseLocations()"/>
@@ -111,8 +112,8 @@
       </div>        
     </div>
     <ul id="myMenu" class="contextMenu"> 
-      <li class="start"><a href="#start">Set Start</a></li> 
-      <li class="dest"><a href="#dest">Set Destination</a></li> 
+      <li class="start"><a href="#start">Placer le départ</a></li> 
+      <li class="dest"><a href="#dest">Placer la destination</a></li> 
     </ul>
   </body>
 </html>
