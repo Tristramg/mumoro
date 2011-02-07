@@ -124,8 +124,8 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
 	/* Code if geolocation is available. Add buttons*/
 	navigator.geolocation.
 	    getCurrentPosition(function(p){
-			    $('#startGeo').show().click(self.setDepFromGeo);
-			    $('#destGeo').show().click(self.setDestFromGeo);
+			    $('#startGeo').show().click(function(){self.setDepFromGeo();});
+			    $('#destGeo').show().click(function(){self.setDestFromGeo();});
 			    });
 	var gpsStyleMap = new OpenLayers.StyleMap({'strokeColor': "blue", 
 						'fillColor': "blue", 
@@ -352,11 +352,11 @@ $.each($.grep(p.features,
     },
 
     setDepFromGeo: function(){
-	setDepOrDestFromGeo('start');
+	this.setDepOrDestFromGeo('start');
     },
 
     setDestFromGeo: function(){
-	setDepOrDestFromGeo('dest');
+	this.setDepOrDestFromGeo('dest');
     },
 
     setDepOrDestFromGeo: function(target){
