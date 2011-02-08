@@ -321,34 +321,6 @@ $.each($.grep(p.features,
 
 );});}));
 
-// ,
-// 							   $('<td/>').append()]);
-// 			      })));
-	// $("#path_costs").html("<span class=\"tableDes\">Costs:</span>\n<table id=\"costs_table\" class=\"tablesorter\">\n");
-	// 		      $("#path_costs table").append("<thead><tr>");
-	// 		      $.each(data.objectives, function(key, val){$("#path_costs tr").append(
-	// 								     "<th>"+val+"</th>"
-	// 								 );});
-	// 		      $("#path_costs table").append("<tbody>");
-	// 		      $.each( data.paths, function(key, val){
-	// 				  $("#path_costs tbody").append("<tr>");
-	// 				  $.each(val.cost, function(k,v){
-	// 					     if( k != 0 ) {
-	// 						 if( parseInt(v) != 0 )
-	// 						     $("#path_costs tbody tr:last").append("<td><span class=\"tableDes\">"+v+"</span></td>");
-	// 						 else
-	// 						     $("#path_costs tbody tr:last").append("<td><span class=\"tableDes\">None</span></td>");
-	// 					     }
-	// 					     else {
-	// 						 $("#path_costs tbody tr:last").append(
-	// 						     "<td>"+self.transformToDurationString(v)+"</td>"
-	// 						 );
-	// 					     }
-	// 					 });
-	// 				  $("#path_costs tbody tr:last").click(function(){self.disp_path(key); 
-	// 										  $("#path_costs tbody tr").removeClass("hl"); 
-	// 										  $(this).addClass("hl"); });});
-	// 		      $("#costs_table").tablesorter();	
     },
 
     setDepFromGeo: function(){
