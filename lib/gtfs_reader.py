@@ -112,7 +112,7 @@ def convert(filename, session, start_date, end_date):
             if count % 1000 == 0:
                 session.flush()
             if count % 10000 == 0:
-                print "Added {0} timetable elements".format(self.count)
+                print "Added %d timetable elements" % self.count
 
     for k, v in services_map.items():
         session.add(PT_Service(v, k))
