@@ -121,25 +121,7 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
     // 	      });
     // Location support
     if (navigator.geolocation) {  
-	/* Code if geolocation is available. Add buttons*/
-	navigator.geolocation.
-	    getCurrentPosition(function(p){
-			    $('#startGeo').show().click(function(){self.setDepFromGeo();});
-			    $('#destGeo').show().click(function(){self.setDestFromGeo();});
-			    });
-	var gpsStyleMap = new OpenLayers.StyleMap({'strokeColor': "blue", 
-						'fillColor': "blue", 
-						'strokeWidth': 1});
-	gpsStyleMap.addUniqueValueRules("default", "name", {'pointer': {'pointRadius': 8, 
-									'fillOpacity': 1},
-							    'accuracy': {'fillOpacity': 0.2}});
-
-	var gpsLayer = new OpenLayers.Layer.Vector("GPS", {styleMap: gpsStyleMap});
-	this.map.addLayer(gpsLayer);
-	/* Add indicator on map */
-	
-	navigator.geolocation.watchPosition(function(p){self.refreshPosition(p, gpsLayer);});
-	/* Code if geolocation is not available */
+	navigator.geolocation.watchPosition(function(p){self.refreshPosition(p);});
     }
     
     // map.addLayer(bikeLayer);
@@ -333,13 +315,10 @@ $.each($.grep(p.features,
 
     setDepOrDestFromGeo: function(target){
 	var self = this;
-	navigator.geolocation.
-	    getCurrentPosition(
-		function(pos){
-		    self.reverseGeocoding({'lon': pos.coords.longitude,
-					   'lat': pos.coords.latitude},
-					  target);
-		});	
+	pos = this.current_position;
+	self.reverseGeocoding({'lon': pos.coords.longitude,
+			       'lat': pos.coords.latitude},
+			      target);
     },
 
     handleClick: function(coord, mark) {
@@ -411,27 +390,53 @@ $.each($.grep(p.features,
 	else
             return ( (Math.ceil(minutes) ) + "m");
     },       
+
+    initPosition: function(pos){
+	if (this.gpsLayer == undefined){
+	    var self=this;
+	    $('#startGeo').show().click(function(){self.setDepFromGeo();});
+	    $('#destGeo').show().click(function(){self.setDestFromGeo();});
+
+	    var gpsStyleMap = new OpenLayers.StyleMap({'strokeColor': "#204a87",
+						       'fillColor': "#729fcf", 
+						       'strokeWidth': 1});
+	    gpsStyleMap.addUniqueValueRules("default", "name", {'pointer': {graphicWidth: 21,
+									    graphicHeight: 21,
+									    graphicXOffset: -10,
+									    graphicYOffset: -10,
+									    graphicOpacity: 1.0,
+									    externalGraphic: "/img/target.png"},
+								'accuracy': {'fillOpacity': 0.2}});
+
+	    this.gpsLayer = new OpenLayers.Layer.Vector("GPS", {styleMap: gpsStyleMap});
+	    this.map.addLayer(this.gpsLayer);
+	    this.map.setLayerIndex(this.gpsLayer, 1);
+	}
+    },
     
-    refreshPosition: function(pos, layer){
+    refreshPosition: function(pos){
+	this.current_position = pos;
+	this.initPosition();
+
 	var lonLat = new OpenLayers.LonLat(pos.coords.longitude, 
 					   pos.coords.latitude);
 	var accuracy = pos.accuracy;
 	var mapCoordinate = lonLat.transform(this.proj4326,
  					     this.map.getProjectionObject());
 	if(this.node_markers['position']) {
-            layer.removeFeatures(this.node_markers['position']);
+            this.gpsLayer.removeFeatures(this.node_markers['position']);
             this.node_markers['position'].destroy();
             this.node_markers['position'] = null;
 	}
 	this.node_markers['position'] = new OpenLayers.Feature.
 	    Vector(this.LonLatToPoint(mapCoordinate),
 		   {'name': 'pointer'});
-	layer.addFeatures(this.node_markers['position']);
-	layer.drawFeature(this.node_markers['position']);
+	this.gpsLayer.addFeatures(this.node_markers['position']);
+	this.gpsLayer.drawFeature(this.node_markers['position']);
 	
 	if (accuracy){
 	    if(this.node_markers['position-accuracy']) {
-		layer.removeFeatures(this.node_markers['position-accuracy']);
+		this.gpsLayer.removeFeatures(this.node_markers['position-accuracy']);
 		this.node_markers['position-accuracy'].destroy();
 		this.node_markers['position-accuracy'] = null;
 	    }
@@ -440,8 +445,8 @@ $.each($.grep(p.features,
 		       createRegularPolygon(this.LonLatToPoint(mapCoordinate),
 					    accuracy, 40),
 		       {'name':'accuracy'});
-	    layer.addFeatures(this.node_markers['position-accuracy']);
-	    layer.drawFeature(this.node_markers['position-accuracy']);
+	    this.gpsLayer.addFeatures(this.node_markers['position-accuracy']);
+	    this.gpsLayer.drawFeature(this.node_markers['position-accuracy']);
 	}
     },
     
