@@ -68,19 +68,22 @@
 		  et votre arrivée sur la carte avec un clic droit, ou
 		  saisir les adresses ci-dessous.</span>
 		<li>
-		  <label for="startAdr">Adresse du départ</label>
+		  <label for="startAdr">Partir
+		  de</label>    <a id="startGeo" style="display:none;"
+		  href="#">(ma position actuelle)</a>
+
 		  <span id="formError_start"></span>
 		  <br/>           
 		  <textarea name="startAdr" id="startAdr" value="$addressStart">$addressStart</textarea>
-		  <a id="startGeo" style="display:none;" href="#">Ma position</a>
 		</li>
 		<li>
-		  <label for="endAdr">Adresse de la destination</label>
+		  <label for="endAdr">Arriver
+		  à </label>    <a id="destGeo" style="display:none;"
+		  href="#">(ma position actuelle)</a>
+
 		  <span id="formError_dest"></span>
 		  <br/>
 		  <textarea name="endAdr" id="endAdr">$addressDest</textarea>
-		  <a id="destGeo" style="display:none;" href="#">Ma
-		  position</a>
 		  <br/>
 		</li>
 		<li>
