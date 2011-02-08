@@ -39,7 +39,7 @@ void Duration::append(float start, float arrival, const std::string & services)
 
 bool compare_times(const Time & a, const Time & b)
 {
-    return get<0>(a) < get<0>(b);
+  return boost::get<0>(a) < boost::get<0>(b);
 }
 
 void Duration::sort()
