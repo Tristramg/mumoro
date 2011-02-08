@@ -135,6 +135,7 @@ class Layer(BaseLayer):
                
     def edges(self):
         for edge in self.edges_table.select().execute():
+            print "strange edge !"
             e = mumoro.Edge()
             e.length = edge.length
             if self.mode == mumoro.Foot:
@@ -289,8 +290,8 @@ class GTFSLayer(BaseLayer):
         e.line_change = 1
         e.duration = mumoro.Duration(60) # There should be at least a minute between two bus/trains at the same station
         for r in res:
-            yield { 'source': row[0] + self.offset,    
-                    'target': row[1] + self.offset,
+            yield { 'source': r[0] + self.offset,    
+                    'target': r[8] + self.offset,
                     'properties': e }
  
 
@@ -304,22 +305,26 @@ class MultimodalGraph(object):
             nb_nodes += l.count
             self.node_to_layer.append((nb_nodes, l.name))
  
-        self.graph = mumoro.Graph(nb_nodes)
+        self.graph = mumoro.Graph(nb_nodes + 1) # Merci les copains d'avoir décalé tout de 1 et de m'avoir fait suer à cause d'un segfault...
  
         if filename:
             self.graph = mumoro.Graph(filename)
         else:
             count = 0
             tcount = 0
+            horaires = 0
             for l in layers:
+                print "Layer new"
                 for e in l.edges():
                     if e.has_key('properties'):
                         self.graph.add_edge(e['source'], e['target'], e['properties'])
+                        print e['source'], e['target'], e['properties']
                         count += 1
                     else:
                         if self.graph.public_transport_edge(e['source'], e['target'], e['departure'], e['arrival'], str(e['services'])):
                             tcount += 1
-                print "On layer {0}, {1} edges, {2} transport edges, {3} nodes".format(l.name, count, tcount, l.count)
+                        horaires += 1
+                print "On layer {0}, {1} edges, {2} transport edges, {3} nodes, {4} time events".format(l.name, count, tcount, l.count, horaires)
             self.graph.sort()
             print "The multimodal graph has been built and has {0} nodes and {1} edges".format(nb_nodes, count)
  

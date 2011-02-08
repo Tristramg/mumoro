@@ -85,8 +85,8 @@ def import_kalkati_data(filename, network_name = "Public Transport"):
     return import_gtfs_data(filename, network_name)
 
 
-# def import_freq_data(line_name, nodesf, linesf, start_date, end_date):
-#     return import_freq(line_name, nodesf, linesf, start_date, end_date)
+def import_freq_data(line_name, nodesf, linesf, start_date, end_date):
+     return import_gtfs_data(line_name)
 
 
 # Loads a bike service API ( from already formatted URL ). Insert bike stations in database and enables schedulded re-check.
@@ -312,6 +312,8 @@ class Mumoro(object):
         if len(p) == 0:
             return json.dumps({'error': 'Impossible de calculer un itinéraire'})
         print "Len of routes " + str( len( p ) )
+        print "len of first route " + str (len (p[0].nodes))
+#        print "route " + p[0].nodes[0]
         ret = {
                 'objectives': str_obj,
                 'paths': []
@@ -351,6 +353,7 @@ class Mumoro(object):
                     geometry['coordinates'] = coordinates
                     feature['geometry'] = geometry
                     feature['properties'] = {'layer': last_layer.layer_name()}
+                    print "moo", last_node.route
                     feature['properties']['icon'] = last_layer.icon(last_node)
                     feature['properties']['color'] = last_layer.color(last_node)
 

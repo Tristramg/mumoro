@@ -1,3 +1,2 @@
-#nom_ligne, intervalle en secs, heure_debut, heure_fin, tps_moyen, id_noed1, id_noed2 etc.
 M1KP, 200, 21600, 79200, 75, JFK, VU, PON, ANF, STA, REP, CDG, GAR, JCA, GCL, HFR, ITA, TRI, BLO, POT
 M1PK, 200, 21600, 79200, 75, POT, BLO, TRI, ITA, HFR, GCL, JCA, GAR, CDG, REP, STA, ANF, PON, VU, JFK
