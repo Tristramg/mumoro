@@ -50,22 +50,23 @@
       <div id="left-panel">
 	<div class="wrapper">
           <h1><img src="/img/logo-s.png" /></h1>
-          <h2>Calcul d'itinéraires sur Rennes et ses
+          <h2>L'écomobilité pratique sur Rennes et ses
           environs.<br /><a href="/info">En savoir plus ...</a></h2>
 	  
           <div id="mumoro_form">
             <form method="get" action="javascript:$.mumoro.validateAddresses();">
 	      <ul>
 		<li>
-		  <label for="time">Heure du départ</label>
+		  <label for="time">Date et heure du départ</label>
 		  <input name="time" id="datepicker" type="datetime" value="$date"/>
 		  <script type="text/javascript">
 		    AnyTime.picker( "datepicker", { format: "%e/%m/%Y %H:%i",
 		    firstDOW: 1 } );
 		  </script>
 		</li>
-		<span class="tinyText"> Vous pouvez saisir une
-		adresse, ou faire un clic droit sur la carte.</span>
+		<span class="tinyText">Vous pouvez placer votre départ
+		  et votre arrivée sur la carte avec un clic droit, ou
+		  saisir les adresses ci-dessous.</span>
 		<li>
 		  <label for="startAdr">Adresse du départ</label>
 		  <span id="formError_start"></span>
