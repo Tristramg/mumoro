@@ -6,6 +6,9 @@ Paquets à installer (ubuntu)
 
   aptitude install gcc libboost-dev libboost-serialization-dev python-dev swig
 
+  # Debian Lenny 
+  # Configurer les backports
+  aptitude install gcc libboost1.40-dev libboost-serialization1.40-dev python-dev swig
 
 Dépôt de source
 ---------------
@@ -46,6 +49,7 @@ Utiliser la bdd préparée :
 
 Ou la constituer (long)
 
+  python setup.py develop
   python data_import scenarios/rennes.py
 
 
@@ -61,4 +65,5 @@ TODO : vérifier et expliquer
 Démarrer le serveur
 -------------------
 
-  ./env/bin/mumoro_server scenarios/rennes.py
+  python setup.py develop
+  python server.py scenarios/rennes.py

@@ -45,20 +45,15 @@ import datetime
 from cherrypy import request
 from genshi.template import TemplateLoader
 
-loader = TemplateLoader(
-    os.path.join(os.path.dirname(__file__), 'web/templates'),
-    auto_reload=True
-)
-
 layer_array = []
 bike_stations_array = []
 same_nodes_connection_array = []
 nearest_nodes_connection_array = []
 nodes_list_connection_array = []
-
 paths_array = []
+            
 
-#Loads an osm (compressed of not) file and insert data into database
+# Loads an osm (compressed of not) file and insert data into database
 def import_street_data( filename ):
     engine = create_engine( db_type + ":///" + db_params )
     metadata = MetaData(bind = engine)
@@ -70,7 +65,7 @@ def import_street_data( filename ):
     rs = s.execute().first()
     ed = rs[0] if rs else 0
     return {'nodes': str(nd), 'edges' : str(ed)}
-
+    
 
 # Loads the tables corresponding to the public transport layer
 def import_gtfs_data( filename, network_name = "Public Transport"):
@@ -82,11 +77,9 @@ def import_gtfs_data( filename, network_name = "Public Transport"):
     services = mumoro_metadata.select((mumoro_metadata.c.origin == filename) & (mumoro_metadata.c.node_or_edge == 'Services')).execute().first()[0]
     lines = mumoro_metadata.select((mumoro_metadata.c.origin == filename) & (mumoro_metadata.c.node_or_edge == 'Lines')).execute().first()[0]
     stop_areas = mumoro_metadata.select((mumoro_metadata.c.origin == filename) & (mumoro_metadata.c.node_or_edge == 'StopAreas')).execute().first()[0]
-
+    
     return {'nodes': str(nd), 'edges' : str(ed), 'services': str(services),
             'lines': str(lines), 'stop_areas': str(stop_areas)}
-
-
 
 def import_kalkati_data(filename, network_name = "Public Transport"):
     return import_gtfs_data(filename, network_name)
@@ -96,7 +89,7 @@ def import_kalkati_data(filename, network_name = "Public Transport"):
 #     return import_freq(line_name, nodesf, linesf, start_date, end_date)
 
 
-#Loads a bike service API ( from already formatted URL ). Insert bike stations in database and enables schedulded re-check.
+# Loads a bike service API ( from already formatted URL ). Insert bike stations in database and enables schedulded re-check.
 def import_bike_service( url, name ):
     engine = create_engine(db_type + ":///" + db_params)
     metadata = MetaData(bind = engine)
@@ -108,7 +101,7 @@ def import_bike_service( url, name ):
     return {'url_api': url,'table': str(bt)}
 
 
-#Loads data from previous inserted data and creates a layer used in multi-modal graph
+# Loads data from previous inserted data and creates a layer used in multi-modal graph
 def street_layer( data, name, color, mode, bike_service=None ):
     if not data or not name:
         raise NameError('One or more parameters are missing')
@@ -138,21 +131,23 @@ def paths( starting_layer, destination_layer, objectives ):
     c = map(valid_obj,objectives)
     paths_array.append( {'starting_layer':starting_layer,'destination_layer':destination_layer,'objectives':objectives} )
 
-
-#Creates a transit cost variable, including the duration in seconds of the transit and if the mode is changed
+        
+# Creates a transit cost variable, including the duration in seconds of the transit and if the mode is changed
 def cost( duration, mode_change ):
     e = mumoro.Edge()
     e.mode_change = 1 if mode_change else 0
     e.duration = mumoro.Duration( duration );
     return e
 
-#Connects 2 given layers on same nodes with the given cost(s)
+# Connects 2 given layers on same nodes with the given cost(s)
 def connect_layers_same_nodes( layer1, layer2, cost ):
     if not layer1 or not layer2 or not cost:
         raise NameError('One or more paramaters are empty')
     same_nodes_connection_array.append( { 'layer1':layer1, 'layer2':layer2, 'cost':cost } )
 
-#Connect 2 given layers on a node list (arg 3 which should be the returned data from import_municipal_data or import_bike_service) with the given cost(s)
+# Connect 2 given layers on a node list (arg 3 which
+# should be the returned data from import_municipal_data
+# or import_bike_service) with the given cost(s)
 def connect_layers_from_node_list( layer1, layer2, node_list, cost, cost2 = None ):
     if not layer1 or not layer2 or not node_list or not cost:
         raise NameError('One or more paramaters are empty')
@@ -161,14 +156,18 @@ def connect_layers_from_node_list( layer1, layer2, node_list, cost, cost2 = None
     else:
         nodes_list_connection_array.append( { 'layer1':layer1, 'layer2':layer2, 'node_list':node_list, 'cost1':cost, 'cost2':cost2 } )
 
-#Connect 2 given layers on nearest nodes
+# Connect 2 given layers on nearest nodes
 def connect_layers_on_nearest_nodes( layer1 , layer2, cost, cost2 = None):
     if not layer1 or not layer2 or not cost:
         raise NameError('One or more paramaters are empty')
     nearest_nodes_connection_array.append( { 'layer1':layer1, 'layer2':layer2, 'cost':cost, 'cost2':cost2 } )
 
-class Mumoro:
+
+class Mumoro(object):
     def __init__(self,db_string,config_file,admin_email,web_url):
+        self.loader = TemplateLoader(os.path.join(os.path.dirname(__file__), 
+                                                  'web/templates'),
+                                     auto_reload=True)
         if not admin_email:
             raise NameError('Administrator email is empty')
         self.admin_email = admin_email
@@ -259,6 +258,12 @@ class Mumoro:
             self.g.save( md5_config_checksum + '.dump' )
             i = self.config_table.insert()
             i.execute({'config_file': config_file, 'md5': md5_config_checksum, 'binary_file': md5_config_checksum + '.dump'})
+
+
+
+
+
+
 
 
     @cherrypy.expose
@@ -464,7 +469,7 @@ class Mumoro:
 
     @cherrypy.expose
     def index(self,fromHash=False,hashData=[]):
-        tmpl = loader.load('index.html')
+        tmpl = self.loader.load('index.html')
         t = "{"
         for i in range( len( layer_array ) ):
             t = t + "\"" + layer_array[i]['name'] + "\": { strokeColor : \"" + layer_array[i]['color'] + "\"}"
@@ -484,7 +489,7 @@ class Mumoro:
 
     @cherrypy.expose
     def info(self):
-        tmpl = loader.load('info.html')
+        tmpl = self.loader.load('info.html')
         return tmpl.generate().render('html', doctype='html5')
     
     @cherrypy.expose
@@ -496,6 +501,7 @@ class Mumoro:
           "format":"json",
           "polygon": 0,
           "addressdetails" : 1,
+          "limit": 1,
           "email" : self.admin_email
         })
         conn = httplib.HTTPConnection(url)
@@ -617,30 +623,29 @@ class Mumoro:
         return {'seconds':past_seconds,'days':delta.days} 
         
 
-total = len( sys.argv )
-if total != 2:
-    sys.exit("Usage: python server.py {config_file.py}")
-if not os.path.exists( os.getcwd() + "/" + sys.argv[1] ):
-    raise NameError('Configuration file does not exist')
-exec( file( sys.argv[1] ) )
+def mumoro_namespace(k, v):
+    pass
+
+cherrypy.config.namespaces['mumoro'] = mumoro_namespace
+
+
+config_file = None
+
+cherrypy.config.update(os.path.abspath(os.path.dirname(__file__)) + '/cherrypy.config')
+
+if cherrypy.config["mumoro.scenario"] == None or not os.path.exists(cherrypy.config["mumoro.scenario"]):
+    raise NameError('Scenario configuration file does not exist "%s"' % cherrypy.config["mumoro.scenario"])
+exec(file(cherrypy.config["mumoro.scenario"]))
+
 cherrypy.config.update({
     'tools.encode.on': True,
     'tools.encode.encoding': 'utf-8',
     'tools.decode.on': True,
     'tools.trailing_slash.on': True,
     'tools.staticdir.root': os.path.abspath(os.path.dirname(__file__)) + "/web/",
-    'server.socket_port': listening_port,
-    'server.socket_host': '0.0.0.0'
 })
-cherrypy.tree.mount(Mumoro(db_type + ":///" + db_params,sys.argv[1],admin_email,web_url), '/', config={
-    '/': {
-            'tools.staticdir.on': True,
-            'tools.staticdir.dir': 'static'
-       },
-})
-cherrypy.quickstart()
-
-def main():
-    print "Goodbye!"
-    
-
+cherrypy.quickstart(Mumoro(db_type + ":///" + db_params, cherrypy.config["mumoro.scenario"], admin_email, web_url), '/', 
+                    config={'/': {'tools.staticdir.on': True,
+                                  'tools.staticdir.dir': 'static'}
+                            }
+                    )
