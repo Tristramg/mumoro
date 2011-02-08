@@ -244,3 +244,9 @@ div.bike-popup span.arrival{
   color: #cc0000;
   font-weight: bold;
 }
+
+div.index-page{
+  max-width: 950px;
+  margin: 0 auto;
+  padding: 3px;
+}

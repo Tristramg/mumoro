@@ -4,8 +4,13 @@
 	  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />        
-    <link rel="stylesheet" media="screen" type="text/css" title="Design" href="design.css" />
+    <meta http-equiv="Content-Type" 
+	  content="text/html; charset=utf-8"/>        
+    <meta name="viewport" 
+	  content="initial-scale=1.0,maximum-scale=1.0, minimum-scale=1.0, user-scalable=no"/>
+    <link rel="stylesheet" media="screen" type="text/css"
+    title="Design" href="/design.css" />
+    <link rel="stylesheet" media="all and (max-device-width: 480px)" href="/css/iphone.css"/> 
     <link rel="icon" type="image/png" href="img/arrow.png" />
     <!-- <script type="text/javascript"> -->
     <!--   var gaJsHost = (("https:" == document.location.protocol) ?"https://ssl." : "http://www."); -->
@@ -20,68 +25,70 @@
     <title></title>
   </head>
   <body>
-    <h1><a href="/"><img src="/img/logo-s.png" /></a></h1>
-    <h2>À propos du service Mobi’Rennes</h2>
-    <p>
-      Mobi’Rennes est un service de calcul d'itinéraires en
-      transports doux, destiné à toute personne désireuse de se
-      déplacer rapidement et proprement dans l'agglomération
-      Rennaise. En effet, Mobi’Rennes compose pour l'usager une
-      sélection de trajets efficaces, combinant tous les modes de
-      transports publics proposés par la métropole. Pour l'utiliser,
-      il suffit de se rendre sur <a href="/">la page d'accueil</a>,
-      puis d'y placer le lieu de départ et celui d'arrivée,
-      directement sur la carte, pour obtenir instantanément des
-      propositions d'itinéraires performants. Ce service est donc un
-      véritable système d'aide à l'écomobilité sur le territoire de
-      Rennes Métropole.
-    </p>
-    <ul>
-      <li><p> Mobi’Rennes vous est proposé
-	  par <a href="http://www.demotera.com">Demotera</a>, société
-	  Rennaise éditrice du logiciel en ligne de gestion de projet
-	  et de collaboration <a href="http://www.atikteam.com">
-	  AtikTeam </a>.
-      </p></li>
-      <li><p> Le moteur de calcul d'itinéraire vous est proposé par
-	  Tristram Gräbener et fait suite à ses travaux de thèse, que
-	  vous pouvez consulter en téléchargeant son
-	  mémoire <a href="http://dl.demotera.com/these_graebener.pdf">
-	  ici </a>.
-      </p></li>
-      <li><p> Les données pour les transports publics ainsi que
-	  pour <em>Le vélo STAR</em> sont fournis par
-	  <a href="http://data.keolis-rennes.com">
-	    <em>Data Keolis Rennes</em>, et datent du 18 janvier 2011.
-	  </a>
-      </p></li>
-      <li><p> 
-	  Les données cartographiques et le module de visualisation
-	  sont fournis par
-	  <a href="http://www.openstreetmap.org/">Open Street Maps</a>
-	  et <a href="http://www.openlayers.org/">Open Layers</a>.
-      </p></li>
-      <li><p>
-	  Le code source du projet, en GPLv3, se trouve sur 
-	  <a href="http://github.com/demotera/mobirennes">le dépôt GitHub
-	    de Mobi’Rennes</a>. C'est également sur ce dépôt que nous vous
-	  invitons à déposer vos remarques et suggestions.
-      </p></li>
-    </ul>
-        
-    <p><a href="/">Revenir sur la carte</a>  </p>
-
-    
-    <div id="footer">
-      <hr/>
-      <a href="http://www.openstreetmap.org/">Openstreetmap</a>
-      (<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC
-        by-sa</a>) |
-      <a href="http://www.data.rennes-metropole.fr/fr/lentrepot/licence-dutilisation.html">Entrepôt de
-        données publiques de Rennes et Rennes Métropole</a>
-      (<a href="http://www.data.rennes-metropole.fr/fr/lentrepot/licence-dutilisation.html">licence</a>) | 
-      <a href="https://github.com/Tristramg/mumoro">Routing
-	algorithms</a> (<a href="http://www.gnu.org/licenses/gpl.html">GPLv3</a>)
+    <div id="info-page">
+      <h1><a href="/"><img src="/img/logo-s.png" /></a></h1>
+      <h2>À propos du service Mobi’Rennes</h2>
+      <p>
+	Mobi’Rennes est un service de calcul d’itinéraires en
+	transports doux, destiné à toute personne désireuse de se
+	déplacer rapidement et proprement dans l’agglomération
+	Rennaise. En effet, Mobi’Rennes compose pour l’usager une
+	sélection de trajets efficaces, combinant tous les modes de
+	transports publics proposés par la métropole. Pour l’utiliser,
+	il suffit de se rendre sur <a href="/">la page d’accueil</a>,
+	puis d’y placer le lieu de départ et celui d’arrivée,
+	directement sur la carte, pour obtenir instantanément des
+	propositions d’itinéraires performants. Ce service est donc un
+	véritable système d’aide à l’écomobilité sur le territoire de
+	Rennes Métropole.
+      </p>
+      <ul>
+	<li><p> Mobi’Rennes vous est proposé
+	    par <a href="http://www.demotera.com">Demotera</a>, société
+	    Rennaise éditrice du logiciel en ligne de gestion de projet
+	    et de collaboration <a href="http://www.atikteam.com">
+	      AtikTeam </a>.
+	</p></li>
+	<li><p> Le moteur de calcul d’itinéraire vous est proposé par
+	    Tristram Gräbener et fait suite à ses travaux de thèse, que
+	    vous pouvez consulter en téléchargeant son
+	    mémoire <a href="http://dl.demotera.com/these_graebener.pdf">
+	      ici </a>.
+	</p></li>
+	<li><p> Les données pour les transports publics ainsi que
+	    pour <em>Le vélo STAR</em> sont fournis par
+	    <a href="http://data.keolis-rennes.com">
+	      <em>Data Keolis Rennes</em>, et datent du 18 janvier 2011.
+	    </a>
+	</p></li>
+	<li><p> 
+	    Les données cartographiques et le module de visualisation
+	    sont fournis par
+	    <a href="http://www.openstreetmap.org/">Open Street Maps</a>
+	    et <a href="http://www.openlayers.org/">Open Layers</a>.
+	</p></li>
+	<li><p>
+	    Le code source du projet, en GPLv3, se trouve sur 
+	    <a href="http://github.com/demotera/mobirennes">le dépôt GitHub
+	      de Mobi’Rennes</a>. C’est également sur ce dépôt que nous vous
+	    invitons à déposer vos remarques et suggestions.
+	</p></li>
+      </ul>
+      
+      <p><a href="/">Revenir sur la carte</a>  </p>
+      
+      
+      <div id="footer">
+	<hr/>
+	<a href="http://www.openstreetmap.org/">Openstreetmap</a>
+	(<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC
+          by-sa</a>) |
+	<a href="http://www.data.rennes-metropole.fr/fr/lentrepot/licence-dutilisation.html">Entrepôt de
+          données publiques de Rennes et Rennes Métropole</a>
+	(<a href="http://www.data.rennes-metropole.fr/fr/lentrepot/licence-dutilisation.html">licence</a>) | 
+	<a href="https://github.com/Tristramg/mumoro">Routing
+	  algorithms</a> (<a href="http://www.gnu.org/licenses/gpl.html">GPLv3</a>)
+      </div>
     </div>
   </body>
 </html>
