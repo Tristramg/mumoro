@@ -200,7 +200,7 @@ class Importer():
         start_date = datetime.datetime.strptime(start_date, "%Y%m%d")
         end_date = datetime.datetime.strptime(end_date, "%Y%m%d")
         service = '1' * (end_date - start_date).days
-        service_id = 1000 ### Arbitraire, normalement il faudrait
+        service_id = 1 ### Arbitraire, normalement il faudrait
                           ### récupérer l'id de l'élément inséré.
         self.session.add(PT_Service(service_id, service))
 
@@ -236,10 +236,14 @@ class Importer():
             tps_moyen = int(l[5])
             for departure in range(int(l[3]), int(l[4]), int(l[2])):
                 prev_stop = nodes_map[l[0]][l[6]]
-                for i in range(7, len(l) - 1):
+                current_departure = departure
+                for i in range(7, len(l)):
                     current_node = nodes_map[l[0]][l[i]]
-                    self.session.add(PT_Edge(prev_stop, current_node, 0, departure, departure + tps_moyen, service_id, 'Metro', str(lines_count)))
+                    self.session.add(PT_Edge(prev_stop, current_node, 0, 
+                                             current_departure, current_departure + tps_moyen, 
+                                             service_id, '4', str(lines_count)))
                     prev_stop = current_node
+                    current_departure += tps_moyen
             lines_count += 1
         self.session.commit()
         self.init_mappers()

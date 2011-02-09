@@ -135,7 +135,7 @@ class Layer(BaseLayer):
                
     def edges(self):
         for edge in self.edges_table.select().execute():
-            print "strange edge !"
+            # print "strange edge !"
             e = mumoro.Edge()
             e.length = edge.length
             if self.mode == mumoro.Foot:

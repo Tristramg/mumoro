@@ -353,7 +353,7 @@ class Mumoro(object):
                     geometry['coordinates'] = coordinates
                     feature['geometry'] = geometry
                     feature['properties'] = {'layer': last_layer.layer_name()}
-                    print "moo", last_node.route
+                    # print "moo", last_node.route
                     feature['properties']['icon'] = last_layer.icon(last_node)
                     feature['properties']['color'] = last_layer.color(last_node)
 
