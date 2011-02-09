@@ -1,7 +1,7 @@
 OpenLayers.ImgPath = "/img/openlayers/";
 
 function Mumoro(lonStart, latStart, lonDest, latDest,
-                fromHash, hashUrl, layers){
+                fromHash, hashUrl, layers, cloudmadeapi){
     this.lonStart = lonStart;
     this.latStart = latStart;
     this.lonDest = lonDest;
@@ -44,9 +44,9 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
     // Define the map layer
     // Other defined layers are OpenLayers.Layer.OSM.Mapnik, OpenLayers.Layer.OSM.Maplint and OpenLayers.Layer.OSM.CycleMap
     var cloudmade = new OpenLayers.Layer.CloudMade("CloudMade", {
-						       key: 'fff941bc66c34422a2e41a529e34aebc',
-						       styleId: 997,
-						       opacity: 0.8
+						       key: cloudmadeapi,
+						       styleId: 31494,
+						       opacity: 1
 						   });
     this.map.addLayer(cloudmade);
     var styleMap = new OpenLayers.StyleMap({strokeWidth: 2});
@@ -74,6 +74,15 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
     function onPopupClose(evt) {
 	selectControl.unselect(this.feature);
     }
+
+    function onBeforeFeatureSelect(evt){
+	feature = evt.feature;
+	if(feature.attributes.type == "bus_departure" || feature.attributes.type == "bike_departure"){
+	    return true;
+	}else {
+	    return false;
+	}
+    }
     function onFeatureSelect(evt) {
 	feature = evt.feature;
 	if(feature.attributes.type == "bus_departure" || feature.attributes.type == "bike_departure"){
@@ -98,7 +107,8 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
 	}
     }
     this.routeLayer.events.on({'featureselected': onFeatureSelect,
-    			       'featureunselected': onFeatureUnselect
+    			       'featureunselected': onFeatureUnselect,
+			       'beforefeatureselected': onBeforeFeatureSelect
     			      });
     this.map.addLayer(this.routeLayer);
     // bikeLayer = new OpenLayers.Layer.Text( "Bike Stations",{

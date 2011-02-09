@@ -426,6 +426,7 @@ class Mumoro(object):
             feature['geometry'] = geometry
             feature['properties'] = {'layer': last_layer.layer_name()}
             feature['properties']['icon'] = last_layer.icon(last_node)
+            feature['properties']['color'] = last_layer.color(last_node)
             features.append(feature)
             features.extend(markers)
             p_str['features'] = features
@@ -486,9 +487,20 @@ class Mumoro(object):
                                  addressStart='',addressDest='',
                                  hashUrl=self.web_url,layers=t, 
                                  date=datetime.datetime.today().
-                                 strftime("%d/%m/%Y %H:%M")).render('html', doctype='html5')
+                                 strftime("%d/%m/%Y %H:%M"),
+                                 googleanalytics=request.config['mumoro.googleanalytics'],
+                                 cloudmadeapi=request.config['mumoro.cloudmadeapi']).render('html', doctype='html5')
         else:
-            return tmpl.generate(fromHash='true',lonStart=hashData[4],latStart=hashData[5],lonDest=hashData[6],latDest=hashData[7],addressStart=hashData[8].decode('utf-8'),addressDest=hashData[9].decode('utf-8'),hashUrl=self.web_url,layers=t,date=hashData[10]).render('html', doctype='html5')
+            return tmpl.generate(fromHash='true',
+                                 lonStart=hashData[4],
+                                 latStart=hashData[5],
+                                 lonDest=hashData[6],
+                                 latDest=hashData[7],
+                                 addressStart=hashData[8].decode('utf-8'),
+                                 addressDest=hashData[9].decode('utf-8'),
+                                 hashUrl=self.web_url,layers=t,date=hashData[10],
+                                 googleanalytics=request.config['mumoro.googleanalytics'],
+                                 cloudmadeapi=request.config['mumoro.cloudmadeapi']).render('html', doctype='html5')
 
     @cherrypy.expose
     def info(self):
