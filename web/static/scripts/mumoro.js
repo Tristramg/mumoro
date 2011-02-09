@@ -398,9 +398,9 @@ $.each($.grep(p.features,
 	var minutes = ( tmp / 60) % 60;
 	var hours = tmp / 3600;
 	if( (Math.ceil(hours) - 1) > 0 )
-            return ( (Math.ceil(hours) - 1) + "h" + (Math.ceil(minutes)) + "m");
+            return ( (Math.ceil(hours) - 1) + "h" + (Math.ceil(minutes)) + "min");
 	else
-            return ( (Math.ceil(minutes) ) + "m");
+            return ( (Math.ceil(minutes) ) + "min");
     },       
 
     initPosition: function(pos){

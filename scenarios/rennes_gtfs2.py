@@ -71,17 +71,3 @@ connect_layers_on_nearest_nodes(metro_layer, foot_layer, cost1 , cost2)
 paths( foot_layer, foot_layer, [ mode_change, line_change ] )
 # paths( star_layer, star_layer, [ dist, mode_change ] )
 
-#Administrator valid email
-#REQUIRED for geocoding services, if empty the service will NOT work
-#-------------------------------------------------------------------
-admin_email = 'pplr@free.fr'
-
-#Website valid URL : 'http://url/' example 'http://mumoro.openstreetmap.fr/'
-#REQUIRED for urls generating (allowing you to send the url to a friend and to find the same route)
-#--------------------------------------------------------------------------------------------------
-web_url =  'http://localhost:8086'
-
-#Listening port
-#Check that it is free and port-fordwarded if behind a router
-#-------------------------------------------------------------
-listening_port = 8086
