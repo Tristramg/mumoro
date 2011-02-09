@@ -28,6 +28,7 @@ start_date = '20110118'
 end_date = '20110501'
 
 star_data = import_gtfs_data('GTFS-20110118.zip', 'Metro Bus STAR')
+metro_data = import_freq_data('Metro a', 'data_rennes/metro/nodes.csv', 'data_rennes/metro/edges.csv', start_date, end_date)
 
 #Create relevant layers from previously imported data (origin paramater) with a name, a color and the mode.
 #Color in the html format : '#RRGGBB' with R, G and B respetcly reg, green and blue values in hex
@@ -37,6 +38,8 @@ star_data = import_gtfs_data('GTFS-20110118.zip', 'Metro Bus STAR')
 foot_layer = street_layer( data=osm_data , name='Foot', color='#7E2217', mode=mumoro.Foot )
 bike_layer = street_layer( data=osm_data, name='Bike', color='#652AF7', mode=mumoro.Bike, bike_service=data_bike )
 star_layer = public_transport_layer(data=star_data ,name='STAR', color='#4CC417' )
+metro_layer = public_transport_layer(data=metro_data ,name='Metro', color='#F00BA4' )
+
 #Starting layer is the layer on wich the route begins
 #Destination layer is the layer on wich the route finishes
 #Starting & destination layers MUST be selected, otherwise the server could not start
@@ -62,6 +65,7 @@ cost2 = cost( duration = 60, mode_change = False )
 
 connect_layers_from_node_list( foot_layer, bike_layer, data_bike,cost1, cost2 )
 connect_layers_on_nearest_nodes(star_layer, foot_layer, cost1 , cost2)
+connect_layers_on_nearest_nodes(metro_layer, foot_layer, cost1 , cost2)
 
 
 paths( foot_layer, foot_layer, [ mode_change, line_change ] )
