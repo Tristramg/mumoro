@@ -211,13 +211,13 @@ div#info h2{
     border-top: 2px solid #4E9A06;
     color: white;
     font-weight: bold;
-    margin: 0 -3px 0 -3px;
+    margin: 0 -3px 0 -4px;
     padding: 5px;
     text-align: center;
 }
 
 #path_costs{
-  margin: 0.3em -3px 0 -3px;
+  margin: 0.3em -3px 0 -4px;
 }
 
 div#info table{

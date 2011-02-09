@@ -284,7 +284,7 @@ Mumoro.prototype = {
 			      $("#hash_url").html('');
 			  }
 			  else {
-			      $("#info > h2").html("Mobi’Rennes propose " + data.paths.length + " itinéraire" + (data.paths.lenght > 1 ? "s" : ""));
+			      $("#info > h2").html("Mobi’Rennes propose " + data.paths.length + " itinéraire" + (data.paths.length > 1 ? "s" : ""));
 			      $("#path_costs").html(self.itineraries_descriptions(data));
 			      self.paths = data.paths;
 			      self.disp_path(0);

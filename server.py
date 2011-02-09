@@ -343,7 +343,9 @@ class Mumoro(object):
                 layer_name = coord[3]
                 layer = self.g.layer_object(node_id)
                 node = layer.node(node_id)
-                if(last_layer_name != layer_name):
+                if(last_layer_name != layer_name or 
+                   (last_layer.mode == mumoro.PublicTransport and
+                    last_node.route != node.route)):
                     geometry['coordinates'] = coordinates
                     feature['geometry'] = geometry
                     feature['properties'] = {'layer': last_layer.layer_name()}
