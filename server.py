@@ -164,16 +164,10 @@ def connect_layers_on_nearest_nodes( layer1 , layer2, cost, cost2 = None):
 
 
 class Mumoro(object):
-    def __init__(self,db_string,config_file,admin_email,web_url):
+    def __init__(self,db_string,config_file,):
         self.loader = TemplateLoader(os.path.join(os.path.dirname(__file__), 
                                                   'web/templates'),
                                      auto_reload=True)
-        if not admin_email:
-            raise NameError('Administrator email is empty')
-        self.admin_email = admin_email
-        if not web_url:
-            raise NameError('Website URL is empty')
-        self.web_url = web_url
         if not layer_array:
             raise NameError('Can not create multimodal graph beceause there are no layers')
         layers = []
@@ -484,7 +478,8 @@ class Mumoro(object):
                                  lonStart=-1.688976,latStart=48.122070,
                                  lonDest=-1.659279,latDest=48.103045,
                                  addressStart='',addressDest='',
-                                 hashUrl=self.web_url,layers=t, 
+                                 hashUrl=request.config['mumoro.web_url'],
+                                 layers=t, 
                                  date=datetime.datetime.today().
                                  strftime("%d/%m/%Y %H:%M"),
                                  googleanalytics=request.config['mumoro.googleanalytics'],
@@ -497,7 +492,8 @@ class Mumoro(object):
                                  latDest=hashData[7],
                                  addressStart=hashData[8].decode('utf-8'),
                                  addressDest=hashData[9].decode('utf-8'),
-                                 hashUrl=self.web_url,layers=t,date=hashData[10],
+                                 hashUrl=request.config['mumoro.web_url'],
+                                 layers=t,date=hashData[10],
                                  googleanalytics=request.config['mumoro.googleanalytics'],
                                  cloudmadeapi=request.config['mumoro.cloudmadeapi']).render('html', doctype='html5')
 
@@ -516,7 +512,7 @@ class Mumoro(object):
           "polygon": 0,
           "addressdetails" : 1,
           "limit": 1,
-          "email" : self.admin_email
+          "email" : request.config['mumoro.admin_email']
         })
         conn = httplib.HTTPConnection(url)
         conn.request("GET", "/search?" + params)
@@ -559,7 +555,7 @@ class Mumoro(object):
           "format":"json",
           "zoom": 18,
           "addressdetails" : 1,
-          "email" : self.admin_email
+          "email" : request.config['mumoro.admin_email']
         })
         conn = httplib.HTTPConnection(url)
         conn.request("GET", "/reverse?" + params)
@@ -658,7 +654,7 @@ cherrypy.config.update({
     'tools.trailing_slash.on': True,
     'tools.staticdir.root': os.path.abspath(os.path.dirname(__file__)) + "/web/",
 })
-cherrypy.quickstart(Mumoro(db_type + ":///" + db_params, cherrypy.config["mumoro.scenario"], admin_email, web_url), '/', 
+cherrypy.quickstart(Mumoro(db_type + ":///" + db_params, cherrypy.config["mumoro.scenario"]), '/', 
                     config={'/': {'tools.staticdir.on': True,
                                   'tools.staticdir.dir': 'static'}
                             }
