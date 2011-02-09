@@ -76,7 +76,7 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
     }
 
     function onBeforeFeatureSelect(evt){
-	feature = evt.feature;
+	var feature = evt.feature;
 	if(feature.attributes.type == "bus_departure" || feature.attributes.type == "bike_departure"){
 	    return true;
 	}else {
@@ -84,9 +84,9 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
 	}
     }
     function onFeatureSelect(evt) {
-	feature = evt.feature;
+	var feature = evt.feature;
 	if(feature.attributes.type == "bus_departure" || feature.attributes.type == "bike_departure"){
-	    popup = new OpenLayers.Popup.
+	    var popup = new OpenLayers.Popup.
 		FramedCloud("featurePopup",
 			    feature.geometry.getBounds().getCenterLonLat(),
                             new OpenLayers.Size(100,100),
@@ -98,9 +98,11 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
 	}
     }
     function onFeatureUnselect(evt) {
-	feature = evt.feature;
+	var feature = evt.feature;
 	if (feature.popup) {
-            popup.feature = null;
+	    var popup = feature.popup;
+            feature.popup = null;
+	    popup.feature = null;
             self.map.removePopup(feature.popup);
             feature.popup.destroy();
             feature.popup = null;
@@ -142,8 +144,8 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
     			//     feature.style.graphicOpacity = 0.5;
     			// },
     			'onComplete': function(feature) {
-    			    lonlat = new OpenLayers.LonLat(feature.geometry.x,feature.geometry.y);
-    			    ll = self.MToLonLat(lonlat);
+    			    var lonlat = new OpenLayers.LonLat(feature.geometry.x,feature.geometry.y);
+    			    var ll = self.MToLonLat(lonlat);
     			    feature.style.graphicOpacity = 1.0;
     			    self.nodes['fmouse_'+feature.data]=true;
     			    self.reverseGeocoding(lonlat,feature.data);
@@ -153,7 +155,7 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
     this.map.addControl(controlDrag);
     controlDrag.activate();
 
-    selectControl = new OpenLayers.Control.
+    var selectControl = new OpenLayers.Control.
 	SelectFeature([this.routeLayer, this.layerMarkers], {clickout: true,
 							     multiple: true});
 
@@ -177,10 +179,10 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
         this.compute();
     }
     else {
-        s = {'lon': lonStart,
-	     'lat': latStart};
-        d = {'lon': lonDest,
-	     'lat': latDest};
+        var s = {'lon': lonStart,
+		 'lat': latStart};
+        var d = {'lon': lonDest,
+		 'lat': latDest};
         this.centerToMap(s,d);
     }
     $("#map").contextMenu({menu: 'myMenu'},
@@ -247,7 +249,7 @@ Mumoro.prototype = {
     },
 
     cleanup_path: function(){
-	map = this.map;
+	var map = this.map;
 	while(map.popups.length){
 	    var p = map.popups[0];
 	    map.removePopup(p);
@@ -327,7 +329,7 @@ $.each($.grep(p.features,
 
     setDepOrDestFromGeo: function(target){
 	var self = this;
-	pos = this.current_position;
+	var pos = this.current_position;
 	self.reverseGeocoding({'lon': pos.coords.longitude,
 			       'lat': pos.coords.latitude},
 			      target);
@@ -732,5 +734,5 @@ $.each($.grep(p.features,
 	$("#routing_description").append("</tbody>");
 	
     }
-}
+};
 
