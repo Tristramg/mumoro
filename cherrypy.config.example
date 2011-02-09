@@ -2,3 +2,5 @@
 server.socket_port: 8085
 server.socket_host: '127.0.0.1'
 mumoro.scenario: 'scenarios/rennes_gtfs2.py'
+mumoro.cloudmadeapi: '67c22e4178bf452789ae39051fcf2215'
+mumoro.googleanalytics: 'UA-3628893-6'
