@@ -22,7 +22,7 @@ db_params = 'rennesMetro.sqlite'
 start_date = '20110201'
 end_date = '20110601'
 
-metro_data = import_freq_data('Metro 1', 'data_rennes/metro/nodes.csv', 'data_rennes/metro/edges.csv', start_date, end_date)
+metro_data = import_freq_data('Metro a', 'data_rennes/metro/nodes.csv', 'data_rennes/metro/edges.csv', start_date, end_date)
 
 #star_data = import_gtfs_data('GTFS-20110118.zip', 'Metro Bus STAR')
 

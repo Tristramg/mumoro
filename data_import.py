@@ -200,7 +200,9 @@ class Importer():
         start_date = datetime.datetime.strptime(start_date, "%Y%m%d")
         end_date = datetime.datetime.strptime(end_date, "%Y%m%d")
         service = '1' * (end_date - start_date).days
-        self.session.add(PT_Service(0, service))
+        service_id = 1000 ### Arbitraire, normalement il faudrait
+                          ### récupérer l'id de l'élément inséré.
+        self.session.add(PT_Service(service_id, service))
 
         nodes_count = 1
         lines = csv.reader(open(linesf, 'r'), delimiter=',', dialect='skipinitialspace')
@@ -213,23 +215,30 @@ class Importer():
         lines_count = 1
         nodes_map = {}
         for l in lines:
+            # on trouve le nom complet de la destination, houlala
+            # c'est pas beau comme code ...
+            nodes = csv.reader(open(nodesf, 'r'), delimiter=',', dialect='skipinitialspace')
+            heading = "destination"
+            for n in nodes:
+                if n[0] == l[len(l)-1]:
+                    heading = n[1]
             # Pour chaque nœud on crée un stop_area
             #format de nodes : Id, Nom, lon, lat
             nodes_map[l[0]] = {}
             nodes = csv.reader(open(nodesf, 'r'), delimiter=',', dialect='skipinitialspace')
             for n in nodes:
                 self.session.add(PT_StopArea(n[0], unicode(n[1], 'utf-8')))
-                self.session.add(PT_Node(n[0], n[2], n[3], l[0], str(nodes_count), "direction"))
+                self.session.add(PT_Node(n[0], n[2], n[3], l[0], str(nodes_count), heading))
                 nodes_map[l[0]][n[0]] = nodes_count
                 nodes_count += 1
 
-            self.session.add(PT_Line(l[0], l[0], l[0], "#0000AA", '#FFFFFF', line_name))
-            tps_moyen = int(l[4])
-            for departure in range(int(l[2]), int(l[3]), int(l[1])):
-                prev_stop = nodes_map[l[0]][l[5]]
-                for i in range(6, len(l) - 1):
+            self.session.add(PT_Line(l[0], l[1], line_name, 'DE2118', 'FFFFFF', line_name))
+            tps_moyen = int(l[5])
+            for departure in range(int(l[3]), int(l[4]), int(l[2])):
+                prev_stop = nodes_map[l[0]][l[6]]
+                for i in range(7, len(l) - 1):
                     current_node = nodes_map[l[0]][l[i]]
-                    self.session.add(PT_Edge(prev_stop, current_node, 0, departure, departure + tps_moyen, 0, 'Metro', str(lines_count)))
+                    self.session.add(PT_Edge(prev_stop, current_node, 0, departure, departure + tps_moyen, service_id, 'Metro', str(lines_count)))
                     prev_stop = current_node
             lines_count += 1
         self.session.commit()
