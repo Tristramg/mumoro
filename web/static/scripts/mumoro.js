@@ -278,11 +278,13 @@ Mumoro.prototype = {
 		      function(data) {
 			  $("#info").show();
 			  if(data.error){
+			      $("#info > h2").html("Itinéraires");
 			      $('#path_costs').html($('<p/>', {'class': 'error'}).text(data.error));
 			      self.cleanup_path();
 			      $("#hash_url").html('');
 			  }
 			  else {
+			      $("#info > h2").html("Mobi’Rennes propose " + data.paths.length + " itinéraire" + (data.paths.lenght > 1 ? "s" : ""));
 			      $("#path_costs").html(self.itineraries_descriptions(data));
 			      self.paths = data.paths;
 			      self.disp_path(0);
@@ -482,6 +484,7 @@ $.each($.grep(p.features,
     
     clearPath: function() {
 	$("#routing_description").html("");
+	$("#info > h2").html("Itinéraires");
 	$("#path_costs").html("");
 	$("#hash_url").html("");
 	this.routeLayer.destroyFeatures();   
