@@ -100,9 +100,6 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
     function onFeatureUnselect(evt) {
 	var feature = evt.feature;
 	if (feature.popup) {
-	    var popup = feature.popup;
-            feature.popup = null;
-	    popup.feature = null;
             self.map.removePopup(feature.popup);
             feature.popup.destroy();
             feature.popup = null;
