@@ -22,7 +22,7 @@
 #    Author: Paul Rivier, Pierre Paysant-Le Roux
 
 from lib.core import mumoro
-from lib.core.mumoro import Bike, Car, Foot, PublicTransport, cost, co2, dist, elevation, line_change, mode_change, Costs
+from lib.core.mumoro import Bike, Car, Foot, PublicTransport, cost, co2, dist, elevation, line_change, mode_change, penibility, Costs
 from lib import layer
 
 from lib import bikestations as bikestations
@@ -123,13 +123,13 @@ def public_transport_layer(data, name, color):
     return {'layer':res,'name':name,'mode':PublicTransport,'origin':PublicTransport,'color':color} 
 
 # vérifie le type des objectifs et ajoute à la variable globale paths_array les couches et les objectifs
-def paths( starting_layer, destination_layer, objectives ):
+def paths( starting_layer, destination_layer, objectives, epsilon = None ):
     if not starting_layer or not destination_layer:
         raise NameError('Empty layer(s)')
     def valid_obj(o): return [mumoro.dist, mumoro.cost, mumoro.elevation,
-                              mumoro.co2, mumoro.mode_change, mumoro.line_change].index(o)
+                              mumoro.co2, mumoro.mode_change, mumoro.line_change, mumoro.penibility].index(o)
     c = map(valid_obj,objectives)
-    paths_array.append( {'starting_layer':starting_layer,'destination_layer':destination_layer,'objectives':objectives} )
+    paths_array.append( {'starting_layer':starting_layer,'destination_layer':destination_layer,'objectives':objectives, 'epsilon': epsilon} )
 
         
 # Creates a transit cost variable, including the duration in seconds of the transit and if the mode is changed
@@ -275,18 +275,29 @@ class Mumoro(object):
         for y in paths_array:
             s = self.g.match( y['starting_layer']['name'], float(slon), float(slat))
             d = self.g.match( y['destination_layer']['name'], float(dlon), float(dlat))
-            tmp = y['objectives']
-            tmp = self.sort_objectives( tmp )
-            t = len( tmp )
+            obj = y['objectives']
+            eps = y['epsilon']
+            nb_obj = len( obj )
             print c['seconds'], c['days']
-            if t == 0:
-                p = p + self.normalise_paths( mumoro.martins(s, d, self.g.graph,c['seconds'], c['days']),[],u_obj )
-            elif t == 1:
-                p = p + self.normalise_paths( mumoro.martins(s, d, self.g.graph,c['seconds'], c['days'], tmp[0] ), [ tmp[0] ], u_obj )
-            elif t == 2:
-                p = p + self.normalise_paths( mumoro.martins(s, d, self.g.graph,c['seconds'], c['days'], tmp[0], tmp[1] ), [ tmp[0], tmp[1] ], u_obj )
-            elif t >= 3:
-                p = p + self.normalise_paths( mumoro.martins(s, d, self.g.graph,c['seconds'], c['days'], tmp[0], tmp[1], tmp[2] ), [ tmp[0], tmp[1], tmp[2] ], u_obj )
+            if eps == None:
+                if nb_obj == 0:
+                    p = p + self.normalise_paths( mumoro.martins(s, d, self.g.graph,c['seconds'], c['days']),[],u_obj )
+                elif nb_obj == 1:
+                    p = p + self.normalise_paths( mumoro.martins(s, d, self.g.graph,c['seconds'], c['days'], obj[0] ), [ obj[0] ], u_obj )
+                elif nb_obj == 2:
+                    p = p + self.normalise_paths( mumoro.martins(s, d, self.g.graph,c['seconds'], c['days'], obj[0], obj[1] ), [ obj[0], obj[1] ], u_obj )
+                elif nb_obj >= 3:
+                    p = p + self.normalise_paths( mumoro.martins(s, d, self.g.graph,c['seconds'], c['days'], obj[0], obj[1], obj[2] ), [ obj[0], obj[1], obj[2] ], u_obj )
+            else:
+                if nb_obj == 0:
+                    p = p + mumoro.martins(s, d, self.g.graph,c['seconds'], c['days'])
+                elif nb_obj == 1:
+                    p = p + self.normalise_paths(mumoro.relaxed_martins(s, d, self.g.graph,c['seconds'], c['days'], obj[0], eps[0]) , [ obj[0] ], u_obj )
+                elif nb_obj == 2:
+                    p = p + self.normalise_paths(mumoro.relaxed_martins(s, d, self.g.graph,c['seconds'], c['days'], obj[0], eps[0], obj[1], eps[1] ), [ obj[0], obj[1] ], u_obj ) 
+                elif nb_obj >= 3:
+                    p = p + self.normalise_paths(mumoro.relaxed_martins(s, d, self.g.graph,c['seconds'], c['days'], obj[0], eps[0], obj[1], eps[1], obj[2], eps[2] ), [ obj[0], obj[1], obj[2] ], u_obj )
+            print "Longueur de p : ", len(p)
         #Creates the array containing the user-oriented string for each objective
         str_obj = ['Duration']
         for j in u_obj:
@@ -302,6 +313,8 @@ class Mumoro(object):
                 str_obj.append( 'Mode Change' )
             elif j == mumoro.line_change:
                 str_obj.append( 'Line Change' )
+            elif j == mumoro.penibility:
+                str_obj.append( 'Penibility' )
         cherrypy.response.headers['Content-Type']= 'application/json'
         if len(p) == 0:
             return json.dumps({'error': 'Impossible de calculer un itinéraire'})
@@ -610,6 +623,8 @@ class Mumoro(object):
             res.append( mumoro.line_change )  
         if mumoro.mode_change in obj and len( res ) < 3:
             res.append( mumoro.mode_change )
+        if mumoro.penibility in obj :
+            res.append( mumoro.penibility )
         return res
 
     def normalise_paths(self,route,used_objectives,union_objectives):

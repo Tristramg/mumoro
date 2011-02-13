@@ -141,15 +141,19 @@ class Layer(BaseLayer):
             if self.mode == mumoro.Foot:
                 property = edge.foot
                 property_rev = edge.foot
+                e.penibility = e.length
             elif self.mode == mumoro.Bike:
                 property = edge.bike
+                e.penibility = e.length * 0.5
                 property_rev = edge.bike_rev
             elif self.mode == mumoro.Car:
                 property = edge.car
                 property_rev = edge.car_rev
+                e.penibility = 0
             else:
                 property = 0
                 property_rev = 0
+                e.penibility = 0
  
             node1 = self.map(edge.source)
             node2 = self.map(edge.target)
@@ -157,7 +161,7 @@ class Layer(BaseLayer):
                 dur = duration(e.length, property, self.mode)
                 e.duration = mumoro.Duration(dur)
                 e.elevation = 0
-              #  if self.mode == mumoro.Bike:
+               #  if self.mode == mumoro.Bike:
               #      e.elevation = max(0, target_alt - source_alt)
                 yield {
                     'source': node1,
@@ -171,7 +175,7 @@ class Layer(BaseLayer):
                 dur = duration(e.length, property_rev, self.mode)
                 e.duration = mumoro.Duration(dur)
                 e.elevation = 0
-#                if self.mode == mumoro.Bike:
+ #                if self.mode == mumoro.Bike:
 #                    e.elevation = max(0, source_alt - target_alt)
                 yield {'source': node2,
                        'target': node1,
@@ -289,6 +293,7 @@ class GTFSLayer(BaseLayer):
         e = mumoro.Edge()
         e.line_change = 1
         e.duration = mumoro.Duration(60) # There should be at least a minute between two bus/trains at the same station
+        e.penibility = 0
         for r in res:
             yield { 'source': r[0] + self.offset,    
                     'target': r[8] + self.offset,
@@ -318,7 +323,6 @@ class MultimodalGraph(object):
                 for e in l.edges():
                     if e.has_key('properties'):
                         self.graph.add_edge(e['source'], e['target'], e['properties'])
-                        print e['source'], e['target'], e['properties']
                         count += 1
                     else:
                         if self.graph.public_transport_edge(e['source'], e['target'], e['departure'], e['arrival'], str(e['services'])):

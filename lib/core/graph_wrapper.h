@@ -101,11 +101,12 @@ struct Edge
     float cost;
     float line_change;
     float co2;
+    float penibility;
     Duration duration;
             template<class Archive>
             void serialize(Archive& ar, const unsigned int version)
             {
-                ar & distance & elevation & mode_change & line_change & co2 & duration;
+                ar & distance & elevation & mode_change & line_change & co2 & penibility & duration;
             }
 
 };

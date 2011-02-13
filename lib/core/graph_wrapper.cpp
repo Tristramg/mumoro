@@ -23,7 +23,7 @@
 #include <boost/graph/adj_list_serialize.hpp>
 #include <boost/foreach.hpp>
 
-Edge::Edge() : distance(0), elevation(0), mode_change(0), cost(0), line_change(0), co2(0)
+Edge::Edge() : distance(0), elevation(0), mode_change(0), cost(0), line_change(0), co2(0), penibility(0)
 {
 }
 

@@ -68,6 +68,6 @@ connect_layers_on_nearest_nodes(star_layer, foot_layer, cost1 , cost2)
 connect_layers_on_nearest_nodes(metro_layer, foot_layer, cost1 , cost2)
 
 
-paths( foot_layer, foot_layer, [ mode_change, line_change ] )
+paths( foot_layer, foot_layer, [ mode_change, line_change, penibility ], [300, 120, 2]  )
 # paths( star_layer, star_layer, [ dist, mode_change ] )
 
