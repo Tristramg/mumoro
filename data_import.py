@@ -287,7 +287,7 @@ def street_layer(data, name, color, mode, bike_service=None):
 def public_transport_layer(data, name, color):
     pass
 
-def paths( starting_layer, destination_layer, objectives ):
+def paths( starting_layer, destination_layer, objectives, epsilon = None ):
     pass
 
 

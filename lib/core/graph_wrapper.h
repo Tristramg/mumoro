@@ -64,11 +64,10 @@ void serialize(Archive &ar, Time &t, const unsigned int version)
 }
 } 
 
-class Duration
+struct Duration
 {
     int const_duration;
     std::vector<Time> timetable;
-public:
     Duration();
     Duration(float const_duration);
     void append(float start, float arrival, const std::string & services);
@@ -101,11 +100,12 @@ struct Edge
     float cost;
     float line_change;
     float co2;
+    float penibility;
     Duration duration;
             template<class Archive>
             void serialize(Archive& ar, const unsigned int version)
             {
-                ar & distance & elevation & mode_change & line_change & co2 & duration;
+                ar & distance & elevation & mode_change & line_change & co2 & penibility & duration;
             }
 
 };
@@ -124,6 +124,8 @@ struct Graph
     void save(const std::string & filename) const;
     void load(const std::string & filename);
     void sort();
+    int get_start(int source, int target, float time, int day);
+    int get_arrival(int source, int target, float time, int day);
 };
 
 const int invalid_node = -1;
