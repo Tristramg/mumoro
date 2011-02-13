@@ -312,6 +312,19 @@ class Mumoro(object):
                 'objectives': str_obj,
                 'paths': []
                 }
+        def layer_split(l,x):
+            if(len(l[-1]) == 0):
+                l[-1].append(x)
+            elif(l[-1][-1][1] == x[1]):
+                if (l[-1][-1][1].mode == mumoro.PublicTransport and
+                    l[-1][-1][0].route != x[0].route):
+                    l.append([x])
+                else:
+                    l[-1].append(x)
+            else:
+                l.append([x])
+            return l
+                        
         for path in p:
             p_str = {
                     'cost': [],
@@ -327,104 +340,47 @@ class Mumoro(object):
             for c in path.cost:
                 p_str['cost'].append(c)
 
-            features = []
-            markers = []
-            last_marker = None
-            feature = {'type': 'feature'}
-            geometry = {'type': 'Linestring'}
-            coordinates = []
-            last_node_id = path.nodes[0]
-            last_coord = self.g.coordinates(last_node_id)
-            last_layer = self.g.layer_object(last_node_id)
-            last_node = last_layer.node(last_node_id)
-            last_layer_name = last_coord[3]
-            for node_id in path.nodes:
-                coord = self.g.coordinates(node_id)
-                layer_name = coord[3]
-                layer = self.g.layer_object(node_id)
-                node = layer.node(node_id)
-                if(last_layer_name != layer_name or 
-                   (last_layer.mode == mumoro.PublicTransport and
-                    last_node.route != node.route)):
-                    geometry['coordinates'] = coordinates
-                    feature['geometry'] = geometry
-                    feature['properties'] = {'layer': last_layer.layer_name()}
-                    # print "moo", last_node.route
-                    feature['properties']['icon'] = last_layer.icon(last_node)
-                    feature['properties']['color'] = last_layer.color(last_node)
+                it = reduce(layer_split, 
+                            [[self.g.layer_object(node_id).node(node_id), 
+                              self.g.layer_object(node_id), 
+                              node_id] for node_id in path.nodes],
+                            [[]])
 
-                    features.append(feature)
-
-                    feature = {'type': 'feature'}
-                    geometry = {'type': 'Linestring'}
-                    coordinates = []
-
-                    connection = {
-                            'type': 'feature',
-                            'geometry': {
-                                'type': 'Linestring',
-                                'coordinates': [[last_coord[0], last_coord[1]], [coord[0], coord[1]]]
-                                },
-                            'properties': {'layer': 'connection'}
-                            }
-                    features.append(connection)
-                    if last_layer.mode == mumoro.PublicTransport and last_layer != None:
-                        # complete last marker
-                        last_marker["properties"]["dest_stop_area"] = last_layer.stop_area(last_node.original_id).name
-                    elif last_layer.mode == mumoro.Bike and last_layer != None:
-                        bike_station = last_layer.bike_station(last_node)
-                        if bike_station:
-                            last_marker["properties"]["dest_station_name"] = bike_station.name
-                    if layer.mode == mumoro.PublicTransport:
-                        last_marker = {"type":"Feature",
-                                       "geometry":{"type":"Point",
-                                                   "coordinates": [coord[0],
-                                                                   coord[1]]},
-                                       "properties": { "line": node.route,
-                                                       "layer": "marker",
-                                                       "headsign": node.headsign,
-                                                       "marker_icon": 
-                                                       layer.marker_icon(node),
-                                                       "line_icon": 
-                                                       layer.icon(node),
-                                                       "line_name":
-                                                           layer.line(node).long_name,
-                                                       "stop_area": 
-                                                       layer.
-                                                       stop_area(node.
-                                                                 original_id).
-                                                       name,
-                                                       "type": "bus_departure"}}
-                        markers.append(last_marker)
-                    elif layer.mode == mumoro.Bike:
-                        bike_station = layer.bike_station(node)
-                        if bike_station:
-                            last_marker = {"type":"Feature",
-                                           "geometry":{"type":"Point",
-                                                       "coordinates": [coord[0],
-                                                                       coord[1]]},
-                                           "properties": { "layer": "marker",
-                                                           "marker_icon": 
-                                                           layer.marker_icon(node),
-                                                           "bikes_av": bike_station.av_bikes,
-                                                           "slots_av": bike_station.av_slots,
-                                                           "station_name": bike_station.name,
-                                                           "type": "bike_departure"}}
-                            markers.append(last_marker)
-                        
-                    last_layer_name = layer_name
-                    last_layer = layer
-                last_node = node
-                last_node_id = node_id
-                last_coord = coord
-                coordinates.append([coord[0], coord[1]])
-            geometry['coordinates'] = coordinates
-            feature['geometry'] = geometry
-            feature['properties'] = {'layer': last_layer.layer_name()}
-            feature['properties']['icon'] = last_layer.icon(last_node)
-            feature['properties']['color'] = last_layer.color(last_node)
-            features.append(feature)
-            features.extend(markers)
+                features = [{'type': 'feature',
+                             'geometry':  {'type': 'Linestring',
+                                           'coordinates': [[node[0].lon, node[0].lat] for node in seq]},
+                             'properties': {'layer': seq[0][1].layer_name(),
+                                            'icon': seq[0][1].icon(seq[0][0]),
+                                            'color': seq[0][1].color(seq[0][0])}}
+                            for seq in it]
+                features.extend([ {"type":"Feature",
+                                   "geometry":{"type":"Point",
+                                               "coordinates": [seq[0][0].lon,
+                                                               seq[0][0].lat]},
+                                   "properties": { "line": seq[0][0].route,
+                                                   "layer": "marker",
+                                                   "headsign": seq[0][0].headsign,
+                                                   "marker_icon": 
+                                                   seq[0][1].marker_icon(seq[0][0]),
+                                                   "line_icon": 
+                                                   seq[0][1].icon(seq[0][0]),
+                                                   "line_name":
+                                                       seq[0][1].line(seq[0][0]).long_name,
+                                                   "stop_area": 
+                                                   seq[0][1].
+                                                   stop_area(seq[0][0].original_id).name,
+                                                   "dest_stop_area": seq[-1][1].stop_area(seq[-1][0].original_id).name,
+                                                   "type": "bus_departure"}} for seq in it if seq[0][1].mode == mumoro.PublicTransport])
+                features.extend([{"type":"Feature",
+                                  "geometry":{"type":"Point",
+                                              "coordinates": [seq[0][0].lon,
+                                                              seq[0][0].lat]},
+                                  "properties": { "layer": "marker",
+                                                  "marker_icon": seq[0][1].marker_icon(seq[0][0]),
+                                                  "bikes_av": seq[0][1].bike_station(seq[0][0]).av_bikes,
+                                                  "slots_av": seq[0][1].bike_station(seq[0][0]).av_slots,
+                                                  "station_name": seq[0][1].bike_station(seq[0][0]).name,
+                                                  "type": "bike_departure"}} for seq in it if seq[0][1].mode == mumoro.Bike])
             p_str['features'] = features
             ret['paths'].append(p_str)
         return json.dumps(ret)

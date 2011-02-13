@@ -26,18 +26,19 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
     var self = this;
     this.map = new OpenLayers.Map("map",
 			     {
-				 maxExtent: new OpenLayers.Bounds(-20037508.34,-20037508.34,
-								  20037508.34,20037508.34),
-				 maxResolution: 156543.0399,
-				 numZoomLevels: 19,
+				 maxExtent: new OpenLayers.Bounds(-230256.98428, 6100548.77175, -121945.71522, 6147786.85522),
+				 restrictedExtent: new OpenLayers.Bounds(-230256.98428, 6100548.77175, -121945.71522, 6147786.85522),
+				 // maxResolution: 156543.0399,
+				 // numZoomLevels: 19,
 				 units: 'm',
 				 projection: this.proj900913,
 				 displayProjection: this.proj4326,
 				 controls: [
 				     new OpenLayers.Control.Navigation({zoomWheelEnabled: true}),
-				     new OpenLayers.Control.PanZoomBar(),
-				     new OpenLayers.Control.MobileDragPan(),
-				     new OpenLayers.Control.ScaleLine()
+				     new OpenLayers.Control.ScaleLine(),
+				     (this.isTouchDevice() ? 
+				      new OpenLayers.Control.MobileDragPan(): 
+				      new OpenLayers.Control.PanZoomBar())
 				 ]
 			     }
 			    );
@@ -46,7 +47,9 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
     var cloudmade = new OpenLayers.Layer.CloudMade("CloudMade", {
 						       key: cloudmadeapi,
 						       styleId: 31494,
-						       opacity: 1
+						       opacity: 1,
+						       minZoomLevel: 1,
+						       maxZoomLevel: 5
 						   });
     this.map.addLayer(cloudmade);
     var styleMap = new OpenLayers.StyleMap({strokeWidth: 2});
@@ -188,9 +191,6 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
 					 'y': pos.y};          
 			      self.handleClick(tmp, action);
 			  });
-    // showDescription( layers );
-    // new TouchHandler( map, 4 );  
-    
 }
 
 Mumoro.prototype = {
@@ -217,7 +217,17 @@ Mumoro.prototype = {
     paths: undefined,
     cacheStart: "",
     cacheDest: "",
-    
+
+    isTouchDevice: function() {
+	var el = document.createElement('div');
+	el.setAttribute('ontouchstart', 'return;');
+	if(typeof el.ontouchstart == "function"){
+	    return true;
+	}else {
+	    return false;
+	}
+    },
+
     bus_popup_content: function(feature){
 	return $('<div/>').append($('<div/>',{'class': 'bus-popup'}).append($('<h2/>').
 				  append($('<img/>', 
@@ -733,3 +743,99 @@ $.each($.grep(p.features,
     }
 };
 
+$(function(){
+      $('#panel-toggle').click(function(){
+				   var toggler = this;
+				   var w = $('#left-panel').width();
+				   var m = toggler.panelHidden ? 0 : -w;
+				   var to_pan = (toggler.panelHidden ? -w : w)/2;
+				   $('#left-panel').animate({'margin-left': m},
+						     {step: function(now,fx){
+							  $('#panel-toggle').
+							      css({left: w+now});
+							  $('#right-panel').
+							      css({'margin-left': w+now});
+						      },
+						      complete: function(){
+							  toggler.panelHidden=!toggler.panelHidden;
+							  if(toggler.panelHidden){
+							      $('#panel-toggle').addClass("hidden");
+							  }else{
+							      $('#panel-toggle').removeClass("hidden");
+							  }
+							  $.mumoro.map.pan(to_pan, 0, {animate:false});
+						      }});
+			       });
+      // $('#left-panel').
+      // 	  bind('touchstart', 
+      // 	       function(evt){
+      // 		   var e = evt.originalEvent;
+      // 		   if(e.touches.length == 1){
+      // 		       var t = e.touches[0];
+      // 		       this.scroll_touch_started = true;
+      // 		       this.scroll_touch_last_pos = [t.clientX, t.clientY];
+      // 		   }
+      // 		   return true;
+      // });
+      // $('#left-panel').
+      // 	  bind('touchmove', 
+      // 	       function(evt){
+      // 		   var e = evt.originalEvent;
+      // 		   if(e.touches.length == 1 && this.scroll_touch_started){
+      // 		       e.preventDefault();
+      // 		       var t = e.touches[0];
+      // 		       var last_pos = this.scroll_touch_last_pos;
+      // 		       var move = [last_pos[0] - t.clientX, last_pos[1] - t.clientY];
+      // 		       this.scroll_touch_last_pos = [t.clientX, t.clientY];
+      // 		       this.scrollLeft += move[0];
+      // 		       this.scrollTop += move[1];
+      // 		       return false;
+      // 		   } else {
+      // 		       return true;
+      // 		   }
+      // 	       });
+      // $('#left-panel').
+      // 	  bind("touchcancel",
+      // 	       function(){
+      // 		   this.scroll_touch_last_pos = undefined;
+      // 		   this.scroll_touch_started = false;
+      // 		   return true;
+      // 	       });
+      // $('#left-panel').
+      // 	  bind("touchend",
+      // 	       function(evt){
+      // 		   evt.originalEvent.preventDefault();
+      // 		   this.scroll_touch_last_pos = undefined;
+      // 		   this.scroll_touch_started = false;
+      // 		   return true;
+      // 	       });
+
+      if((navigator.userAgent.match(/iPhone/i)) || (navigator.userAgent.match(/iPod/i))) {
+	  $('body').addClass('iphone');
+	  if(!window.navigator.standalone){
+	      var setOrientation = function() {
+		  setTimeout(function() {
+				 window.scrollTo(0,1);
+			     },100);
+		  var orientation = window.orientation;
+		  switch(orientation) {
+		  case 0:
+		  case 180:
+		      $('body').removeClass('landscape');
+		      $('body').addClass('portrait');
+		      break; 
+		  case 90:
+		  case -90: 
+		      $('body').removeClass('portrait');
+		      $('body').addClass('landscape');
+		      break;
+		  }
+	      };
+	      $(window).load(function () {
+				 setOrientation();
+			     });
+	      $(window).bind('orientationchange', 
+			     setOrientation);
+	  }
+      }
+});
