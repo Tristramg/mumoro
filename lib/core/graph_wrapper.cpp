@@ -73,7 +73,7 @@ float Duration::operator()(float start, int day) const
             }
             if (next_day != 0 && s[day+1])
             {
-                next_day = start + 24*3600;
+                next_day = tt_start + 24*3600;
             }
         }
         if(next_day > 0)
@@ -103,6 +103,52 @@ void Graph::add_edge(int source, int target, const Edge & e)
     boost::add_edge(source, target, e, g);
 }
 
+int Graph::get_start(int source, int target, float start, int day)
+{
+    edge_t e;
+    bool b;
+    tie(e, b) = edge(source, target, g);
+    if(!b)
+        return -1;
+    Duration d = g[e].duration;
+    std::vector<Time>::const_iterator it;
+
+    if (d.const_duration >= 0)
+        return start;
+
+    float next_day = -1;
+    for(it = d.timetable.begin(); it != d.timetable.end(); it++)
+    {
+        float tt_start, tt_arrival;
+        Services s;
+        boost::tie(tt_start, tt_arrival, s) = *it;
+        if (tt_start >= start && s[day])
+        {
+            return tt_start;
+        }
+        if (next_day != 0 && s[day+1])
+        {
+            next_day = tt_start + 24*3600;
+        }
+    }
+    if(next_day > 0)
+    {
+        return next_day;
+    }
+    return -1;
+}
+
+int Graph::get_arrival(int source, int target, float time, int day)
+{
+    edge_t e;
+    bool b;
+    tie(e, b) = edge(source, target, g);
+    if(!b)
+        return -1;
+    else
+        return g[e].duration(time, day);
+}
+
 bool Graph::public_transport_edge(int source, int target, float start, float arrival, const std::string & services)
 {
     edge_t e;
@@ -116,29 +162,29 @@ bool Graph::public_transport_edge(int source, int target, float start, float arr
     g[e].duration.append(start, arrival, services);
     return !b;
 }
-    struct found_goal
+struct found_goal
+{
+}; // exception for termination
+
+// visitor that terminates when we find the goal
+
+class dijkstra_goal_visitor : public boost::default_dijkstra_visitor
+{   
+    public:
+
+        dijkstra_goal_visitor(int goal) : m_goal(goal)
     {
-    }; // exception for termination
+    }   
 
-    // visitor that terminates when we find the goal
-
-    class dijkstra_goal_visitor : public boost::default_dijkstra_visitor
-    {   
-        public:
-            
-            dijkstra_goal_visitor(int goal) : m_goal(goal)
-        {
-        }   
-            
-            template <class Graph_t>
-                void examine_vertex(int u, Graph_t& g)
-                {   
-                    if (u == m_goal)
-                        throw found_goal();
-                }
-        private:
-            int m_goal;
-    };
+        template <class Graph_t>
+            void examine_vertex(int u, Graph_t& g)
+            {   
+                if (u == m_goal)
+                    throw found_goal();
+            }
+    private:
+        int m_goal;
+};
 
 float calc_duration(float in, Duration d)
 {
@@ -156,16 +202,16 @@ bool Graph::dijkstra(int source, int target)
     std::vector<int> p(boost::num_vertices(g));
     std::vector<float> d(boost::num_vertices(g));
     try{
-    boost::dijkstra_shortest_paths(g, source,
-            boost::predecessor_map(&p[0])
-            .distance_map(&d[0])
-            .weight_map(get(&Edge::duration, g))
-            .visitor(dijkstra_goal_visitor(target))
-            .distance_zero(30000)
-            .distance_combine(&calc_duration)
-            .distance_compare(Comp())
-            );
-    return false;
+        boost::dijkstra_shortest_paths(g, source,
+                boost::predecessor_map(&p[0])
+                .distance_map(&d[0])
+                .weight_map(get(&Edge::duration, g))
+                .visitor(dijkstra_goal_visitor(target))
+                .distance_zero(30000)
+                .distance_combine(&calc_duration)
+                .distance_compare(Comp())
+                );
+        return false;
     }
     catch(found_goal)
     {
@@ -173,7 +219,7 @@ bool Graph::dijkstra(int source, int target)
     }
 
 }
-    
+
 void Graph::sort()
 {
     BOOST_FOREACH(edge_t e, boost::edges(g))
