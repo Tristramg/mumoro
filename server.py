@@ -612,9 +612,6 @@ def mumoro_namespace(k, v):
 
 cherrypy.config.namespaces['mumoro'] = mumoro_namespace
 
-
-config_file = None
-
 cherrypy.config.update(os.path.abspath(os.path.dirname(__file__)) + '/cherrypy.config')
 
 if cherrypy.config["mumoro.scenario"] == None or not os.path.exists(cherrypy.config["mumoro.scenario"]):
@@ -628,8 +625,11 @@ cherrypy.config.update({
     'tools.trailing_slash.on': True,
     'tools.staticdir.root': os.path.abspath(os.path.dirname(__file__)) + "/web/",
 })
-cherrypy.quickstart(Mumoro(db_type + ":///" + db_params, cherrypy.config["mumoro.scenario"]), '/', 
-                    config={'/': {'tools.staticdir.on': True,
-                                  'tools.staticdir.dir': 'static'}
+
+cherrypy.quickstart(Mumoro(db_type + ":///" + db_params, 
+                           cherrypy.config["mumoro.scenario"]), 
+                    '/',
+                    config={'/static': {'tools.staticdir.on': True,
+                                        'tools.staticdir.dir': 'static'}
                             }
                     )

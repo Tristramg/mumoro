@@ -13,7 +13,7 @@ setup(name='Mumoro',
       license = 'GPLv3',
       packages = ['lib', 'lib.core', 'web'],
 
-      install_requires = ['cherrypy', 'genshi', 'simplejson', 'transitfeed', 'setuptools-git', 'osm4routing', "iso8601"],
+      install_requires = ['cherrypy>=3.1', 'genshi', 'simplejson', 'transitfeed', 'setuptools-git', 'osm4routing', "iso8601"],
       py_modules = ['server', 'data_import', 'web', 'lib'],
       ext_modules = [
           Extension("lib.core._mumoro",

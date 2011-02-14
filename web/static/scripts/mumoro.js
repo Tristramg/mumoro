@@ -1,4 +1,4 @@
-OpenLayers.ImgPath = "/img/openlayers/";
+OpenLayers.ImgPath = "/static/img/openlayers/";
 
 function Mumoro(lonStart, latStart, lonDest, latDest,
                 fromHash, hashUrl, layers, cloudmadeapi){
@@ -17,9 +17,9 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
     icon_standard.graphicOpacity = 1.0;
     icon_standard.pointRadius = 6;
     this.icon['start'] = OpenLayers.Util.extend({}, icon_standard);
-    this.icon['start'].externalGraphic = "/img/pin-d.png";
+    this.icon['start'].externalGraphic = "/static/img/pin-d.png";
     this.icon['dest']  = OpenLayers.Util.extend({}, icon_standard);
-    this.icon['dest'].externalGraphic = "/img/pin-a.png";      
+    this.icon['dest'].externalGraphic = "/static/img/pin-a.png";      
     
     this.geojson_reader= new OpenLayers.Format.GeoJSON({'internalProjection': this.proj900913,
 							'externalProjection': this.proj4326});
@@ -66,7 +66,7 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
 					     graphicXOffset: -12,
 					     graphicYOffset: -39,
 					     graphicOpacity: 1.0,
-					     externalGraphic: "/img/${marker_icon}",
+					     externalGraphic: "/static/img/${marker_icon}",
 					     cursor: 'pointer'
 				  },
 				  "connection": {strokeColor : "#4e9a06",
@@ -231,7 +231,7 @@ Mumoro.prototype = {
     bus_popup_content: function(feature){
 	return $('<div/>').append($('<div/>',{'class': 'bus-popup'}).append($('<h2/>').
 				  append($('<img/>', 
-					   {src: '/img/' + 
+					   {src: '/static/img/' + 
 					    feature.attributes.line_icon})).
 				  append("vers " + feature.attributes.headsign)
 
@@ -316,7 +316,7 @@ Mumoro.prototype = {
 $.each($.grep(p.features, 
 	       function(f){ return f.properties.icon;}),
       function(id, f){ $(td).append($('<img/>',
-			       { src: "/img/" + f.properties.icon }));});}
+			       { src: "/static/img/" + f.properties.icon }));});}
 
 							    )).append($('<td/>').append(self.
 							 transformToDurationString(time))).
@@ -426,7 +426,7 @@ $.each($.grep(p.features,
 									    graphicXOffset: -10,
 									    graphicYOffset: -10,
 									    graphicOpacity: 1.0,
-									    externalGraphic: "/img/target.png"},
+									    externalGraphic: "/static/img/target.png"},
 								'accuracy': {'fillOpacity': 0.2}});
 
 	    this.gpsLayer = new OpenLayers.Layer.Vector("GPS", {styleMap: gpsStyleMap});

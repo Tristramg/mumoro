@@ -106,12 +106,12 @@ div#footer {
   bottom: 45px;
   left: 20em;
   z-index: 10002;
-  background: transparent url('/img/panel-toggler.png') no-repeat left top;
+  background: transparent url('/static/img/panel-toggler.png') no-repeat left top;
   cursor: pointer;
 }
 
 #panel-toggle.hidden{
-  background-image: url('/img/panel-toggler-hidden.png');
+  background-image: url('/static/img/panel-toggler-hidden.png');
 }
 
 #left-panel {
