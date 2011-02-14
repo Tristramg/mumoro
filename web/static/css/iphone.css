@@ -1,7 +1,23 @@
 #left-panel{
-  display: none;
+  overflow: scroll;
+  /* margin-left: -20em; */
 }
 
-#right-panel{
-  margin-left: 0;
+#left-panel > h1{
+  float: left;
+  width: 51%;
+}
+#left-panel > h2{
+  width: 46%;
+  font-size: 0.9em;
+  margin-left: 53%;
+}
+#left-panel > h1 img{
+  width: 100%;
+}
+#mumoro_form{
+  clear: both;
+}
+#licences {
+  font-size: 8px;
 }

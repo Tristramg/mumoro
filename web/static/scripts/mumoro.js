@@ -1,7 +1,7 @@
-OpenLayers.ImgPath = "/img/openlayers/";
+OpenLayers.ImgPath = "/static/img/openlayers/";
 
 function Mumoro(lonStart, latStart, lonDest, latDest,
-                fromHash, hashUrl, layers){
+                fromHash, hashUrl, layers, cloudmadeapi){
     this.lonStart = lonStart;
     this.latStart = latStart;
     this.lonDest = lonDest;
@@ -17,36 +17,39 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
     icon_standard.graphicOpacity = 1.0;
     icon_standard.pointRadius = 6;
     this.icon['start'] = OpenLayers.Util.extend({}, icon_standard);
-    this.icon['start'].externalGraphic = "/img/pin-d.png";
+    this.icon['start'].externalGraphic = "/static/img/pin-d.png";
     this.icon['dest']  = OpenLayers.Util.extend({}, icon_standard);
-    this.icon['dest'].externalGraphic = "/img/pin-a.png";      
+    this.icon['dest'].externalGraphic = "/static/img/pin-a.png";      
     
     this.geojson_reader= new OpenLayers.Format.GeoJSON({'internalProjection': this.proj900913,
 							'externalProjection': this.proj4326});
     var self = this;
     this.map = new OpenLayers.Map("map",
 			     {
-				 maxExtent: new OpenLayers.Bounds(-20037508.34,-20037508.34,
-								  20037508.34,20037508.34),
-				 maxResolution: 156543.0399,
-				 numZoomLevels: 19,
+				 maxExtent: new OpenLayers.Bounds(-230256.98428, 6100548.77175, -121945.71522, 6147786.85522),
+				 restrictedExtent: new OpenLayers.Bounds(-230256.98428, 6100548.77175, -121945.71522, 6147786.85522),
+				 // maxResolution: 156543.0399,
+				 // numZoomLevels: 19,
 				 units: 'm',
 				 projection: this.proj900913,
 				 displayProjection: this.proj4326,
 				 controls: [
 				     new OpenLayers.Control.Navigation({zoomWheelEnabled: true}),
-				     new OpenLayers.Control.PanZoomBar(),
-				     new OpenLayers.Control.MobileDragPan(),
-				     new OpenLayers.Control.ScaleLine()
+				     new OpenLayers.Control.ScaleLine(),
+				     (this.isTouchDevice() ? 
+				      new OpenLayers.Control.MobileDragPan(): 
+				      new OpenLayers.Control.PanZoomBar())
 				 ]
 			     }
 			    );
     // Define the map layer
     // Other defined layers are OpenLayers.Layer.OSM.Mapnik, OpenLayers.Layer.OSM.Maplint and OpenLayers.Layer.OSM.CycleMap
     var cloudmade = new OpenLayers.Layer.CloudMade("CloudMade", {
-						       key: 'fff941bc66c34422a2e41a529e34aebc',
-						       styleId: 997,
-						       opacity: 0.8
+						       key: cloudmadeapi,
+						       styleId: 31494,
+						       opacity: 1,
+						       minZoomLevel: 1,
+						       maxZoomLevel: 5
 						   });
     this.map.addLayer(cloudmade);
     var styleMap = new OpenLayers.StyleMap({strokeWidth: 2});
@@ -63,7 +66,7 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
 					     graphicXOffset: -12,
 					     graphicYOffset: -39,
 					     graphicOpacity: 1.0,
-					     externalGraphic: "/img/${marker_icon}",
+					     externalGraphic: "/static/img/${marker_icon}",
 					     cursor: 'pointer'
 				  },
 				  "connection": {strokeColor : "#4e9a06",
@@ -74,10 +77,19 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
     function onPopupClose(evt) {
 	selectControl.unselect(this.feature);
     }
-    function onFeatureSelect(evt) {
-	feature = evt.feature;
+
+    function onBeforeFeatureSelect(evt){
+	var feature = evt.feature;
 	if(feature.attributes.type == "bus_departure" || feature.attributes.type == "bike_departure"){
-	    popup = new OpenLayers.Popup.
+	    return true;
+	}else {
+	    return false;
+	}
+    }
+    function onFeatureSelect(evt) {
+	var feature = evt.feature;
+	if(feature.attributes.type == "bus_departure" || feature.attributes.type == "bike_departure"){
+	    var popup = new OpenLayers.Popup.
 		FramedCloud("featurePopup",
 			    feature.geometry.getBounds().getCenterLonLat(),
                             new OpenLayers.Size(100,100),
@@ -89,16 +101,16 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
 	}
     }
     function onFeatureUnselect(evt) {
-	feature = evt.feature;
+	var feature = evt.feature;
 	if (feature.popup) {
-            popup.feature = null;
             self.map.removePopup(feature.popup);
             feature.popup.destroy();
             feature.popup = null;
 	}
     }
     this.routeLayer.events.on({'featureselected': onFeatureSelect,
-    			       'featureunselected': onFeatureUnselect
+    			       'featureunselected': onFeatureUnselect,
+			       'beforefeatureselected': onBeforeFeatureSelect
     			      });
     this.map.addLayer(this.routeLayer);
     // bikeLayer = new OpenLayers.Layer.Text( "Bike Stations",{
@@ -132,8 +144,8 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
     			//     feature.style.graphicOpacity = 0.5;
     			// },
     			'onComplete': function(feature) {
-    			    lonlat = new OpenLayers.LonLat(feature.geometry.x,feature.geometry.y);
-    			    ll = self.MToLonLat(lonlat);
+    			    var lonlat = new OpenLayers.LonLat(feature.geometry.x,feature.geometry.y);
+    			    var ll = self.MToLonLat(lonlat);
     			    feature.style.graphicOpacity = 1.0;
     			    self.nodes['fmouse_'+feature.data]=true;
     			    self.reverseGeocoding(lonlat,feature.data);
@@ -143,7 +155,7 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
     this.map.addControl(controlDrag);
     controlDrag.activate();
 
-    selectControl = new OpenLayers.Control.
+    var selectControl = new OpenLayers.Control.
 	SelectFeature([this.routeLayer, this.layerMarkers], {clickout: true,
 							     multiple: true});
 
@@ -167,10 +179,10 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
         this.compute();
     }
     else {
-        s = {'lon': lonStart,
-	     'lat': latStart};
-        d = {'lon': lonDest,
-	     'lat': latDest};
+        var s = {'lon': lonStart,
+		 'lat': latStart};
+        var d = {'lon': lonDest,
+		 'lat': latDest};
         this.centerToMap(s,d);
     }
     $("#map").contextMenu({menu: 'myMenu'},
@@ -179,9 +191,6 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
 					 'y': pos.y};          
 			      self.handleClick(tmp, action);
 			  });
-    // showDescription( layers );
-    // new TouchHandler( map, 4 );  
-    
 }
 
 Mumoro.prototype = {
@@ -208,11 +217,21 @@ Mumoro.prototype = {
     paths: undefined,
     cacheStart: "",
     cacheDest: "",
-    
+
+    isTouchDevice: function() {
+	var el = document.createElement('div');
+	el.setAttribute('ontouchstart', 'return;');
+	if(typeof el.ontouchstart == "function"){
+	    return true;
+	}else {
+	    return false;
+	}
+    },
+
     bus_popup_content: function(feature){
 	return $('<div/>').append($('<div/>',{'class': 'bus-popup'}).append($('<h2/>').
 				  append($('<img/>', 
-					   {src: '/img/' + 
+					   {src: '/static/img/' + 
 					    feature.attributes.line_icon})).
 				  append("vers " + feature.attributes.headsign)
 
@@ -237,7 +256,7 @@ Mumoro.prototype = {
     },
 
     cleanup_path: function(){
-	map = this.map;
+	var map = this.map;
 	while(map.popups.length){
 	    var p = map.popups[0];
 	    map.removePopup(p);
@@ -268,11 +287,13 @@ Mumoro.prototype = {
 		      function(data) {
 			  $("#info").show();
 			  if(data.error){
+			      $("#info > h2").html("Itinéraires");
 			      $('#path_costs').html($('<p/>', {'class': 'error'}).text(data.error));
 			      self.cleanup_path();
 			      $("#hash_url").html('');
 			  }
 			  else {
+			      $("#info > h2").html("Mobi’Rennes propose " + data.paths.length + " itinéraire" + (data.paths.length > 1 ? "s" : ""));
 			      $("#path_costs").html(self.itineraries_descriptions(data));
 			      self.paths = data.paths;
 			      self.disp_path(0);
@@ -295,7 +316,7 @@ Mumoro.prototype = {
 $.each($.grep(p.features, 
 	       function(f){ return f.properties.icon;}),
       function(id, f){ $(td).append($('<img/>',
-			       { src: "/img/" + f.properties.icon }));});}
+			       { src: "/static/img/" + f.properties.icon }));});}
 
 							    )).append($('<td/>').append(self.
 							 transformToDurationString(time))).
@@ -315,7 +336,7 @@ $.each($.grep(p.features,
 
     setDepOrDestFromGeo: function(target){
 	var self = this;
-	pos = this.current_position;
+	var pos = this.current_position;
 	self.reverseGeocoding({'lon': pos.coords.longitude,
 			       'lat': pos.coords.latitude},
 			      target);
@@ -386,9 +407,9 @@ $.each($.grep(p.features,
 	var minutes = ( tmp / 60) % 60;
 	var hours = tmp / 3600;
 	if( (Math.ceil(hours) - 1) > 0 )
-            return ( (Math.ceil(hours) - 1) + "h" + (Math.ceil(minutes)) + "m");
+            return ( (Math.ceil(hours) - 1) + "h" + (Math.ceil(minutes)) + "min");
 	else
-            return ( (Math.ceil(minutes) ) + "m");
+            return ( (Math.ceil(minutes) ) + "min");
     },       
 
     initPosition: function(pos){
@@ -405,7 +426,7 @@ $.each($.grep(p.features,
 									    graphicXOffset: -10,
 									    graphicYOffset: -10,
 									    graphicOpacity: 1.0,
-									    externalGraphic: "/img/target.png"},
+									    externalGraphic: "/static/img/target.png"},
 								'accuracy': {'fillOpacity': 0.2}});
 
 	    this.gpsLayer = new OpenLayers.Layer.Vector("GPS", {styleMap: gpsStyleMap});
@@ -472,6 +493,7 @@ $.each($.grep(p.features,
     
     clearPath: function() {
 	$("#routing_description").html("");
+	$("#info > h2").html("Itinéraires");
 	$("#path_costs").html("");
 	$("#hash_url").html("");
 	this.routeLayer.destroyFeatures();   
@@ -719,5 +741,101 @@ $.each($.grep(p.features,
 	$("#routing_description").append("</tbody>");
 	
     }
-}
+};
 
+$(function(){
+      $('#panel-toggle').click(function(){
+				   var toggler = this;
+				   var w = $('#left-panel').width();
+				   var m = toggler.panelHidden ? 0 : -w;
+				   var to_pan = (toggler.panelHidden ? -w : w)/2;
+				   $('#left-panel').animate({'margin-left': m},
+						     {step: function(now,fx){
+							  $('#panel-toggle').
+							      css({left: w+now});
+							  $('#right-panel').
+							      css({'margin-left': w+now});
+						      },
+						      complete: function(){
+							  toggler.panelHidden=!toggler.panelHidden;
+							  if(toggler.panelHidden){
+							      $('#panel-toggle').addClass("hidden");
+							  }else{
+							      $('#panel-toggle').removeClass("hidden");
+							  }
+							  $.mumoro.map.pan(to_pan, 0, {animate:false});
+						      }});
+			       });
+      // $('#left-panel').
+      // 	  bind('touchstart', 
+      // 	       function(evt){
+      // 		   var e = evt.originalEvent;
+      // 		   if(e.touches.length == 1){
+      // 		       var t = e.touches[0];
+      // 		       this.scroll_touch_started = true;
+      // 		       this.scroll_touch_last_pos = [t.clientX, t.clientY];
+      // 		   }
+      // 		   return true;
+      // });
+      // $('#left-panel').
+      // 	  bind('touchmove', 
+      // 	       function(evt){
+      // 		   var e = evt.originalEvent;
+      // 		   if(e.touches.length == 1 && this.scroll_touch_started){
+      // 		       e.preventDefault();
+      // 		       var t = e.touches[0];
+      // 		       var last_pos = this.scroll_touch_last_pos;
+      // 		       var move = [last_pos[0] - t.clientX, last_pos[1] - t.clientY];
+      // 		       this.scroll_touch_last_pos = [t.clientX, t.clientY];
+      // 		       this.scrollLeft += move[0];
+      // 		       this.scrollTop += move[1];
+      // 		       return false;
+      // 		   } else {
+      // 		       return true;
+      // 		   }
+      // 	       });
+      // $('#left-panel').
+      // 	  bind("touchcancel",
+      // 	       function(){
+      // 		   this.scroll_touch_last_pos = undefined;
+      // 		   this.scroll_touch_started = false;
+      // 		   return true;
+      // 	       });
+      // $('#left-panel').
+      // 	  bind("touchend",
+      // 	       function(evt){
+      // 		   evt.originalEvent.preventDefault();
+      // 		   this.scroll_touch_last_pos = undefined;
+      // 		   this.scroll_touch_started = false;
+      // 		   return true;
+      // 	       });
+
+      if((navigator.userAgent.match(/iPhone/i)) || (navigator.userAgent.match(/iPod/i))) {
+	  $('body').addClass('iphone');
+	  if(!window.navigator.standalone){
+	      var setOrientation = function() {
+		  setTimeout(function() {
+				 window.scrollTo(0,1);
+			     },100);
+		  var orientation = window.orientation;
+		  switch(orientation) {
+		  case 0:
+		  case 180:
+		      $('body').removeClass('landscape');
+		      $('body').addClass('portrait');
+		      break; 
+		  case 90:
+		  case -90: 
+		      $('body').removeClass('portrait');
+		      $('body').addClass('landscape');
+		      break;
+		  }
+	      };
+	      $(window).load(function () {
+				 setOrientation();
+			     });
+	      $(window).bind('orientationchange', 
+			     setOrientation);
+	  }
+      }
+});

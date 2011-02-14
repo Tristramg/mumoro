@@ -76,7 +76,7 @@ class Importer():
                 self.import_kalkati( m['file'], start_date, end_date, m['network'] )
 
         for f in freq_data_array:
-            self.import_freq(f['line_name'], f['nodesf'], f['linesf'], f['start_date'], f['end_date'])
+            self.import_freq(f['line_name'], f['nodesf'], f['linesf'], start_date, end_date)
 
 
 
@@ -167,50 +167,45 @@ class Importer():
         print "---------------------------------------------------------------------"
 
     def import_freq(self, line_name, nodesf, linesf, start_date, end_date):
+        #On ignore l'espace initial du texte
+        csv.register_dialect('skipinitialspace', skipinitialspace = True)
+
         print "Importing a frequency PT Node File"
-        stop_areas_table = Metadata(line_name, "Stop Areas", line_name)
+        stop_areas_table = Metadata(line_name, "StopAreas", line_name)
         self.session.add(stop_areas_table)
         self.session.commit()
-        create_pt_stop_areas_table(str(stop_areas_table.id), self.metadata)
+        mapper(PT_StopArea, create_pt_stop_areas_table(str(stop_areas_table.id), self.metadata))
 
         nodes_table = Metadata(line_name, "Nodes", line_name)
         self.session.add(nodes_table)
         self.session.commit()
-        create_pt_nodes_table(str(nodes_table.id), self.metadata, str(stop_areas_table.id))
+        mapper(PT_Node, create_pt_nodes_table(str(nodes_table.id), self.metadata, str(stop_areas_table.id)))
 
         services_table = Metadata(line_name, "Services", line_name)
         self.session.add(services_table)
         self.session.commit()
-        create_services_table(str(services_table.id), self.metadata)
+        mapper(PT_Service, create_services_table(str(services_table.id), self.metadata))
 
         line_table = Metadata(line_name, "Lines", line_name)
         self.session.add(line_table)
         self.session.commit()
-        create_pt_lines_table(str(line_table.id), self.metadata)
+        mapper(PT_Line, create_pt_lines_table(str(line_table.id), self.metadata))
 
         edges_table = Metadata(line_name, "Edges", line_name)
         self.session.add(edges_table)
         self.session.commit()
-        create_pt_edges_table(str(edges_table.id), self.metadata, str(services_table.id), str(line_table.id))
+        mapper(PT_Edge, create_pt_edges_table(str(edges_table.id), self.metadata, str(services_table.id), str(line_table.id)))
 
         # On crée un unique service toujours valide pour ne pas s'embêter
         start_date = datetime.datetime.strptime(start_date, "%Y%m%d")
         end_date = datetime.datetime.strptime(end_date, "%Y%m%d")
-        service = '1' * 200 # ... f*ck ... (end_date - start_date).days()
-        self.session.add(PT_Service(0, service))
+        service = '1' * (end_date - start_date).days
+        service_id = 1 ### Arbitraire, normalement il faudrait
+                          ### récupérer l'id de l'élément inséré.
+        self.session.add(PT_Service(service_id, service))
 
-        nodes = csv.reader(open(nodef, 'r'), delimiter=',')
-        # Pour chaque nœud on crée un stop_area
-        #format de nodes : Id, Nom, lon, lat
         nodes_count = 1
-        nodes_map
-        for n in nodes:
-            session.add(PT_StopArea(n[0], n[1]))
-            self.session.add(PT_Node(n[0], n[2], n[3], 0, str(nodes_count), "direction"))
-            nodes_map[n[0]] = nodes_count
-            nodes_count += 1
-
-        lines = csv.reader(open(linesf, 'r'), delimiter=',')
+        lines = csv.reader(open(linesf, 'r'), delimiter=',', dialect='skipinitialspace')
         # format de edges : nom_ligne, intervalle en secs, heure_debut, heure_fin, tps_moyen, id_noed1, id_noed2 etc.
         # penser à faire deux ligne selon les sens
         # on peut varier la fréquence selon l'heure de la journée !
@@ -218,15 +213,37 @@ class Importer():
         # les heures de début et de fin sont en secondes depuis minuit, ex 28800 pour dire 8h du matin, c'est la période sur laquelle est définie la fréquence
         # tps_moyen est le temps moyen en secondes entre deux arrêts. Pas moyen d'avoir plus fin
         lines_count = 1
+        nodes_map = {}
         for l in lines:
-            self.session.add(PT_Line(l[0], l[0], l[0], "#0000AA", '#FFFFFF', line_name))
-            tps_moyen = int(l[4])
-            for departure in range(int(l[2]), int(l[3]), int(l[1])):
-                prev_stop = nodes_map[l[5]]
-                for i in range(6, len(l) - 1):
-                    current_node = nodes_map[l[i]]
-                    self.session.add(PT_Edge(prev_stop, current_node, 0, departure, departure + tps_moyen, 0, "Metro", str(lines_count)))
+            # on trouve le nom complet de la destination, houlala
+            # c'est pas beau comme code ...
+            nodes = csv.reader(open(nodesf, 'r'), delimiter=',', dialect='skipinitialspace')
+            heading = "destination"
+            for n in nodes:
+                if n[0] == l[len(l)-1]:
+                    heading = n[1]
+            # Pour chaque nœud on crée un stop_area
+            #format de nodes : Id, Nom, lon, lat
+            nodes_map[l[0]] = {}
+            nodes = csv.reader(open(nodesf, 'r'), delimiter=',', dialect='skipinitialspace')
+            for n in nodes:
+                self.session.add(PT_StopArea(n[0], unicode(n[1], 'utf-8')))
+                self.session.add(PT_Node(n[0], n[2], n[3], l[0], str(nodes_count), heading))
+                nodes_map[l[0]][n[0]] = nodes_count
+                nodes_count += 1
+
+            self.session.add(PT_Line(l[0], l[1], line_name, 'DE2118', 'FFFFFF', line_name))
+            tps_moyen = int(l[5])
+            for departure in range(int(l[3]), int(l[4]), int(l[2])):
+                prev_stop = nodes_map[l[0]][l[6]]
+                current_departure = departure
+                for i in range(7, len(l)):
+                    current_node = nodes_map[l[0]][l[i]]
+                    self.session.add(PT_Edge(prev_stop, current_node, 0, 
+                                             current_departure, current_departure + tps_moyen, 
+                                             service_id, '4', str(lines_count)))
                     prev_stop = current_node
+                    current_departure += tps_moyen
             lines_count += 1
         self.session.commit()
         self.init_mappers()
@@ -260,7 +277,7 @@ def import_bike_service( url, name ):
     bike_service_array.append( {'url_api': url, 'service_name': name } )
 
 # Charge les données de transport en commun sous forme de fréquence
-def import_freq(line_name, nodesf, linesf, start_date, end_date):
+def import_freq_data(line_name, nodesf, linesf, start_date, end_date):
     freq_data_array.append({'line_name': line_name, 'nodesf': nodesf, 'linesf': linesf, 'start_date': start_date, 'end_date': end_date})
 
 #Loads data from previous inserted data and creates a layer used in multi-modal graph
@@ -270,7 +287,7 @@ def street_layer(data, name, color, mode, bike_service=None):
 def public_transport_layer(data, name, color):
     pass
 
-def paths( starting_layer, destination_layer, objectives ):
+def paths( starting_layer, destination_layer, objectives, epsilon = None ):
     pass
 
 

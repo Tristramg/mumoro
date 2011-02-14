@@ -22,7 +22,7 @@
 #    Author: Paul Rivier, Pierre Paysant-Le Roux
 
 from lib.core import mumoro
-from lib.core.mumoro import Bike, Car, Foot, PublicTransport, cost, co2, dist, elevation, line_change, mode_change, Costs
+from lib.core.mumoro import Bike, Car, Foot, PublicTransport, cost, co2, dist, elevation, line_change, mode_change, penibility, Costs
 from lib import layer
 
 from lib import bikestations as bikestations
@@ -85,8 +85,8 @@ def import_kalkati_data(filename, network_name = "Public Transport"):
     return import_gtfs_data(filename, network_name)
 
 
-# def import_freq_data(line_name, nodesf, linesf, start_date, end_date):
-#     return import_freq(line_name, nodesf, linesf, start_date, end_date)
+def import_freq_data(line_name, nodesf, linesf, start_date, end_date):
+     return import_gtfs_data(line_name)
 
 
 # Loads a bike service API ( from already formatted URL ). Insert bike stations in database and enables schedulded re-check.
@@ -123,13 +123,13 @@ def public_transport_layer(data, name, color):
     return {'layer':res,'name':name,'mode':PublicTransport,'origin':PublicTransport,'color':color} 
 
 # vérifie le type des objectifs et ajoute à la variable globale paths_array les couches et les objectifs
-def paths( starting_layer, destination_layer, objectives ):
+def paths( starting_layer, destination_layer, objectives, epsilon = None ):
     if not starting_layer or not destination_layer:
         raise NameError('Empty layer(s)')
     def valid_obj(o): return [mumoro.dist, mumoro.cost, mumoro.elevation,
-                              mumoro.co2, mumoro.mode_change, mumoro.line_change].index(o)
+                              mumoro.co2, mumoro.mode_change, mumoro.line_change, mumoro.penibility].index(o)
     c = map(valid_obj,objectives)
-    paths_array.append( {'starting_layer':starting_layer,'destination_layer':destination_layer,'objectives':objectives} )
+    paths_array.append( {'starting_layer':starting_layer,'destination_layer':destination_layer,'objectives':objectives, 'epsilon': epsilon} )
 
         
 # Creates a transit cost variable, including the duration in seconds of the transit and if the mode is changed
@@ -164,16 +164,10 @@ def connect_layers_on_nearest_nodes( layer1 , layer2, cost, cost2 = None):
 
 
 class Mumoro(object):
-    def __init__(self,db_string,config_file,admin_email,web_url):
+    def __init__(self,db_string,config_file,):
         self.loader = TemplateLoader(os.path.join(os.path.dirname(__file__), 
                                                   'web/templates'),
                                      auto_reload=True)
-        if not admin_email:
-            raise NameError('Administrator email is empty')
-        self.admin_email = admin_email
-        if not web_url:
-            raise NameError('Website URL is empty')
-        self.web_url = web_url
         if not layer_array:
             raise NameError('Can not create multimodal graph beceause there are no layers')
         layers = []
@@ -281,18 +275,29 @@ class Mumoro(object):
         for y in paths_array:
             s = self.g.match( y['starting_layer']['name'], float(slon), float(slat))
             d = self.g.match( y['destination_layer']['name'], float(dlon), float(dlat))
-            tmp = y['objectives']
-            tmp = self.sort_objectives( tmp )
-            t = len( tmp )
+            obj = y['objectives']
+            eps = y['epsilon']
+            nb_obj = len( obj )
             print c['seconds'], c['days']
-            if t == 0:
-                p = p + self.normalise_paths( mumoro.martins(s, d, self.g.graph,c['seconds'], c['days']),[],u_obj )
-            elif t == 1:
-                p = p + self.normalise_paths( mumoro.martins(s, d, self.g.graph,c['seconds'], c['days'], tmp[0] ), [ tmp[0] ], u_obj )
-            elif t == 2:
-                p = p + self.normalise_paths( mumoro.martins(s, d, self.g.graph,c['seconds'], c['days'], tmp[0], tmp[1] ), [ tmp[0], tmp[1] ], u_obj )
-            elif t >= 3:
-                p = p + self.normalise_paths( mumoro.martins(s, d, self.g.graph,c['seconds'], c['days'], tmp[0], tmp[1], tmp[2] ), [ tmp[0], tmp[1], tmp[2] ], u_obj )
+            if eps == None:
+                if nb_obj == 0:
+                    p = p + self.normalise_paths( mumoro.martins(s, d, self.g.graph,c['seconds'], c['days']),[],u_obj )
+                elif nb_obj == 1:
+                    p = p + self.normalise_paths( mumoro.martins(s, d, self.g.graph,c['seconds'], c['days'], obj[0] ), [ obj[0] ], u_obj )
+                elif nb_obj == 2:
+                    p = p + self.normalise_paths( mumoro.martins(s, d, self.g.graph,c['seconds'], c['days'], obj[0], obj[1] ), [ obj[0], obj[1] ], u_obj )
+                elif nb_obj >= 3:
+                    p = p + self.normalise_paths( mumoro.martins(s, d, self.g.graph,c['seconds'], c['days'], obj[0], obj[1], obj[2] ), [ obj[0], obj[1], obj[2] ], u_obj )
+            else:
+                if nb_obj == 0:
+                    p = p + mumoro.martins(s, d, self.g.graph,c['seconds'], c['days'])
+                elif nb_obj == 1:
+                    p = p + self.normalise_paths(mumoro.relaxed_martins(s, d, self.g.graph,c['seconds'], c['days'], obj[0], eps[0]) , [ obj[0] ], u_obj )
+                elif nb_obj == 2:
+                    p = p + self.normalise_paths(mumoro.relaxed_martins(s, d, self.g.graph,c['seconds'], c['days'], obj[0], eps[0], obj[1], eps[1] ), [ obj[0], obj[1] ], u_obj ) 
+                elif nb_obj >= 3:
+                    p = p + self.normalise_paths(mumoro.relaxed_martins(s, d, self.g.graph,c['seconds'], c['days'], obj[0], eps[0], obj[1], eps[1], obj[2], eps[2] ), [ obj[0], obj[1], obj[2] ], u_obj )
+            print "Longueur de p : ", len(p)
         #Creates the array containing the user-oriented string for each objective
         str_obj = ['Duration']
         for j in u_obj:
@@ -308,14 +313,31 @@ class Mumoro(object):
                 str_obj.append( 'Mode Change' )
             elif j == mumoro.line_change:
                 str_obj.append( 'Line Change' )
+            elif j == mumoro.penibility:
+                str_obj.append( 'Penibility' )
         cherrypy.response.headers['Content-Type']= 'application/json'
         if len(p) == 0:
             return json.dumps({'error': 'Impossible de calculer un itinéraire'})
         print "Len of routes " + str( len( p ) )
+        print "len of first route " + str (len (p[0].nodes))
+#        print "route " + p[0].nodes[0]
         ret = {
                 'objectives': str_obj,
                 'paths': []
                 }
+        def layer_split(l,x):
+            if(len(l[-1]) == 0):
+                l[-1].append(x)
+            elif(l[-1][-1][1] == x[1]):
+                if (l[-1][-1][1].mode == mumoro.PublicTransport and
+                    l[-1][-1][0].route != x[0].route):
+                    l.append([x])
+                else:
+                    l[-1].append(x)
+            else:
+                l.append([x])
+            return l
+                        
         for path in p:
             p_str = {
                     'cost': [],
@@ -331,100 +353,47 @@ class Mumoro(object):
             for c in path.cost:
                 p_str['cost'].append(c)
 
-            features = []
-            markers = []
-            last_marker = None
-            feature = {'type': 'feature'}
-            geometry = {'type': 'Linestring'}
-            coordinates = []
-            last_node_id = path.nodes[0]
-            last_coord = self.g.coordinates(last_node_id)
-            last_layer = self.g.layer_object(last_node_id)
-            last_node = last_layer.node(last_node_id)
-            last_layer_name = last_coord[3]
-            for node_id in path.nodes:
-                coord = self.g.coordinates(node_id)
-                layer_name = coord[3]
-                layer = self.g.layer_object(node_id)
-                node = layer.node(node_id)
-                if(last_layer_name != layer_name):
-                    geometry['coordinates'] = coordinates
-                    feature['geometry'] = geometry
-                    feature['properties'] = {'layer': last_layer.layer_name()}
-                    feature['properties']['icon'] = last_layer.icon(last_node)
-                    feature['properties']['color'] = last_layer.color(last_node)
+                it = reduce(layer_split, 
+                            [[self.g.layer_object(node_id).node(node_id), 
+                              self.g.layer_object(node_id), 
+                              node_id] for node_id in path.nodes],
+                            [[]])
 
-                    features.append(feature)
-
-                    feature = {'type': 'feature'}
-                    geometry = {'type': 'Linestring'}
-                    coordinates = []
-
-                    connection = {
-                            'type': 'feature',
-                            'geometry': {
-                                'type': 'Linestring',
-                                'coordinates': [[last_coord[0], last_coord[1]], [coord[0], coord[1]]]
-                                },
-                            'properties': {'layer': 'connection'}
-                            }
-                    features.append(connection)
-                    if last_layer.mode == mumoro.PublicTransport and last_layer != None:
-                        # complete last marker
-                        last_marker["properties"]["dest_stop_area"] = last_layer.stop_area(last_node.original_id).name
-                    elif last_layer.mode == mumoro.Bike and last_layer != None:
-                        bike_station = last_layer.bike_station(last_node)
-                        if bike_station:
-                            last_marker["properties"]["dest_station_name"] = bike_station.name
-                    if layer.mode == mumoro.PublicTransport:
-                        last_marker = {"type":"Feature",
-                                       "geometry":{"type":"Point",
-                                                   "coordinates": [coord[0],
-                                                                   coord[1]]},
-                                       "properties": { "line": node.route,
-                                                       "layer": "marker",
-                                                       "headsign": node.headsign,
-                                                       "marker_icon": 
-                                                       layer.marker_icon(node),
-                                                       "line_icon": 
-                                                       layer.icon(node),
-                                                       "line_name":
-                                                           layer.line(node).long_name,
-                                                       "stop_area": 
-                                                       layer.
-                                                       stop_area(node.
-                                                                 original_id).
-                                                       name,
-                                                       "type": "bus_departure"}}
-                        markers.append(last_marker)
-                    elif layer.mode == mumoro.Bike:
-                        bike_station = layer.bike_station(node)
-                        if bike_station:
-                            last_marker = {"type":"Feature",
-                                           "geometry":{"type":"Point",
-                                                       "coordinates": [coord[0],
-                                                                       coord[1]]},
-                                           "properties": { "layer": "marker",
-                                                           "marker_icon": 
-                                                           layer.marker_icon(node),
-                                                           "bikes_av": bike_station.av_bikes,
-                                                           "slots_av": bike_station.av_slots,
-                                                           "station_name": bike_station.name,
-                                                           "type": "bike_departure"}}
-                            markers.append(last_marker)
-                        
-                    last_layer_name = layer_name
-                    last_layer = layer
-                last_node = node
-                last_node_id = node_id
-                last_coord = coord
-                coordinates.append([coord[0], coord[1]])
-            geometry['coordinates'] = coordinates
-            feature['geometry'] = geometry
-            feature['properties'] = {'layer': last_layer.layer_name()}
-            feature['properties']['icon'] = last_layer.icon(last_node)
-            features.append(feature)
-            features.extend(markers)
+                features = [{'type': 'feature',
+                             'geometry':  {'type': 'Linestring',
+                                           'coordinates': [[node[0].lon, node[0].lat] for node in seq]},
+                             'properties': {'layer': seq[0][1].layer_name(),
+                                            'icon': seq[0][1].icon(seq[0][0]),
+                                            'color': seq[0][1].color(seq[0][0])}}
+                            for seq in it]
+                features.extend([ {"type":"Feature",
+                                   "geometry":{"type":"Point",
+                                               "coordinates": [seq[0][0].lon,
+                                                               seq[0][0].lat]},
+                                   "properties": { "line": seq[0][0].route,
+                                                   "layer": "marker",
+                                                   "headsign": seq[0][0].headsign,
+                                                   "marker_icon": 
+                                                   seq[0][1].marker_icon(seq[0][0]),
+                                                   "line_icon": 
+                                                   seq[0][1].icon(seq[0][0]),
+                                                   "line_name":
+                                                       seq[0][1].line(seq[0][0]).long_name,
+                                                   "stop_area": 
+                                                   seq[0][1].
+                                                   stop_area(seq[0][0].original_id).name,
+                                                   "dest_stop_area": seq[-1][1].stop_area(seq[-1][0].original_id).name,
+                                                   "type": "bus_departure"}} for seq in it if seq[0][1].mode == mumoro.PublicTransport])
+                features.extend([{"type":"Feature",
+                                  "geometry":{"type":"Point",
+                                              "coordinates": [seq[0][0].lon,
+                                                              seq[0][0].lat]},
+                                  "properties": { "layer": "marker",
+                                                  "marker_icon": seq[0][1].marker_icon(seq[0][0]),
+                                                  "bikes_av": seq[0][1].bike_station(seq[0][0]).av_bikes,
+                                                  "slots_av": seq[0][1].bike_station(seq[0][0]).av_slots,
+                                                  "station_name": seq[0][1].bike_station(seq[0][0]).name,
+                                                  "type": "bike_departure"}} for seq in it if seq[0][1].mode == mumoro.Bike])
             p_str['features'] = features
             ret['paths'].append(p_str)
         return json.dumps(ret)
@@ -481,11 +450,24 @@ class Mumoro(object):
                                  lonStart=-1.688976,latStart=48.122070,
                                  lonDest=-1.659279,latDest=48.103045,
                                  addressStart='',addressDest='',
-                                 hashUrl=self.web_url,layers=t, 
+                                 hashUrl=request.config['mumoro.web_url'],
+                                 layers=t, 
                                  date=datetime.datetime.today().
-                                 strftime("%d/%m/%Y %H:%M")).render('html', doctype='html5')
+                                 strftime("%d/%m/%Y %H:%M"),
+                                 googleanalytics=request.config['mumoro.googleanalytics'],
+                                 cloudmadeapi=request.config['mumoro.cloudmadeapi']).render('html', doctype='html5')
         else:
-            return tmpl.generate(fromHash='true',lonStart=hashData[4],latStart=hashData[5],lonDest=hashData[6],latDest=hashData[7],addressStart=hashData[8].decode('utf-8'),addressDest=hashData[9].decode('utf-8'),hashUrl=self.web_url,layers=t,date=hashData[10]).render('html', doctype='html5')
+            return tmpl.generate(fromHash='true',
+                                 lonStart=hashData[4],
+                                 latStart=hashData[5],
+                                 lonDest=hashData[6],
+                                 latDest=hashData[7],
+                                 addressStart=hashData[8].decode('utf-8'),
+                                 addressDest=hashData[9].decode('utf-8'),
+                                 hashUrl=request.config['mumoro.web_url'],
+                                 layers=t,date=hashData[10],
+                                 googleanalytics=request.config['mumoro.googleanalytics'],
+                                 cloudmadeapi=request.config['mumoro.cloudmadeapi']).render('html', doctype='html5')
 
     @cherrypy.expose
     def info(self):
@@ -502,7 +484,7 @@ class Mumoro(object):
           "polygon": 0,
           "addressdetails" : 1,
           "limit": 1,
-          "email" : self.admin_email
+          "email" : request.config['mumoro.admin_email']
         })
         conn = httplib.HTTPConnection(url)
         conn.request("GET", "/search?" + params)
@@ -545,7 +527,7 @@ class Mumoro(object):
           "format":"json",
           "zoom": 18,
           "addressdetails" : 1,
-          "email" : self.admin_email
+          "email" : request.config['mumoro.admin_email']
         })
         conn = httplib.HTTPConnection(url)
         conn.request("GET", "/reverse?" + params)
@@ -597,6 +579,8 @@ class Mumoro(object):
             res.append( mumoro.line_change )  
         if mumoro.mode_change in obj and len( res ) < 3:
             res.append( mumoro.mode_change )
+        if mumoro.penibility in obj :
+            res.append( mumoro.penibility )
         return res
 
     def normalise_paths(self,route,used_objectives,union_objectives):
@@ -628,9 +612,6 @@ def mumoro_namespace(k, v):
 
 cherrypy.config.namespaces['mumoro'] = mumoro_namespace
 
-
-config_file = None
-
 cherrypy.config.update(os.path.abspath(os.path.dirname(__file__)) + '/cherrypy.config')
 
 if cherrypy.config["mumoro.scenario"] == None or not os.path.exists(cherrypy.config["mumoro.scenario"]):
@@ -644,8 +625,11 @@ cherrypy.config.update({
     'tools.trailing_slash.on': True,
     'tools.staticdir.root': os.path.abspath(os.path.dirname(__file__)) + "/web/",
 })
-cherrypy.quickstart(Mumoro(db_type + ":///" + db_params, cherrypy.config["mumoro.scenario"], admin_email, web_url), '/', 
-                    config={'/': {'tools.staticdir.on': True,
-                                  'tools.staticdir.dir': 'static'}
+
+cherrypy.quickstart(Mumoro(db_type + ":///" + db_params, 
+                           cherrypy.config["mumoro.scenario"]), 
+                    '/',
+                    config={'/static': {'tools.staticdir.on': True,
+                                        'tools.staticdir.dir': 'static'}
                             }
                     )

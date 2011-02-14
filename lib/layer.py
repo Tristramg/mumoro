@@ -135,20 +135,25 @@ class Layer(BaseLayer):
                
     def edges(self):
         for edge in self.edges_table.select().execute():
+            # print "strange edge !"
             e = mumoro.Edge()
             e.length = edge.length
             if self.mode == mumoro.Foot:
                 property = edge.foot
                 property_rev = edge.foot
+                e.penibility = e.length
             elif self.mode == mumoro.Bike:
                 property = edge.bike
+                e.penibility = e.length * 0.5
                 property_rev = edge.bike_rev
             elif self.mode == mumoro.Car:
                 property = edge.car
                 property_rev = edge.car_rev
+                e.penibility = 0
             else:
                 property = 0
                 property_rev = 0
+                e.penibility = 0
  
             node1 = self.map(edge.source)
             node2 = self.map(edge.target)
@@ -156,7 +161,7 @@ class Layer(BaseLayer):
                 dur = duration(e.length, property, self.mode)
                 e.duration = mumoro.Duration(dur)
                 e.elevation = 0
-              #  if self.mode == mumoro.Bike:
+               #  if self.mode == mumoro.Bike:
               #      e.elevation = max(0, target_alt - source_alt)
                 yield {
                     'source': node1,
@@ -170,7 +175,7 @@ class Layer(BaseLayer):
                 dur = duration(e.length, property_rev, self.mode)
                 e.duration = mumoro.Duration(dur)
                 e.elevation = 0
-#                if self.mode == mumoro.Bike:
+ #                if self.mode == mumoro.Bike:
 #                    e.elevation = max(0, source_alt - target_alt)
                 yield {'source': node2,
                        'target': node1,
@@ -288,9 +293,10 @@ class GTFSLayer(BaseLayer):
         e = mumoro.Edge()
         e.line_change = 1
         e.duration = mumoro.Duration(60) # There should be at least a minute between two bus/trains at the same station
+        e.penibility = 0
         for r in res:
-            yield { 'source': row[0] + self.offset,    
-                    'target': row[1] + self.offset,
+            yield { 'source': r[0] + self.offset,    
+                    'target': r[8] + self.offset,
                     'properties': e }
  
 
@@ -304,14 +310,16 @@ class MultimodalGraph(object):
             nb_nodes += l.count
             self.node_to_layer.append((nb_nodes, l.name))
  
-        self.graph = mumoro.Graph(nb_nodes)
+        self.graph = mumoro.Graph(nb_nodes + 1) # Merci les copains d'avoir décalé tout de 1 et de m'avoir fait suer à cause d'un segfault...
  
         if filename:
             self.graph = mumoro.Graph(filename)
         else:
             count = 0
             tcount = 0
+            horaires = 0
             for l in layers:
+                print "Layer new"
                 for e in l.edges():
                     if e.has_key('properties'):
                         self.graph.add_edge(e['source'], e['target'], e['properties'])
@@ -319,7 +327,8 @@ class MultimodalGraph(object):
                     else:
                         if self.graph.public_transport_edge(e['source'], e['target'], e['departure'], e['arrival'], str(e['services'])):
                             tcount += 1
-                print "On layer %s, %d edges, %d transport edges, %d nodes" % (l.name, count, tcount, l.count)
+                        horaires += 1
+                print "On layer %s, %d edges, %d transport edges, %d nodes, %d time events" % (l.name, count, tcount, l.count, horaires)
             self.graph.sort()
             print "The multimodal graph has been built and has %d nodes and %d edges" % (nb_nodes, count)
  
