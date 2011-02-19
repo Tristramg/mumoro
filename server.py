@@ -393,6 +393,7 @@ class Mumoro(object):
                                                   "bikes_av": seq[0][1].bike_station(seq[0][0]).av_bikes,
                                                   "slots_av": seq[0][1].bike_station(seq[0][0]).av_slots,
                                                   "station_name": seq[0][1].bike_station(seq[0][0]).name,
+                                                  "dest_station_name": seq[-1][1].bike_station(seq[-1][0]).name,
                                                   "type": "bike_departure"}} for seq in it if seq[0][1].mode == mumoro.Bike])
             p_str['features'] = features
             ret['paths'].append(p_str)
