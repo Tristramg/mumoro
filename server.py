@@ -353,48 +353,47 @@ class Mumoro(object):
             for c in path.cost:
                 p_str['cost'].append(c)
 
-                it = reduce(layer_split, 
-                            [[self.g.layer_object(node_id).node(node_id), 
-                              self.g.layer_object(node_id), 
-                              node_id] for node_id in path.nodes],
-                            [[]])
-
-                features = [{'type': 'feature',
-                             'geometry':  {'type': 'Linestring',
-                                           'coordinates': [[node[0].lon, node[0].lat] for node in seq]},
-                             'properties': {'layer': seq[0][1].layer_name(),
-                                            'icon': seq[0][1].icon(seq[0][0]),
-                                            'color': seq[0][1].color(seq[0][0])}}
-                            for seq in it]
-                features.extend([ {"type":"Feature",
-                                   "geometry":{"type":"Point",
-                                               "coordinates": [seq[0][0].lon,
-                                                               seq[0][0].lat]},
-                                   "properties": { "line": seq[0][0].route,
-                                                   "layer": "marker",
-                                                   "headsign": seq[0][0].headsign,
-                                                   "marker_icon": 
-                                                   seq[0][1].marker_icon(seq[0][0]),
-                                                   "line_icon": 
-                                                   seq[0][1].icon(seq[0][0]),
-                                                   "line_name":
-                                                       seq[0][1].line(seq[0][0]).long_name,
-                                                   "stop_area": 
-                                                   seq[0][1].
-                                                   stop_area(seq[0][0].original_id).name,
-                                                   "dest_stop_area": seq[-1][1].stop_area(seq[-1][0].original_id).name,
-                                                   "type": "bus_departure"}} for seq in it if seq[0][1].mode == mumoro.PublicTransport])
-                features.extend([{"type":"Feature",
-                                  "geometry":{"type":"Point",
-                                              "coordinates": [seq[0][0].lon,
-                                                              seq[0][0].lat]},
-                                  "properties": { "layer": "marker",
-                                                  "marker_icon": seq[0][1].marker_icon(seq[0][0]),
-                                                  "bikes_av": seq[0][1].bike_station(seq[0][0]).av_bikes,
-                                                  "slots_av": seq[0][1].bike_station(seq[0][0]).av_slots,
-                                                  "station_name": seq[0][1].bike_station(seq[0][0]).name,
-                                                  "dest_station_name": seq[-1][1].bike_station(seq[-1][0]).name,
-                                                  "type": "bike_departure"}} for seq in it if seq[0][1].mode == mumoro.Bike])
+            it = reduce(layer_split, 
+                        [[self.g.layer_object(node_id).node(node_id), 
+                          self.g.layer_object(node_id), 
+                          node_id] for node_id in path.nodes],
+                        [[]])
+            features = [{'type': 'feature',
+                         'geometry':  {'type': 'Linestring',
+                                       'coordinates': [[node[0].lon, node[0].lat] for node in seq]},
+                         'properties': {'layer': seq[0][1].layer_name(),
+                                        'icon': seq[0][1].icon(seq[0][0]),
+                                        'color': seq[0][1].color(seq[0][0])}}
+                        for seq in it]
+            features.extend([ {"type":"Feature",
+                               "geometry":{"type":"Point",
+                                           "coordinates": [seq[0][0].lon,
+                                                           seq[0][0].lat]},
+                               "properties": { "line": seq[0][0].route,
+                                               "layer": "marker",
+                                               "headsign": seq[0][0].headsign,
+                                               "marker_icon": 
+                                               seq[0][1].marker_icon(seq[0][0]),
+                                               "line_icon": 
+                                               seq[0][1].icon(seq[0][0]),
+                                               "line_name":
+                                                   seq[0][1].line(seq[0][0]).long_name,
+                                               "stop_area": 
+                                               seq[0][1].
+                                               stop_area(seq[0][0].original_id).name,
+                                               "dest_stop_area": seq[-1][1].stop_area(seq[-1][0].original_id).name,
+                                               "type": "bus_departure"}} for seq in it if seq[0][1].mode == mumoro.PublicTransport])
+            features.extend([{"type":"Feature",
+                              "geometry":{"type":"Point",
+                                          "coordinates": [seq[0][0].lon,
+                                                          seq[0][0].lat]},
+                              "properties": { "layer": "marker",
+                                              "marker_icon": seq[0][1].marker_icon(seq[0][0]),
+                                              "bikes_av": seq[0][1].bike_station(seq[0][0]).av_bikes,
+                                              "slots_av": seq[0][1].bike_station(seq[0][0]).av_slots,
+                                              "station_name": seq[0][1].bike_station(seq[0][0]).name,
+                                              "dest_station_name": seq[-1][1].bike_station(seq[-1][0]).name,
+                                              "type": "bike_departure"}} for seq in it if seq[0][1].mode == mumoro.Bike])
             p_str['features'] = features
             ret['paths'].append(p_str)
         return json.dumps(ret)
