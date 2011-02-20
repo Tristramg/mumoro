@@ -79,7 +79,7 @@ class BaseLayer(object):
         if result:
             return result[0] + self.offset
         else:
-            print "Unable to find id {0}".format(o_id)
+            print "Unable to find id %s" % o_id
             raise DataIncoherence()
 
     def borders(self):
@@ -116,7 +116,7 @@ class BaseLayer(object):
         if res:
             return res
         else:
-            print "Unknow node {0} on layer {1}, offset ".format(nd, self.name, self.offset)
+            print "Unknow node %d on layer %s, offset %d" % (nd, self.name, self.offset)
 
 
     def coordinates(self, nd):
@@ -328,9 +328,9 @@ class MultimodalGraph(object):
                         if self.graph.public_transport_edge(e['source'], e['target'], e['departure'], e['arrival'], str(e['services'])):
                             tcount += 1
                         horaires += 1
-                print "On layer {0}, {1} edges, {2} transport edges, {3} nodes, {4} time events".format(l.name, count, tcount, l.count, horaires)
+                print "On layer %s, %d edges, %d transport edges, %d nodes, %d time events" % (l.name, count, tcount, l.count, horaires)
             self.graph.sort()
-            print "The multimodal graph has been built and has {0} nodes and {1} edges".format(nb_nodes, count)
+            print "The multimodal graph has been built and has %d nodes and %d edges" % (nb_nodes, count)
  
     def save(self, filename):
         self.graph.save(filename)
@@ -342,7 +342,7 @@ class MultimodalGraph(object):
         for l in self.node_to_layer:
             if int(node) < l[0]:
                 return l[1]
-        print "Unable to find the right layer for node {0}".format(node)
+        print "Unable to find the right layer for node %d" % node
         print self.node_to_layer
 
     def layer_object(self,node):
@@ -350,7 +350,7 @@ class MultimodalGraph(object):
         for l in self.layers:
             if l.name == name:
                 return l
-        raise NameError("Unknown node: {0} on layer: {1}".format(node, name))
+        raise NameError("Unknown node: %d on layer: %s" % (node, name))
 
     def coordinates(self, node):
         return self.layer_object(node).coordinates(node)
@@ -397,7 +397,7 @@ class MultimodalGraph(object):
 
 
     def connect_nearest_nodes(self, layer1, layer2, property, property2 = None):
-        print "Connecting nearest nodes from layer offset {0} to layer offset {1}".format(layer1.offset, layer2.offset)
+        print "Connecting nearest nodes from layer offset %d to layer offset %d" % (layer1.offset, layer2.offset)
         count = 0
         if property2 == None:
             property2 = property
@@ -408,7 +408,7 @@ class MultimodalGraph(object):
                 self.graph.add_edge(nearest, n.id + layer1.offset, property2)
                 count += 2
             else:
-                print "(lon='{0}' AND lat='{1}') OR".format(str(n.lon), str(n.lat))
+                print "Nearest node not found"
         return count
 
     '''Given a vector of nodes and a departure time returns the arrival, waiting and departure time'''
