@@ -414,14 +414,17 @@ class MultimodalGraph(object):
     '''Given a vector of nodes and a departure time returns the arrival, waiting and departure time'''
     def get_duration(self, dep_time, nodes, day):
         current_time = dep_time
-        times = [(current_time, 0, dep_time)]
-        for i in range(0, len(nodes) - 1):
-            dep = self.graph.get_start(nodes[i], nodes[i+1], current_time, day)
-            arr = self.graph.get_arrival(nodes[i], nodes[i+1], current_time, day)
-            waiting = dep-current_time
-            times.append((dep,waiting,arr))
-            current_time = arr
-        return times
+        if(len(nodes)==1):
+            return (current_time, dep_time)
+        else:
+            times = [(current_time, 0, dep_time)]
+            for i in range(0, len(nodes) - 1):
+                dep = self.graph.get_start(nodes[i], nodes[i+1], current_time, day)
+                arr = self.graph.get_arrival(nodes[i], nodes[i+1], current_time, day)
+                waiting = dep-current_time
+                times.append((dep,waiting,arr))
+                current_time = arr
+            return (times[1][0], times[-1][2])
 
 
  

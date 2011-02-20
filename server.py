@@ -318,13 +318,10 @@ class Mumoro(object):
         cherrypy.response.headers['Content-Type']= 'application/json'
         if len(p) == 0:
             return json.dumps({'error': 'Impossible de calculer un itinéraire'})
-        print "Len of routes " + str( len( p ) )
-        print "len of first route " + str (len (p[0].nodes))
-#        print "route " + p[0].nodes[0]
-        ret = {
-                'objectives': str_obj,
-                'paths': []
-                }
+
+        ret = {'objectives': str_obj,
+               'paths': []}
+
         def layer_split(l,x):
             if(len(l[-1]) == 0):
                 l[-1].append(x)
@@ -350,8 +347,8 @@ class Mumoro(object):
                             }
                         }
                     }
-            for c in path.cost:
-                p_str['cost'].append(c)
+            for cost in path.cost:
+                p_str['cost'].append(cost)
 
             it = reduce(layer_split, 
                         [[self.g.layer_object(node_id).node(node_id), 
@@ -365,24 +362,39 @@ class Mumoro(object):
                                         'icon': seq[0][1].icon(seq[0][0]),
                                         'color': seq[0][1].color(seq[0][0])}}
                         for seq in it]
-            features.extend([ {"type":"Feature",
-                               "geometry":{"type":"Point",
-                                           "coordinates": [seq[0][0].lon,
-                                                           seq[0][0].lat]},
-                               "properties": { "line": seq[0][0].route,
-                                               "layer": "marker",
-                                               "headsign": seq[0][0].headsign,
-                                               "marker_icon": 
-                                               seq[0][1].marker_icon(seq[0][0]),
-                                               "line_icon": 
-                                               seq[0][1].icon(seq[0][0]),
-                                               "line_name":
-                                                   seq[0][1].line(seq[0][0]).long_name,
-                                               "stop_area": 
-                                               seq[0][1].
-                                               stop_area(seq[0][0].original_id).name,
-                                               "dest_stop_area": seq[-1][1].stop_area(seq[-1][0].original_id).name,
-                                               "type": "bus_departure"}} for seq in it if seq[0][1].mode == mumoro.PublicTransport])
+            # Si l'itinéraire inclus un trajet en bus, on va calculer les
+            # horaires
+            if (reduce(lambda v,seq: v or seq[0][1].mode == mumoro.PublicTransport,
+                       it, False)):
+                it_times = reduce(lambda v,seq: 
+                                  v + [self.g.get_duration(v[-1][-1], 
+                                                          [n[2] for n in seq], 
+                                                          c['days'])],
+                                  it,
+                                  [[c['seconds']]])
+                it_times.pop(0)
+
+                features.extend([ {"type":"Feature",
+                                   "geometry":{"type":"Point",
+                                               "coordinates": [seq[0][0].lon,
+                                                               seq[0][0].lat]},
+                                   "properties": { "line": seq[0][0].route,
+                                                   "layer": "marker",
+                                                   "headsign": seq[0][0].headsign,
+                                                   "marker_icon": 
+                                                   seq[0][1].marker_icon(seq[0][0]),
+                                                   "line_icon": 
+                                                   seq[0][1].icon(seq[0][0]),
+                                                   "start_time": it_time[0],
+                                                   "arrival_time": it_time[1],
+                                                   "line_name":
+                                                       seq[0][1].line(seq[0][0]).long_name,
+                                                   "stop_area": 
+                                                   seq[0][1].
+                                                   stop_area(seq[0][0].original_id).name,
+                                                   "dest_stop_area": seq[-1][1].stop_area(seq[-1][0].original_id).name,
+                                                   "type": "bus_departure"}} for seq,it_time in zip(it,it_times) if seq[0][1].mode == mumoro.PublicTransport])
+
             features.extend([{"type":"Feature",
                               "geometry":{"type":"Point",
                                           "coordinates": [seq[0][0].lon,

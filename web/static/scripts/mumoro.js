@@ -237,11 +237,13 @@ Mumoro.prototype = {
 
 ).
 	    append($('<p/>').append("Monter à <span class='departure'>"+ 
-				    feature.attributes.stop_area + 
-				    "</span>")).
+				    feature.attributes.stop_area +
+				    "</span> à " + 
+				    this.secondesToHuman(feature.attributes.start_time))).
 	    append($('<p/>').append("Descendre à <span class='arrival'>"+ 
 				    feature.attributes.dest_stop_area + 
-				    "</span>"))).html();
+				    "</span> à " + 
+				    this.secondesToHuman(feature.attributes.arrival_time)))).html();
     },
 
     bike_popup_content: function(feature){
@@ -719,8 +721,22 @@ $.each($.grep(p.features,
 	}
 	this.map.zoomToExtent( new OpenLayers.Bounds( left, bottom, right, top ) );
     },
-    
-    
+
+    // Formate le nombre en ajoutant un zéro s'il est inférieur à 10
+    pad: function(a){
+	if (a < 10){
+	    return "0" + a;
+	}else{
+	    return a;
+	}
+    },
+
+    secondesToHuman: function(s){
+	var hours = Math.floor(s / 3600);
+	var minutes = Math.floor((s - (hours * 3600)) / 60);
+	return this.pad(hours) + 'h' + this.pad(minutes);
+    },
+ 
     LonLatToPoint: function(ll) {
 	return new OpenLayers.Geometry.Point(ll.lon,ll.lat);
     },
