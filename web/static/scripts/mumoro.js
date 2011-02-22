@@ -351,20 +351,21 @@ $.each($.grep(p.features,
     setDepOrDestFromGeo: function(target){
 	var self = this;
 	var pos = this.current_position;
-	self.reverseGeocoding({'lon': pos.coords.longitude,
-			       'lat': pos.coords.latitude},
-			      target);
+	self.setMark({'lon': pos.coords.longitude,
+		      'lat': pos.coords.latitude
+		     }, target);
     },
 
     handleClick: function(coord, mark) {
 	var lonlat = this.map.getLonLatFromViewPortPx(coord);
 	lonlat.transform(this.proj900913, this.proj4326);
 	this.nodes['fmouse_'+mark]=true;
-	this.reverseGeocoding(lonlat,mark);
+	this.setMark(lonlat, mark);
     },
     
     // Coordinates in 4326 projection (lon/lat)
     setMark: function(lonlat, mark){
+	this.nodes[mark] = lonlat;
 	if(this.node_markers[mark]) {
             this.layerMarkers.removeFeatures(this.node_markers[mark]);
             this.node_markers[mark].destroy();
@@ -378,7 +379,10 @@ $.each($.grep(p.features,
 							  );
 	this.layerMarkers.addFeatures(this.node_markers[mark]);
 	this.layerMarkers.drawFeature(this.node_markers[mark]);
-	
+	if( this.areBothMarked() ) { 
+            this.compute();
+	}
+	this.reverseGeocoding(lonlat, mark);
     }, // End of function setMark(lonlat, mark)
     
     areBothMarked: function() {
@@ -645,28 +649,20 @@ $.each($.grep(p.features,
 			  if( mark == "start" ) {
                               $('#startAdr').css({backgroundColor: "#f48b5d"});
                               $("#formError_start").html("<span class=\"errorOrange\">Nothing found. Please type again.</span>");
-                              self.clearPath();
-                              self.clearArrow(mark);
 			  }                   
 			  else if( mark == "dest" ) {
                               $('#endAdr').css({backgroundColor: "#f48b5d"});
                               $("#formError_dest").html("<span class=\"errorOrange\">Nothing found. Please type again.</span>");
-                              self.clearPath();
-                              self.clearArrow(mark);
 			  }               
                       }
                       else if( !data.is_covered ) {
 			  if( mark == "start" ) {
                               $('#startAdr').css({backgroundColor: "#f48b5d"});
                               $("#formError_start").html("<span class=\"errorOrange\">Not in covered zone.</span>");
-                              self.clearPath();
-                              self.clearArrow(mark);
 			  }                   
 			  else if( mark == "dest" ) {
                               $('#endAdr').css({backgroundColor: "#f48b5d"});
                               $("#formError_dest").html("<span class=\"errorOrange\">Not in covered zone.</span>");
-                              self.clearPath();
-                              self.clearArrow(mark);
 			  }               
                       }               
                       else if( data.node_error != '' ) {
@@ -675,20 +671,15 @@ $.each($.grep(p.features,
                               $("#formError_start").html(
 				  "<span class=\"errorOrange\">Can not find a node. Retry with a different address.</span>"
                               );
-                              self.clearPath();
-                              self.clearArrow(mark);
 			  }                   
 			  else if( mark == "dest" ) {
                               $('#endAdr').css({backgroundColor: "#f48b5d"});
                               $("#formError_dest").html(
 				  "<span class=\"errorOrange\">Can not find a node. Retry with a different address.</span>"
                               );
-                              self.clearPath();
-                              self.clearArrow(mark);
 			  }               
                       }
                       else {              
-			  var cord = new OpenLayers.LonLat(lonlat.lon, lonlat.lat);
 			  if( mark == "start" ) {
                               $('#startAdr').val(data.display_name);
                               $('#startAdr').css({backgroundColor: "#ffffff"});
@@ -698,14 +689,6 @@ $.each($.grep(p.features,
                               $('#endAdr').val(data.display_name);
                               $('#endAdr').css({backgroundColor: "#ffffff"});
                               $("#formError_dest").html("");
-			  }
-			  self.nodes[mark] = {
-                              'lon': lonlat.lon,
-                              'lat': lonlat.lat
-			  };
-			  self.setMark(cord, mark);                 
-			  if( self.areBothMarked() ) { 
-                              self.compute();
 			  }
                       }
 		  });
