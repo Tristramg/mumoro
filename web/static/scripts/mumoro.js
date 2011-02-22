@@ -115,24 +115,7 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
 			       'featureadded': onFeatureSelect
     			      });
     this.map.addLayer(this.routeLayer);
-    // bikeLayer = new OpenLayers.Layer.Text( "Bike Stations",{
-    // 					       location:"./bikes",
-    // 					       visibility: false,
-    // 					       projection: map.displayProjection
-    // 					   });
     this.map.addLayer(this.layerMarkers);
-    // var busLayer = new OpenLayers.Layer.Vector("BUS", 
-    // 					       {styleMap: new OpenLayers.StyleMap({'strokeColor': '${stroke_color}', 
-    // 										   'strokeWidth': 2})});
-
-    // this.map.addLayer(busLayer);
-    // $.getJSON("bus_lines",
-    // 	      function(data) {
-    // 		  var features = self.geojson_reader.read(data);
-    // 		  if(features){
-    // 		      window.console.debug('Adding features');
-    // 		      busLayer.addFeatures(features);}
-    // 	      });
     // Location support
     if (navigator.geolocation) {  
 	navigator.geolocation.watchPosition(function(p){self.refreshPosition(p);});
@@ -163,6 +146,31 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
 
     this.map.addControl(selectControl);
     selectControl.activate();
+
+    $("#map").contextMenu({menu: 'myMenu'},
+			  function(action, el, pos) {
+			      var tmp = {'x': pos.x,
+					 'y': pos.y};          
+			      self.handleClick(tmp, action);
+			  });
+    // init ui
+    
+    $('#time-select').change(function(){
+			  var v = $(this).val();
+			  if(v == 'later'){
+			      $('#later-time-select').show();
+			  } else {
+			      $('#later-time-select').hide();
+			      self.time_set_in(v);
+			  }
+		      });
+    $("#date-picker").datepicker();
+    $("hour-picker").change(function(){
+				self.time_set_hour($(this).val());
+			    });
+    $("minutes-picker").change(function(){
+				self.time_set_minutes($(this).val());
+			    });
     
     if( this.fromHash ) {
         var tmpStart = new OpenLayers.LonLat(this.lonStart, this.latStart);
@@ -186,13 +194,8 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
         var d = {'lon': lonDest,
 		 'lat': latDest};
         this.centerToMap(s,d);
+	self.time_set_in($('#time-select').val());
     }
-    $("#map").contextMenu({menu: 'myMenu'},
-			  function(action, el, pos) {
-			      var tmp = {'x': pos.x,
-					 'y': pos.y};          
-			      self.handleClick(tmp, action);
-			  });
 }
 
 Mumoro.prototype = {
@@ -219,6 +222,15 @@ Mumoro.prototype = {
     paths: undefined,
     cacheStart: "",
     cacheDest: "",
+
+    time_set_in: function(minutes){
+	this.time_set_as(new Date(new Date().getTime() + minutes * 60000));
+    },
+
+    time_set_as: function(d){
+	$('#time').val(pad(d.getDate()) + '/' + pad(d.getMonth()) + '/' + d.getFullYear() + ' ' + 
+		       pad(d.getHours()) + ':' + pad(d.getMinutes()));
+    },
 
     isTouchDevice: function() {
 	var el = document.createElement('div');
@@ -286,7 +298,7 @@ Mumoro.prototype = {
 			       slat: this.nodes['start'].lat,
 			       dlon: this.nodes['dest'].lon,
 			       dlat: this.nodes['dest'].lat,
-			       time: $("#datepicker").val()
+			       time: $("#time").val()
 			      },
 		      function(data) {
 			  $("#info").show();
@@ -393,7 +405,7 @@ $.each($.grep(p.features,
                       slat: self.nodes['start'].lat,
                       dlon: self.nodes['dest'].lon,
                       dlat: self.nodes['dest'].lat,
-                      time: $("#datepicker").val(),
+                      time: $("#time").val(),
                       saddress: $('#startAdr').val(),
                       daddress: $('#endAdr').val()
 		  },
@@ -707,19 +719,10 @@ $.each($.grep(p.features,
 	this.map.zoomToExtent( new OpenLayers.Bounds( left, bottom, right, top ) );
     },
 
-    // Formate le nombre en ajoutant un zéro s'il est inférieur à 10
-    pad: function(a){
-	if (a < 10){
-	    return "0" + a;
-	}else{
-	    return a;
-	}
-    },
-
     secondesToHuman: function(s){
 	var hours = Math.floor(s / 3600);
 	var minutes = Math.floor((s - (hours * 3600)) / 60);
-	return this.pad(hours) + 'h' + this.pad(minutes);
+	return pad(hours) + 'h' + pad(minutes);
     },
  
     LonLatToPoint: function(ll) {
@@ -840,3 +843,13 @@ $(function(){
 	  }
       }
 });
+
+// Formate le nombre en ajoutant un zéro s'il est inférieur à 10
+function pad(a){
+    if (a < 10){
+	return "0" + a;
+    }else{
+	return a;
+    }
+}
+
