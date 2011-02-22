@@ -230,6 +230,9 @@ Mumoro.prototype = {
     time_set_as: function(d){
 	$('#time').val(pad(d.getDate()) + '/' + pad(d.getMonth()) + '/' + d.getFullYear() + ' ' + 
 		       pad(d.getHours()) + ':' + pad(d.getMinutes()));
+	if( this.areBothMarked() ) { 
+            this.compute();
+	}
     },
 
     isTouchDevice: function() {
