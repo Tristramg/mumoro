@@ -63,10 +63,11 @@
 		    firstDOW: 1 } );
 		  </script>
 		</li>
-		<span class="tinyText">Vous pouvez placer votre départ
-		  et votre arrivée sur la carte avec un clic droit, ou
-		  saisir les adresses ci-dessous.</span>
 		<li>
+		  Placez votre départ et votre arrivée sur la carte
+		  avec un clic droit.
+		</li>
+		<li style="display:none">
 		  <label for="startAdr">Partir
 		  de</label>    <a id="startGeo" style="display:none;"
 		  href="#">(ma position actuelle)</a>
@@ -75,7 +76,7 @@
 		  <br/>           
 		  <textarea name="startAdr" id="startAdr" value="$addressStart">$addressStart</textarea>
 		</li>
-		<li>
+		<li style="display:none">
 		  <label for="endAdr">Arriver
 		  à </label>    <a id="destGeo" style="display:none;"
 		  href="#">(ma position actuelle)</a>
@@ -85,7 +86,7 @@
 		  <textarea name="endAdr" id="endAdr">$addressDest</textarea>
 		  <br/>
 		</li>
-		<li>
+		<li style="display:none">
 		  <input type="submit" value="Itinéraires"/>
 		  <a href="#" onclick="$.mumoro.reverseLocations()">Trajet retour</a>
 		</li>

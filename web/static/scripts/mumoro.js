@@ -95,6 +95,7 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
                             new OpenLayers.Size(100,100),
 			    feature.attributes.type == "bus_departure" ? self.bus_popup_content(feature) : self.bike_popup_content(feature),
                             null, false, onPopupClose);
+	    popup.displayClass="translucent";
 	    feature.popup = popup;
 	    popup.feature = feature;
 	    self.map.addPopup(popup);
@@ -110,7 +111,8 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
     }
     this.routeLayer.events.on({'featureselected': onFeatureSelect,
     			       'featureunselected': onFeatureUnselect,
-			       'beforefeatureselected': onBeforeFeatureSelect
+			       'beforefeatureselected': onBeforeFeatureSelect,
+			       'featureadded': onFeatureSelect
     			      });
     this.map.addLayer(this.routeLayer);
     // bikeLayer = new OpenLayers.Layer.Text( "Bike Stations",{
