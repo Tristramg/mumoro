@@ -27,7 +27,6 @@ from lib import layer
 
 from lib import bikestations as bikestations
 from lib import utils
-from web import shorturl
 
 from sqlalchemy import *
 from sqlalchemy.orm import mapper, sessionmaker, clear_mappers
@@ -195,19 +194,6 @@ class Mumoro(object):
             Column('binary_file', String, primary_key = True),
             Column('md5', String, index = True)
             )
-        self.hash_table = Table('hurl', self.metadata,
-        Column('id', String(length=16), primary_key=True),
-        Column('zoom', Integer),
-        Column('lonMap', Float),
-        Column('latMap', Float),
-        Column('lonStart', Float),
-        Column('latStart', Float),
-        Column('lonDest', Float),
-        Column('latDest', Float),
-        Column('addressStart', Text),
-        Column('addressDest', Text),
-        Column('chrone', DateTime(timezone=False))
-        )
         self.metadata.create_all()
         s = self.config_table.select()
         rs = s.execute()
@@ -430,26 +416,11 @@ class Mumoro(object):
             return None
 
     @cherrypy.expose
-    def addhash(self,mlon,mlat,zoom,slon,slat,dlon,dlat,saddress,daddress,time):
-        cherrypy.response.headers['Content-Type']= 'application/json'
-        hashAdd = shorturl.shortURL(self.metadata)
-        hmd5 =hashAdd.addRouteToDatabase(mlon,mlat,zoom,slon,slat,dlon,dlat,saddress,daddress, time)
-        if( len(hmd5) > 0 ):
-            return json.dumps({ 'h': hmd5 })
-        else:
-            return '{"error": "Add to DB failed"}'
-
-    @cherrypy.expose
-    def h(self,id):
-        hashCheck = shorturl.shortURL(self.metadata)
-        res = hashCheck.getDataFromHash(id)
-        if( len(res) > 0 ):
-            return self.index(True,res)
-        else:
-            return self.index(False,res)
-
-    @cherrypy.expose
-    def index(self,fromHash=False,hashData=[]):
+    def index(self,dep=None,dest=None):
+        lonStart=latStart=lonDest=latDest=""
+        if dep and dest:
+            lonStart,latStart=dep.rsplit(',')
+            lonDest,latDest=dest.rsplit(',')
         tmpl = self.loader.load('index.html')
         t = "{"
         for i in range( len( layer_array ) ):
@@ -457,29 +428,13 @@ class Mumoro(object):
             if i != len( layer_array ) - 1 :
                 t = t + ","
         t = t + "}"
-        if( not fromHash ):
-            return tmpl.generate(fromHash='false',
-                                 lonStart=-1.688976,latStart=48.122070,
-                                 lonDest=-1.659279,latDest=48.103045,
-                                 addressStart='',addressDest='',
-                                 hashUrl=request.config['mumoro.web_url'],
-                                 layers=t, 
-                                 date=datetime.datetime.today().
-                                 strftime("%d/%m/%Y %H:%M"),
-                                 googleanalytics=request.config['mumoro.googleanalytics'],
-                                 cloudmadeapi=request.config['mumoro.cloudmadeapi']).render('html', doctype='html5')
-        else:
-            return tmpl.generate(fromHash='true',
-                                 lonStart=hashData[4],
-                                 latStart=hashData[5],
-                                 lonDest=hashData[6],
-                                 latDest=hashData[7],
-                                 addressStart=hashData[8].decode('utf-8'),
-                                 addressDest=hashData[9].decode('utf-8'),
-                                 hashUrl=request.config['mumoro.web_url'],
-                                 layers=t,date=hashData[10],
-                                 googleanalytics=request.config['mumoro.googleanalytics'],
-                                 cloudmadeapi=request.config['mumoro.cloudmadeapi']).render('html', doctype='html5')
+        return tmpl.generate(lonStart=lonStart,
+                             latStart=latStart,
+                             lonDest=lonDest,
+                             latDest=latDest,
+                             date=datetime.datetime.today().strftime("%d/%m/%Y %H:%M"),
+                             googleanalytics=request.config['mumoro.googleanalytics'],
+                             cloudmadeapi=request.config['mumoro.cloudmadeapi']).render('html', doctype='html5')
 
     @cherrypy.expose
     def info(self):

@@ -1,14 +1,11 @@
 OpenLayers.ImgPath = "/static/img/openlayers/";
 
 function Mumoro(lonStart, latStart, lonDest, latDest,
-                fromHash, hashUrl, layers, cloudmadeapi){
-    this.lonStart = lonStart;
-    this.latStart = latStart;
-    this.lonDest = lonDest;
-    this.latDest = latDest;
-    this.fromHash = fromHash;
-    this.hashUrl = hashUrl;
-    
+                cloudmadeapi){
+    lonDest=parseFloat(lonDest);
+    latDest=parseFloat(latDest);
+    lonStart=parseFloat(lonStart);
+    latStart=parseFloat(latStart);
     var icon_standard = OpenLayers.Util.extend({}, OpenLayers.Feature.Vector.style['default']);
     icon_standard.graphicWidth = 26;
     icon_standard.graphicHeight = 41;
@@ -73,17 +70,24 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
 						 strokeDashstyle: "1 8",
 						 strokeWidth: 5}});
     this.routeLayer = new OpenLayers.Layer.Vector("Route", {styleMap: styleMap});
-
+    var selectControl = new OpenLayers.Control.
+	SelectFeature([this.routeLayer, this.layerMarkers], {clickout: true,
+							     multiple: true});
     function onPopupClose(evt) {
 	selectControl.unselect(this.feature);
     }
-
     function onBeforeFeatureSelect(evt){
 	var feature = evt.feature;
 	if(feature.attributes.type == "bus_departure" || feature.attributes.type == "bike_departure"){
 	    return true;
 	}else {
 	    return false;
+	}
+    }
+    function onFeatureAdded(evt){
+	var feature = evt.feature;
+	if(feature.attributes.type == "bus_departure" || feature.attributes.type == "bike_departure"){
+	    selectControl.select(feature);
 	}
     }
     function onFeatureSelect(evt) {
@@ -95,7 +99,6 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
                             new OpenLayers.Size(100,100),
 			    feature.attributes.type == "bus_departure" ? self.bus_popup_content(feature) : self.bike_popup_content(feature),
                             null, false, onPopupClose);
-	    popup.displayClass="translucent";
 	    feature.popup = popup;
 	    popup.feature = feature;
 	    self.map.addPopup(popup);
@@ -112,7 +115,7 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
     this.routeLayer.events.on({'featureselected': onFeatureSelect,
     			       'featureunselected': onFeatureUnselect,
 			       'beforefeatureselected': onBeforeFeatureSelect,
-			       'featureadded': onFeatureSelect
+			       'featureadded': onFeatureAdded
     			      });
     this.map.addLayer(this.routeLayer);
     this.map.addLayer(this.layerMarkers);
@@ -120,14 +123,8 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
     if (navigator.geolocation) {  
 	navigator.geolocation.watchPosition(function(p){self.refreshPosition(p);});
     }
-    
-    // map.addLayer(bikeLayer);
-    // bikeLayer.setZIndex(730);
     var controlDrag = new OpenLayers.Control.
     	DragFeature(this.layerMarkers, {
-    			// 'onStart': function(feature) {
-    			//     feature.style.graphicOpacity = 0.5;
-    			// },
     			'onComplete': function(feature) {
     			    var lonlat = new OpenLayers.LonLat(feature.geometry.x,feature.geometry.y);
     			    var ll = self.MToLonLat(lonlat);
@@ -140,12 +137,9 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
     this.map.addControl(controlDrag);
     controlDrag.activate();
 
-    var selectControl = new OpenLayers.Control.
-	SelectFeature([this.routeLayer, this.layerMarkers], {clickout: true,
-							     multiple: true});
-
     this.map.addControl(selectControl);
     selectControl.activate();
+    this.selectControl = selectControl;
 
     $("#map").contextMenu({menu: 'myMenu'},
 			  function(action, el, pos) {
@@ -171,30 +165,17 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
     $("minutes-picker").change(function(){
 				self.time_set_minutes($(this).val());
 			    });
+    self.time_set_in($('#time-select').val());
     
-    if( this.fromHash ) {
-        var tmpStart = new OpenLayers.LonLat(this.lonStart, this.latStart);
-        var tmpDest = new OpenLayers.LonLat(this.lonDest, this.latDest);
-        this.nodes['start'] = {
-	    'lon': lonStart,
-	    'lat': latStart
-        };
-        this.nodes['dest'] = {
-	    'lon': lonDest,
-	    'lat': latDest
-        };
+    if( lonStart && latStart && lonDest && latDest ) {
+        var tmpStart = new OpenLayers.LonLat(lonStart, latStart);
+        var tmpDest = new OpenLayers.LonLat(lonDest, latDest);
         this.setMark(tmpStart,"start");
         this.setMark(tmpDest,"dest");
 	this.centerToMap(tmpStart,tmpDest);
-        this.compute();
-    }
-    else {
-        var s = {'lon': lonStart,
-		 'lat': latStart};
-        var d = {'lon': lonDest,
-		 'lat': latDest};
-        this.centerToMap(s,d);
-	self.time_set_in($('#time-select').val());
+    } else {
+	this.centerToMap(new OpenLayers.LonLat(-1.688976, 48.122070),
+			 new OpenLayers.LonLat(-1.659279, 48.103045));
     }
 }
 
@@ -275,13 +256,15 @@ Mumoro.prototype = {
     },
 
     cleanup_path: function(){
+	this.selectControl.deactivate();
 	var map = this.map;
+	this.routeLayer.destroyFeatures();
 	while(map.popups.length){
 	    var p = map.popups[0];
 	    map.removePopup(p);
 	    p.destroy();
 	}
-	this.routeLayer.destroyFeatures();	
+	this.selectControl.activate();
     },
 
     disp_path: function(id) {
@@ -309,15 +292,14 @@ Mumoro.prototype = {
 			      $("#info > h2").html("Itinéraires");
 			      $('#path_costs').html($('<p/>', {'class': 'error'}).text(data.error));
 			      self.cleanup_path();
-			      $("#hash_url").html('');
+			      // $("#hash_url").html('');
 			  }
 			  else {
 			      $("#info > h2").html("Mobi’Rennes propose " + data.paths.length + " itinéraire" + (data.paths.length > 1 ? "s" : ""));
 			      $("#path_costs").html(self.itineraries_descriptions(data));
 			      self.paths = data.paths;
 			      self.disp_path(0);
-			      if( !self.fromHash )
-				  self.addToHash();
+			      // self.addToHash();
 			  }
 		      });
 	}
@@ -394,36 +376,17 @@ $.each($.grep(p.features,
 	return this.nodes['start'] && this.nodes['dest'] && this.nodes['start'].lon && this.nodes['dest'].lat && this.nodes['dest'].lon && this.nodes['dest'].lat; 
     },
     
-    addToHash: function() {
-	var self = this;
-	var tmp = new OpenLayers.LonLat(this.map.center.lon, 
-					this.map.center.lat).transform(
-					    this.map.getProjectionObject(),
-					    this.proj4326); 
-	$.getJSON("addhash", {
-                      mlon: tmp.lon,
-                      mlat: tmp.lat,
-                      zoom: self.map.zoom,
-                      slon: self.nodes['start'].lon, 
-                      slat: self.nodes['start'].lat,
-                      dlon: self.nodes['dest'].lon,
-                      dlat: self.nodes['dest'].lat,
-                      time: $("#time").val(),
-                      saddress: $('#startAdr').val(),
-                      daddress: $('#endAdr').val()
-		  },
-		  function(data){
-                      if(data.error){
-			  $("#hash_url").html('');
-                      } else {
-			  $("#hash_url").html(
-                              "<p>Lien vers cette recherche : <br/><span class=\"tinyText\">" +
-				  self.hashUrl + "/h?id="+data.h+"</span></p>"
-			  );  
-                      }
-		  }
-		 );
-    },
+    // addToHash: function() {
+    // 	$("#hash_url").html(
+    //         "<p>Lien vers cette recherche : <br/><span class=\"tinyText\">" +
+    // 		location.protocol + '//' + location.host + location.pathname + 
+    // 		"?dep="+this.nodes['start'].lon + "," + 
+    // 		this.nodes['start'].lat + "&dest="+
+    // 		this.nodes['dest'].lon+","+this.nodes['dest'].lat + 
+    // 		"</span></p>"
+    // 	);  
+
+    // },
     
     transformToDurationString: function(v) {
 	var tmp = parseInt(v);
@@ -518,7 +481,7 @@ $.each($.grep(p.features,
 	$("#routing_description").html("");
 	$("#info > h2").html("Itinéraires");
 	$("#path_costs").html("");
-	$("#hash_url").html("");
+	// $("#hash_url").html("");
 	this.routeLayer.destroyFeatures();   
     },
     
