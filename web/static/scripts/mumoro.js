@@ -138,7 +138,6 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
     			    var ll = self.MToLonLat(lonlat);
     			    feature.style.graphicOpacity = 1.0;
     			    self.nodes['fmouse_'+feature.data]=true;
-    			    self.reverseGeocoding(lonlat,feature.data);
     			    self.setMark(lonlat,feature.data);
     			}
     		    });
@@ -171,15 +170,30 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
     $("#minutes-picker").change(function(){
 				self.time_set_minutes($(this).val());
 			    });
+
     var v = $("#time-select").val();
-    if(v == 'later'){
+    if($("#time").val() != ""){
+	var t = /(\d\d)\/(\d\d)\/(\d\d\d\d) (\d\d):(\d\d)/.exec($("#time").val());
+	$("#time-select").val("later");
 	$('#later-time-select').show();
-	self.time_set($("#date-picker").datepicker("getDate"),
-		      $("#hours-picker"),
-		      $("#minutes-picker"));
+	self.time_set(new Date(t[3],parseInt(t[2],10)-1,t[1]),
+		      t[4],
+		      t[5]);
+	$("#date-picker").val(t[1] + "/" + t[2] + "/" + t[3]);
+	$("#hours-picker").val(t[4]);
+	$("#minutes-picker").val(Math.min(55, 
+					  Math.floor(parseInt(t[5],10)/5)*5 + 
+					  (parseInt(t[5],10)%5 > 2? 5 : 0)));
     } else {
-	$('#later-time-select').hide();
-	self.time_set_in(v);
+	if(v == 'later'){
+	    $('#later-time-select').show();
+	    self.time_set($("#date-picker").datepicker("getDate"),
+			  $("#hours-picker"),
+			  $("#minutes-picker"));
+	} else {
+	    $('#later-time-select').hide();
+	    self.time_set_in(v);
+	}
     }
     
     if( lonStart && latStart && lonDest && latDest ) {
@@ -277,7 +291,7 @@ Mumoro.prototype = {
 
     later_picker_sync: function(){
 	$("#hours-picker").val(this.current_time.getHours());
-	$("#minutes-picker").val(Math.max(55, Math.floor(this.current_time.getMinutes()/5)*5 + 
+	$("#minutes-picker").val(Math.min(55, Math.floor(this.current_time.getMinutes()/5)*5 + 
 					  (this.current_time.getMinutes()%5 > 2? 5 : 0)));
     },
 
@@ -473,7 +487,7 @@ $.each($.grep(p.features,
     // },
     
     transformToDurationString: function(v) {
-	var tmp = parseInt(v);
+	var tmp = parseInt(v,10);
 	var minutes = ( tmp / 60) % 60;
 	var hours = tmp / 3600;
 	if( (Math.ceil(hours) - 1) > 0 )

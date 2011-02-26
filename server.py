@@ -247,15 +247,15 @@ class Mumoro(object):
     def h(self,id):
         hashCheck = shorturl.shortURL(self.metadata)
         res = hashCheck.getDataFromHash(id)
-        if( len(res) > 0 ):
+        if( res == None ):
             return self.index()
         else:
             tmpl = self.loader.load('index.html')
-            return tmpl.generate(lonStart=hashData[4],
-                                 latStart=hashData[5],
-                                 lonDest=hashData[6],
-                                 latDest=hashData[7],
-                                 date=datetime.datetime.today().strftime("%d/%m/%Y %H:%M"),
+            return tmpl.generate(lonStart=res.lonStart,
+                                 latStart=res.latStart,
+                                 lonDest=res.lonDest,
+                                 latDest=res.latDest,
+                                 date=res.chrone.strftime("%d/%m/%Y %H:%M"),
                                  googleanalytics=request.config['mumoro.googleanalytics'],
                                  cloudmadeapi=request.config['mumoro.cloudmadeapi']).render('html', doctype='html5')
 
@@ -440,7 +440,7 @@ class Mumoro(object):
                              latStart=latStart,
                              lonDest=lonDest,
                              latDest=latDest,
-                             date=datetime.datetime.today().strftime("%d/%m/%Y %H:%M"),
+                             date="",
                              googleanalytics=request.config['mumoro.googleanalytics'],
                              cloudmadeapi=request.config['mumoro.cloudmadeapi']).render('html', doctype='html5')
 

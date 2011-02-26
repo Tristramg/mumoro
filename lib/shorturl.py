@@ -28,7 +28,7 @@ from sqlalchemy.exceptions import IntegrityError
 class shortURL:
     def __init__(self,metadata):
         self.metadata = metadata
-        self.hash_table = Table('hurl', self.metadata,useexisting=True)
+        self.hash_table = Table('hurl', self.metadata,autoload = True)
 
     def addRouteToDatabase(self,lonMap,latMap,zoom,lonStart,latStart,lonDest,
                            latDest,addressStart,addressDest, time):
@@ -61,11 +61,6 @@ class shortURL:
         return h.hexdigest()[0:16]
 
     def getDataFromHash(self,value):
-        print [c.name for c in self.hash_table.columns]
         s = self.hash_table.select(self.hash_table.c.id == value)
-        u = s.execute().first()
-        return [u.id, u.zoom, u.lonMap, u.latMap,
-                u.lonStart, u.latStart, u.lonDest, u.latDest,
-                u.addressStart.encode("utf-8"), u.addressDest.encode("utf-8"),
-                u.chrone.strftime("%d/%m/%Y %H:%M")]
+        return s.execute().first()
 
