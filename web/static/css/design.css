@@ -299,6 +299,12 @@ body.iphone #left-panel {
   z-index: 10001;
 }
 
+div.markerPopup{
+  color: #2E2E2E;
+  font-weight: bold;
+  padding: 0px 9px 9px 4px;
+  width: 12.8em;
+}
 
 div.olPopup{
   opacity: 0.85;

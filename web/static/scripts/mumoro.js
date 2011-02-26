@@ -98,7 +98,8 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
 			    feature.geometry.getBounds().getCenterLonLat(),
                             new OpenLayers.Size(100,100),
 			    feature.attributes.type == "bus_departure" ? self.bus_popup_content(feature) : self.bike_popup_content(feature),
-                            null, false, onPopupClose);
+                            {size:new OpenLayers.Size(20,20),
+                             offset:new OpenLayers.Pixel(0,-20)}, false, onPopupClose);
 	    feature.popup = popup;
 	    popup.feature = feature;
 	    self.map.addPopup(popup);
@@ -125,6 +126,13 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
     }
     var controlDrag = new OpenLayers.Control.
     	DragFeature(this.layerMarkers, {
+			'onStart' : function(feature){
+			    if(feature.popup){
+				self.map.removePopup(feature.popup);
+				feature.popup.destroy();
+				feature.popup = null;
+			    }
+			},
     			'onComplete': function(feature) {
     			    var lonlat = new OpenLayers.LonLat(feature.geometry.x,feature.geometry.y);
     			    var ll = self.MToLonLat(lonlat);
@@ -141,31 +149,38 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
     selectControl.activate();
     this.selectControl = selectControl;
 
-    $("#map").contextMenu({menu: 'myMenu'},
-			  function(action, el, pos) {
-			      var tmp = {'x': pos.x,
-					 'y': pos.y};          
-			      self.handleClick(tmp, action);
-			  });
     // init ui
     
     $('#time-select').change(function(){
 			  var v = $(this).val();
 			  if(v == 'later'){
 			      $('#later-time-select').show();
+			      self.later_picker_sync();
 			  } else {
 			      $('#later-time-select').hide();
 			      self.time_set_in(v);
 			  }
 		      });
     $("#date-picker").datepicker();
-    $("hour-picker").change(function(){
-				self.time_set_hour($(this).val());
+    $("#date-picker").change(function(){
+				self.time_set_date($(this).datepicker('getDate'));
 			    });
-    $("minutes-picker").change(function(){
+    $("#hours-picker").change(function(){
+				self.time_set_hours($(this).val());
+			    });
+    $("#minutes-picker").change(function(){
 				self.time_set_minutes($(this).val());
 			    });
-    self.time_set_in($('#time-select').val());
+    var v = $("#time-select").val();
+    if(v == 'later'){
+	$('#later-time-select').show();
+	self.time_set($("#date-picker").datepicker("getDate"),
+		      $("#hours-picker"),
+		      $("#minutes-picker"));
+    } else {
+	$('#later-time-select').hide();
+	self.time_set_in(v);
+    }
     
     if( lonStart && latStart && lonDest && latDest ) {
         var tmpStart = new OpenLayers.LonLat(lonStart, latStart);
@@ -176,6 +191,48 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
     } else {
 	this.centerToMap(new OpenLayers.LonLat(-1.688976, 48.122070),
 			 new OpenLayers.LonLat(-1.659279, 48.103045));
+
+	this.node_markers['start'] = new OpenLayers.Feature.Vector(this.LonLatToPoint(this.
+										   LonLatToM(
+										       new OpenLayers.LonLat(-1.688,48.11))), 
+							   'start',
+							   this.icon['start']);
+	StartPopup = OpenLayers.Class(OpenLayers.Popup.FramedCloud, 
+				     {'fixedRelativePosition': true,
+				      'relativePosition': 'tr'});
+	var popup = new StartPopup("featurePopup",
+			this.node_markers['start'].geometry.getBounds().getCenterLonLat(),
+                        new OpenLayers.Size(100,100),
+			"<div class='markerPopup'>Déplacez ce pointeur sur le lieu de départ.</div>",
+                        {size:new OpenLayers.Size(20,20),
+                             offset:new OpenLayers.Pixel(0,-20)}, false);
+	this.node_markers['start'].popup = popup;
+	this.map.addPopup(popup);
+
+	this.layerMarkers.addFeatures(this.node_markers['start']);
+	this.layerMarkers.drawFeature(this.node_markers['start']);
+	this.node_markers['dest'] = new OpenLayers.Feature.Vector(this.LonLatToPoint(this.
+										   LonLatToM(
+										       new OpenLayers.LonLat(-1.665,48.11))), 
+							   'dest',
+							   this.icon['dest']
+							  );
+	this.layerMarkers.addFeatures(this.node_markers['dest']);
+	this.layerMarkers.drawFeature(this.node_markers['dest']);
+
+	DestPopup = OpenLayers.Class(OpenLayers.Popup.FramedCloud, 
+				     {'fixedRelativePosition': true,
+				      'relativePosition': 'bl'});
+
+	popup = new DestPopup("featurePopup",
+			this.node_markers['dest'].geometry.getBounds().getCenterLonLat(),
+                        new OpenLayers.Size(300,400),
+			"<div class='markerPopup'>Déplacez ce pointeur sur le lieu d’arrivée.</div>",
+                        {size:new OpenLayers.Size(20,20),
+                             offset:new OpenLayers.Pixel(0,-20)}, false);
+
+	this.node_markers['dest'].popup = popup;
+	this.map.addPopup(popup);
     }
 }
 
@@ -203,17 +260,51 @@ Mumoro.prototype = {
     paths: undefined,
     cacheStart: "",
     cacheDest: "",
+    current_time: new Date(),
 
     time_set_in: function(minutes){
 	this.time_set_as(new Date(new Date().getTime() + minutes * 60000));
     },
 
     time_set_as: function(d){
-	$('#time').val(pad(d.getDate()) + '/' + pad(d.getMonth()) + '/' + d.getFullYear() + ' ' + 
+	$('#time').val(pad(d.getDate()) + '/' + pad(d.getMonth()+1) + '/' + d.getFullYear() + ' ' + 
 		       pad(d.getHours()) + ':' + pad(d.getMinutes()));
+	this.current_time = d;
 	if( this.areBothMarked() ) { 
             this.compute();
 	}
+    },
+
+    later_picker_sync: function(){
+	$("#hours-picker").val(this.current_time.getHours());
+	$("#minutes-picker").val(Math.max(55, Math.floor(this.current_time.getMinutes()/5)*5 + 
+					  (this.current_time.getMinutes()%5 > 2? 5 : 0)));
+    },
+
+    time_set: function(d,h,m){
+	d.setHours(h);
+	d.setMinutes(m);
+	this.time_set_as(d);	
+    },
+
+    time_set_date: function(date){
+	var d = this.current_time;
+	d.setDate(date.getDate());
+	d.setMonth(date.getMonth());
+	d.setFullYear(date.getFullYear());
+	this.time_set_as(d);	
+    },
+
+    time_set_hours:function(h){
+	var d = this.current_time;
+	d.setHours(h);
+	this.time_set_as(d);
+    },
+
+    time_set_minutes:function(h){
+	var d = this.current_time;
+	d.setMinutes(h);
+	this.time_set_as(d);
     },
 
     isTouchDevice: function() {
@@ -343,13 +434,6 @@ $.each($.grep(p.features,
 		     }, target);
     },
 
-    handleClick: function(coord, mark) {
-	var lonlat = this.map.getLonLatFromViewPortPx(coord);
-	lonlat.transform(this.proj900913, this.proj4326);
-	this.nodes['fmouse_'+mark]=true;
-	this.setMark(lonlat, mark);
-    },
-    
     // Coordinates in 4326 projection (lon/lat)
     setMark: function(lonlat, mark){
 	this.nodes[mark] = lonlat;

@@ -27,6 +27,7 @@ from lib import layer
 
 from lib import bikestations as bikestations
 from lib import utils
+from lib import shorturl
 
 from sqlalchemy import *
 from sqlalchemy.orm import mapper, sessionmaker, clear_mappers
@@ -242,8 +243,21 @@ class Mumoro(object):
 
 
 
-
-
+    @cherrypy.expose
+    def h(self,id):
+        hashCheck = shorturl.shortURL(self.metadata)
+        res = hashCheck.getDataFromHash(id)
+        if( len(res) > 0 ):
+            return self.index()
+        else:
+            tmpl = self.loader.load('index.html')
+            return tmpl.generate(lonStart=hashData[4],
+                                 latStart=hashData[5],
+                                 lonDest=hashData[6],
+                                 latDest=hashData[7],
+                                 date=datetime.datetime.today().strftime("%d/%m/%Y %H:%M"),
+                                 googleanalytics=request.config['mumoro.googleanalytics'],
+                                 cloudmadeapi=request.config['mumoro.cloudmadeapi']).render('html', doctype='html5')
 
 
     @cherrypy.expose
@@ -422,12 +436,6 @@ class Mumoro(object):
             lonStart,latStart=dep.rsplit(',')
             lonDest,latDest=dest.rsplit(',')
         tmpl = self.loader.load('index.html')
-        t = "{"
-        for i in range( len( layer_array ) ):
-            t = t + "\"" + layer_array[i]['name'] + "\": { strokeColor : \"" + layer_array[i]['color'] + "\"}"
-            if i != len( layer_array ) - 1 :
-                t = t + ","
-        t = t + "}"
         return tmpl.generate(lonStart=lonStart,
                              latStart=latStart,
                              lonDest=lonDest,
