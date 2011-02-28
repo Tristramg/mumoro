@@ -784,9 +784,9 @@ $.each($.grep(p.features,
     },
 
     secondesToHuman: function(s){
-	var hours = Math.floor(s / 3600)%24;
+	var hours = Math.floor(s / 3600);
 	var minutes = Math.floor((s - (hours * 3600)) / 60);
-	return pad(hours) + 'h' + pad(minutes);
+	return pad(hours%24) + 'h' + pad(minutes);
     },
  
     LonLatToPoint: function(ll) {
