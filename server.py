@@ -256,6 +256,7 @@ class Mumoro(object):
                                  lonDest=res.lonDest,
                                  latDest=res.latDest,
                                  date=res.chrone.strftime("%d/%m/%Y %H:%M"),
+                                 debug_infos=request.config['mumoro.debug_infos'],
                                  googleanalytics=request.config['mumoro.googleanalytics'],
                                  cloudmadeapi=request.config['mumoro.cloudmadeapi']).render('html', doctype='html5')
 
@@ -430,7 +431,7 @@ class Mumoro(object):
             return None
 
     @cherrypy.expose
-    def index(self,dep=None,dest=None):
+    def index(self,dep=None,dest=None,time=""):
         lonStart=latStart=lonDest=latDest=""
         if dep and dest:
             lonStart,latStart=dep.rsplit(',')
@@ -440,7 +441,8 @@ class Mumoro(object):
                              latStart=latStart,
                              lonDest=lonDest,
                              latDest=latDest,
-                             date="",
+                             debug_infos=request.config['mumoro.debug_infos'],
+                             time=time,
                              googleanalytics=request.config['mumoro.googleanalytics'],
                              cloudmadeapi=request.config['mumoro.cloudmadeapi']).render('html', doctype='html5')
 

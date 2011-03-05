@@ -397,14 +397,14 @@ Mumoro.prototype = {
 			      $("#info > h2").html("Itinéraires");
 			      $('#path_costs').html($('<p/>', {'class': 'error'}).text(data.error));
 			      self.cleanup_path();
-			      // $("#hash_url").html('');
+			      $("#link").html('');
 			  }
 			  else {
 			      $("#info > h2").html("Mobi’Rennes propose " + data.paths.length + " itinéraire" + (data.paths.length > 1 ? "s" : ""));
 			      $("#path_costs").html(self.itineraries_descriptions(data));
 			      self.paths = data.paths;
 			      self.disp_path(0);
-			      // self.addToHash();
+			      self.refreshLink();
 			  }
 		      });
 	}
@@ -474,17 +474,17 @@ $.each($.grep(p.features,
 	return this.nodes['start'] && this.nodes['dest'] && this.nodes['start'].lon && this.nodes['dest'].lat && this.nodes['dest'].lon && this.nodes['dest'].lat; 
     },
     
-    // addToHash: function() {
-    // 	$("#hash_url").html(
-    //         "<p>Lien vers cette recherche : <br/><span class=\"tinyText\">" +
-    // 		location.protocol + '//' + location.host + location.pathname + 
-    // 		"?dep="+this.nodes['start'].lon + "," + 
-    // 		this.nodes['start'].lat + "&dest="+
-    // 		this.nodes['dest'].lon+","+this.nodes['dest'].lat + 
-    // 		"</span></p>"
-    // 	);  
-
-    // },
+    refreshLink: function() {
+	var h = location.protocol + '//' + location.host + location.pathname + 
+    	    "?" + $.param({dep: (this.nodes['start'].lon + "," + 
+    				 this.nodes['start'].lat),
+			   dest: (this.nodes['dest'].lon + "," + 
+				  this.nodes['dest'].lat),
+			   time: $("#time").val()});
+	$("#link").html('');
+    	$("#link").append($("<a/>", {href: h}).
+	append("<span class=\"tinyText\">Lien vers cette recherche</span>")).html();  
+    },
     
     transformToDurationString: function(v) {
 	var tmp = parseInt(v,10);
