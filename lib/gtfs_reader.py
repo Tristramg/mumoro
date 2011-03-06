@@ -75,6 +75,8 @@ def convert(filename, session, start_date, end_date):
         mode = route.route_type
         service_period = s.GetServicePeriod(trip.service_id)
         headsign = trip.trip_headsign.split(" | ")[1]
+        # Les services c'est un bitset qui contient les jours de circulation à partir d'une date de départ
+        # Si la date de début c'est le 1er janvier, 0010 veut dire que le bus ne circule que le 2 janvier
         services = ""
         delta = datetime.timedelta(days=1)
         date = start_date
@@ -84,10 +86,18 @@ def convert(filename, session, start_date, end_date):
             else:
                 services = "0" + services
             date += delta
+
+        # On crée un service J+1 pour les trajets qui dépassent minuit
+        # Un service 0010 devient 0100
+        service_next_day = services[1:] + "0"
             
+        # On regarde si un tel service n'existait pas déjà, car en général il y a qu'une dizaine de services par transporteur
         if not services_map.has_key(services):
             services_map[services] = len(services_map)
+        if not services_map.has_key(service_next_day):
+            services_map[service_next_day] = len(services_map)
         service = services_map[services]
+        service_nd = services_map[service_next_day]
 
         if not map.has_key(trip.route_id):
             map[trip.route_id] = {}
@@ -103,7 +113,10 @@ def convert(filename, session, start_date, end_date):
             current_node = session.query(PT_Node).filter_by(original_id = stop.stop_id).first()
             if prev_stop != None:
                 length = distance( (current_node.lon, current_node.lat), (prev_node.lon, prev_node.lat))
-                session.add(PT_Edge(prev_stop, current_stop, length * 1.1, prev_time, stop.arrival_secs, service, mode, routes_map[route.route_id]))
+                if prev_time <= 24 * 60 * 60:
+                    session.add(PT_Edge(prev_stop, current_stop, length * 1.1, prev_time, stop.arrival_secs, service, mode, routes_map[route.route_id]))
+                else:
+                    session.add(PT_Edge(prev_stop, current_stop, length * 1.1, prev_time - 24*60*60, stop.arrival_secs - 24*60*60, service_nd, mode, routes_map[route.route_id]))
 
             prev_node = current_node 
             prev_stop = current_stop

@@ -65,25 +65,25 @@ float Duration::operator()(float start, int day) const
             float tt_start, tt_arrival;
             Services s;
             boost::tie(tt_start, tt_arrival, s) = *it;
-//            std::cout << s << " " << tt_start << " " << tt_arrival << std::endl;
+            //std::cout << s << " " << tt_start << " " << tt_arrival << std::endl;
             if (tt_start >= start && s[day])
             {
-//                std::cout << "Ret : " << tt_arrival << std::endl;
+                //std::cout << "Ret : " << tt_arrival << std::endl;
                 return tt_arrival;
             }
-            if (next_day != 0 && s[day+1])
+            else if (next_day == 0 && s[day+1])
             {
-                next_day = tt_start + 24*3600;
+                next_day = tt_arrival + 24*3600;
             }
         }
         if(next_day > 0)
         {
-//            std::cout << "Next day: " << next_day << std::endl;
+            //std::cout << "Next day: " << next_day << std::endl;
             return next_day;
         }
         else 
         {
-//            std::cout << "No traffic on day " << day << std::endl;
+            //std::cout << "No traffic on day " << day << std::endl;
             throw No_traffic();
         }
     }
