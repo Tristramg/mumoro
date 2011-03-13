@@ -6,3 +6,4 @@ mumoro.cloudmadeapi: '67c22e4178bf452789ae39051fcf2215'
 mumoro.googleanalytics: 'UA-3628893-6'
 mumoro.admin_email = 'admin@admin.com'
 mumoro.web_url =  'http://www.mobirennes.com'
+mumoro.debug_infos = None

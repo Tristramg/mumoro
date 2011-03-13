@@ -199,6 +199,11 @@ div#info table tr:hover td{
   background-color: #fff392;
   cursor: pointer;
 }
+
+div#link{
+  display: none;
+}
+
 div.bus-popup h2 img{
   vertical-align: middle;
   margin-right: 1ex;
