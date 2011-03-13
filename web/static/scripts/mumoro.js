@@ -121,9 +121,9 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
     this.map.addLayer(this.routeLayer);
     this.map.addLayer(this.layerMarkers);
     // Location support
-    if (navigator.geolocation) {  
-	navigator.geolocation.watchPosition(function(p){self.refreshPosition(p);});
-    }
+    // if (navigator.geolocation) {  
+	// navigator.geolocation.watchPosition(function(p){self.refreshPosition(p);});
+    // }
     var controlDrag = new OpenLayers.Control.
     	DragFeature(this.layerMarkers, {
 			'onStart' : function(feature){
@@ -834,49 +834,6 @@ $(function(){
 							  $.mumoro.map.pan(to_pan, 0, {animate:false});
 						      }});
 			       });
-      // $('#left-panel').
-      // 	  bind('touchstart', 
-      // 	       function(evt){
-      // 		   var e = evt.originalEvent;
-      // 		   if(e.touches.length == 1){
-      // 		       var t = e.touches[0];
-      // 		       this.scroll_touch_started = true;
-      // 		       this.scroll_touch_last_pos = [t.clientX, t.clientY];
-      // 		   }
-      // 		   return true;
-      // });
-      // $('#left-panel').
-      // 	  bind('touchmove', 
-      // 	       function(evt){
-      // 		   var e = evt.originalEvent;
-      // 		   if(e.touches.length == 1 && this.scroll_touch_started){
-      // 		       e.preventDefault();
-      // 		       var t = e.touches[0];
-      // 		       var last_pos = this.scroll_touch_last_pos;
-      // 		       var move = [last_pos[0] - t.clientX, last_pos[1] - t.clientY];
-      // 		       this.scroll_touch_last_pos = [t.clientX, t.clientY];
-      // 		       this.scrollLeft += move[0];
-      // 		       this.scrollTop += move[1];
-      // 		       return false;
-      // 		   } else {
-      // 		       return true;
-      // 		   }
-      // 	       });
-      // $('#left-panel').
-      // 	  bind("touchcancel",
-      // 	       function(){
-      // 		   this.scroll_touch_last_pos = undefined;
-      // 		   this.scroll_touch_started = false;
-      // 		   return true;
-      // 	       });
-      // $('#left-panel').
-      // 	  bind("touchend",
-      // 	       function(evt){
-      // 		   evt.originalEvent.preventDefault();
-      // 		   this.scroll_touch_last_pos = undefined;
-      // 		   this.scroll_touch_started = false;
-      // 		   return true;
-      // 	       });
 
       if((navigator.userAgent.match(/iPhone/i)) || (navigator.userAgent.match(/iPod/i))) {
 	  $('body').addClass('iphone');
@@ -904,6 +861,9 @@ $(function(){
 			     });
 	      $(window).bind('orientationchange', 
 			     setOrientation);
+	      $('#panel-toggle').click(function () {
+				 setOrientation();
+			     });
 	  }
       }
 });

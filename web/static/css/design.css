@@ -117,7 +117,6 @@ div#footer {
   -webkit-box-shadow: 0 0 2px 2px rgba(0,0,0,0.2);
   box-shadow: 0 0 2px 2px rgba(0,0,0,0.2);
   z-index: 10001;
-  position: absolute;
 }
 #left-panel > div.wrapper{
   padding: 1px 2px 1px 4px;
@@ -161,58 +160,6 @@ div#footer {
 #mumoro_form #date-picker{
   width: 5em;
 }
-/* Generic context menu styles */
-.contextMenu {
-  position: absolute;
-  z-index: 99999;
-  border: solid 1px #CCC;
-  background: #EEE;
-  padding: 0px;
-  margin: 0px;
-  display: none;
-  font-family: Verdana, Arial, Helvetica, sans-serif;
-  font-size: 11px;
-}
-
-
-.contextMenu ul {
-  padding: 0;
-  margin: 0;
-}
-
-.contextMenu li {
-  list-style: none;
-  margin: 0px;
-}
-
-.contextMenu a {
-  color: #333;
-  text-decoration: none;
-  line-height: 20px;
-  height: 20px;
-  outline: none;
-  padding: 2px 5px;
-  display: block;
-}
-
-.contextMenu li.hover a {
-  color: #AAA;
-  background-color: #3399FF;
-}
-
-.contextMenu li.disabled a {
-  color: #AAA;
-  cursor: default;
-}
-
-.contextMenu li.hover.disabled a {
-  background-color: transparent;
-}
-
-.contextMenu li.separator {
-  border-top: solid 1px #CCC;
-}
-
 .olControlLayerSwitcher .layersDiv {
   background-color: black;
 }
