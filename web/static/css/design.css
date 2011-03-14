@@ -96,7 +96,7 @@ div#footer {
   width: 20px;
   height: 20px;
   bottom: 45px;
-  left: 20em;
+  left: 239px;
   z-index: 10002;
   background: transparent url('/static/img/panel-toggler.png') no-repeat left top;
   cursor: pointer;
@@ -108,15 +108,17 @@ div#footer {
 
 #left-panel {
   background-color: #EFEFEF;
-  width: 20em;
+  width: 239px;
   float: left;
   overflow: auto;
   height: 100%;
-  border-right: 1px solid #B5B5B5;
+  border: 0;
   -moz-box-shadow: 0 0 2px 2px rgba(0,0,0,0.2);
   -webkit-box-shadow: 0 0 2px 2px rgba(0,0,0,0.2);
   box-shadow: 0 0 2px 2px rgba(0,0,0,0.2);
   z-index: 10001;
+  border-right: 1px solid #B5B5B5;
+  position: absolute;
 }
 #left-panel > div.wrapper{
   padding: 1px 2px 1px 4px;
@@ -125,7 +127,7 @@ div#footer {
   margin-right: -10px;
 }
 #right-panel{
-  margin-left: 20em;
+  margin-left: 240px;
   height: 100%;
 }
 #map{
