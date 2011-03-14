@@ -205,48 +205,9 @@ function Mumoro(lonStart, latStart, lonDest, latDest,
     } else {
 	this.centerToMap(new OpenLayers.LonLat(-1.688976, 48.122070),
 			 new OpenLayers.LonLat(-1.659279, 48.103045));
-
-	this.node_markers['start'] = new OpenLayers.Feature.Vector(this.LonLatToPoint(this.
-										   LonLatToM(
-										       new OpenLayers.LonLat(-1.688,48.11))), 
-							   'start',
-							   this.icon['start']);
-	StartPopup = OpenLayers.Class(OpenLayers.Popup.FramedCloud, 
-				     {'fixedRelativePosition': true,
-				      'relativePosition': 'tr'});
-	var popup = new StartPopup("featurePopup",
-			this.node_markers['start'].geometry.getBounds().getCenterLonLat(),
-                        new OpenLayers.Size(100,100),
-			"<div class='markerPopup'>Déplacez ce pointeur sur le lieu de départ.</div>",
-                        {size:new OpenLayers.Size(20,20),
-                             offset:new OpenLayers.Pixel(0,-20)}, false);
-	this.node_markers['start'].popup = popup;
-	this.map.addPopup(popup);
-
-	this.layerMarkers.addFeatures(this.node_markers['start']);
-	this.layerMarkers.drawFeature(this.node_markers['start']);
-	this.node_markers['dest'] = new OpenLayers.Feature.Vector(this.LonLatToPoint(this.
-										   LonLatToM(
-										       new OpenLayers.LonLat(-1.665,48.11))), 
-							   'dest',
-							   this.icon['dest']
-							  );
-	this.layerMarkers.addFeatures(this.node_markers['dest']);
-	this.layerMarkers.drawFeature(this.node_markers['dest']);
-
-	DestPopup = OpenLayers.Class(OpenLayers.Popup.FramedCloud, 
-				     {'fixedRelativePosition': true,
-				      'relativePosition': 'bl'});
-
-	popup = new DestPopup("featurePopup",
-			this.node_markers['dest'].geometry.getBounds().getCenterLonLat(),
-                        new OpenLayers.Size(300,400),
-			"<div class='markerPopup'>Déplacez ce pointeur sur le lieu d’arrivée.</div>",
-                        {size:new OpenLayers.Size(20,20),
-                             offset:new OpenLayers.Pixel(0,-20)}, false);
-
-	this.node_markers['dest'].popup = popup;
-	this.map.addPopup(popup);
+	// Si cette fonction est appellée sans setTimeout, les popups
+	// s'affichent mal et la carte se place n'importe où !
+	setTimeout(function(){self.display_start_dest_markers();}, 1);
     }
 }
 
@@ -275,6 +236,50 @@ Mumoro.prototype = {
     cacheStart: "",
     cacheDest: "",
     current_time: new Date(),
+
+    display_start_dest_markers: function(){
+	this.node_markers['start'] = new OpenLayers.Feature.Vector(this.LonLatToPoint(this.
+										      LonLatToM(
+											  new OpenLayers.LonLat(-1.688,48.11))), 
+								   'start',
+								   this.icon['start']);
+	var StartPopup = OpenLayers.Class(OpenLayers.Popup.FramedCloud, 
+					  {'fixedRelativePosition': true,
+					   'relativePosition': 'tr'});
+	var popup = new StartPopup("featurePopup",
+				   this.node_markers['start'].geometry.getBounds().getCenterLonLat(),
+				   new OpenLayers.Size(100,100),
+				   "<div class='markerPopup'>Déplacez ce pointeur sur le lieu de départ.</div>",
+				   {size:new OpenLayers.Size(20,20),
+				    offset:new OpenLayers.Pixel(0,-20)}, false);
+	this.node_markers['start'].popup = popup;
+	this.map.addPopup(popup);
+	
+	this.layerMarkers.addFeatures(this.node_markers['start']);
+	this.layerMarkers.drawFeature(this.node_markers['start']);
+	this.node_markers['dest'] = new OpenLayers.Feature.Vector(this.LonLatToPoint(this.
+										     LonLatToM(
+											 new OpenLayers.LonLat(-1.665,48.11))), 
+								  'dest',
+								  this.icon['dest']
+								 );
+	this.layerMarkers.addFeatures(this.node_markers['dest']);
+	this.layerMarkers.drawFeature(this.node_markers['dest']);
+	
+	var DestPopup = OpenLayers.Class(OpenLayers.Popup.FramedCloud, 
+					 {'fixedRelativePosition': true,
+					  'relativePosition': 'bl'});
+	
+	popup = new DestPopup("featurePopup",
+			      this.node_markers['dest'].geometry.getBounds().getCenterLonLat(),
+                              new OpenLayers.Size(300,400),
+			      "<div class='markerPopup'>Déplacez ce pointeur sur le lieu d’arrivée.</div>",
+                              {size:new OpenLayers.Size(20,20),
+                               offset:new OpenLayers.Pixel(0,-20)}, false);
+	
+	this.node_markers['dest'].popup = popup;
+	this.map.addPopup(popup);
+    },
 
     time_set_in: function(minutes){
 	this.time_set_as(new Date(new Date().getTime() + minutes * 60000));
