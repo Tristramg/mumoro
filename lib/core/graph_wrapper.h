@@ -66,7 +66,7 @@ void serialize(Archive &ar, Time &t, const unsigned int version)
 
 struct Duration
 {
-    int const_duration;
+    float const_duration;
     std::vector<Time> timetable;
     Duration();
     Duration(float const_duration);
